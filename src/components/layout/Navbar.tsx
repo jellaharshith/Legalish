@@ -46,11 +46,11 @@ export default function Navbar() {
         <Link to="/" className="flex items-center gap-2 z-50">
           <img 
             src="/logo.png" 
-            alt="V.OL.T Logo" 
-            className="w-10 h-10 object-contain"
+            alt="V.O.L.T Logo" 
+            className="w-10 h-10 object-contain filter brightness-0 dark:filter-none dark:brightness-100"
           />
           <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            V.OL.T
+            V.O.L.T
           </span>
         </Link>
 

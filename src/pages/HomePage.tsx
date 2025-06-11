@@ -43,7 +43,7 @@ export default function HomePage() {
     {
       name: "Sarah Chen",
       role: "Startup Founder",
-      content: "V.OL.T saved me hours on contract reviews. The red flag detection is incredibly accurate.",
+      content: "V.O.L.T saved me hours on contract reviews. The red flag detection is incredibly accurate.",
       rating: 5
     },
     {
@@ -90,7 +90,7 @@ export default function HomePage() {
             </h1>
             
             <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
-              V.OL.T uses AI to translate complex legal documents into plain English, 
+              V.O.L.T uses AI to translate complex legal documents into plain English, 
               highlighting red flags and saving you hours of reading.
             </p>
             
@@ -143,7 +143,7 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why choose V.OL.T?
+              Why choose V.O.L.T?
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Stop wasting time on legal jargon. Get instant, accurate analysis with AI-powered insights.
@@ -190,7 +190,7 @@ export default function HomePage() {
                 <span className="text-primary"> plain English</span>
               </h2>
               <p className="text-lg text-muted-foreground mb-8">
-                Watch how V.OL.T transforms complex legal documents into easy-to-understand summaries, 
+                Watch how V.O.L.T transforms complex legal documents into easy-to-understand summaries, 
                 complete with red flag detection and multiple voice options.
               </p>
               <div className="space-y-4">
@@ -250,7 +250,7 @@ export default function HomePage() {
               Loved by thousands
             </h2>
             <p className="text-lg text-muted-foreground">
-              See what our users are saying about V.OL.T
+              See what our users are saying about V.O.L.T
             </p>
           </motion.div>
 
@@ -295,7 +295,7 @@ export default function HomePage() {
               Ready to simplify your legal reading?
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join thousands of users who've already saved hours with V.OL.T. 
+              Join thousands of users who've already saved hours with V.O.L.T. 
               Start analyzing your legal documents today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
