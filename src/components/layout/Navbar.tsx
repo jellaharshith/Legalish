@@ -44,9 +44,11 @@ export default function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 z-50">
-          <div className="rounded-xl bg-gradient-to-r from-primary to-purple-600 w-10 h-10 flex items-center justify-center shadow-lg">
-            <Zap className="h-6 w-6 text-white" />
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="V.OL.T Logo" 
+            className="w-10 h-10 object-contain"
+          />
           <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
             V.OL.T
           </span>
