@@ -44,11 +44,16 @@ export default function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 z-50">
-          <img 
-            src="/logo.png" 
-            alt="V.O.L.T Logo" 
-            className="w-10 h-10 object-contain filter brightness-0 dark:filter-none dark:brightness-100"
-          />
+          <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-lg">
+            <img 
+              src="/logo.png" 
+              alt="V.O.L.T Logo" 
+              className="w-8 h-8 object-contain"
+              style={{
+                filter: 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)'
+              }}
+            />
+          </div>
           <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
             V.O.L.T
           </span>
