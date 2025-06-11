@@ -49,15 +49,23 @@ const VALID_TONES = [
 ];
 
 const TONE_PROMPTS = {
-  serious: "Read this in a calm, articulate, and neutral tone, like David Attenborough narrating a documentary.",
-  sarcastic: "Use a dry, sarcastic tone like Ryan Reynolds mocking bad decisions. Be witty and slightly condescending.",
-  meme: "Read like SpongeBob or PewDiePie narrating a viral video. Overreact, exaggerate, and meme everything.",
-  ominous: "Read like Morgan Freeman telling a scary story, or Light Yagami writing names in the Death Note.",
-  child: "Sound like Dora the Explorer or a cheerful cartoon friend. Happy, excited, simple language.",
-  academic: "Sound like Neil deGrasse Tyson explaining black holes. Scholarly, eloquent, and formal.",
-  authoritative: "Speak like a cop reading someone their rights or All Might giving a heroic speech. Commanding tone.",
-  wizard: "Sound like Gandalf or Gojo delivering mystical prophecy. Deep, wise, and powerful."
+  serious: "Speak in a calm, precise, and emotionally neutral tone. Deliver facts and observations with clarity and composure.",
+  
+  sarcastic: "Adopt a dry, witty tone that questions the logic of things. Layer your words with irony and a hint of disdain, but stay clever—not cruel.",
+  
+  meme: "Turn up the absurdity and exaggeration. Use over-the-top expressions, internet lingo, and break the fourth wall for comedic effect.",
+  
+  ominous: "Use a deep, chilling tone that builds suspense. Speak slowly, with gravity, as if something powerful or terrible is about to unfold.",
+  
+  child: "Use simple, cheerful language full of wonder and excitement. Be clear, repetitive, and encouraging—like you're teaching a new concept to a young learner.",
+  
+  academic: "Be formal, methodical, and intellectually rigorous. Structure ideas clearly, define key terms, and maintain an analytical perspective throughout.",
+  
+  authoritative: "Project strength and confidence. Use assertive language, direct commands, and minimal fluff—you're here to lead, not ask.",
+  
+  wizard: "Use grand, poetic language that suggests ancient knowledge and mystery. Speak with awe, depth, and rhythm, as if unveiling truths from another realm."
 };
+
 
 function validateInput(body: any): { isValid: boolean; error?: string; data?: AnalysisRequest } {
   // Check that exactly one input method is provided
