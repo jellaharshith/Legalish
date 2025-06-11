@@ -407,7 +407,7 @@ export default function SummaryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-24 pb-8">
         {/* Header - Made smaller */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
