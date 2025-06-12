@@ -206,32 +206,29 @@ async function fetchUrlContent(url: string): Promise<string> {
 
 function buildAnalysisPrompt(legalTerms: string, tone: string): string {
   const toneInstruction = TONE_PROMPTS[tone as keyof typeof TONE_PROMPTS];
-  
-  return `You are a legal expert analyzing terms of service and legal documents. ${toneInstruction}
+  return `You are a legal expert specializing in analyzing general contracts, lease agreements (such as apartment or vehicle leases), and employment contracts. ${toneInstruction}
 
 Analyze the following legal terms and provide:
 
-1. A comprehensive summary paragraph covering all key points
-2. Red flags or concerning clauses (3-5 items)
-3. Overall assessment
+1. A comprehensive summary paragraph that covers all key points, including the main clauses, rights, and obligations relevant to this type of contract.
+2. A list of potential red flags or concerning clauses specific to this contract type (e.g., payment terms, penalties, early termination, confidentiality, dispute resolution, etc). A minimum of one red flag should be flagged. 
+3. An overall assessment of the contract’s fairness, clarity, and any areas that may require further negotiation or legal review.
 
 Legal terms to analyze:
 ${legalTerms}
 
 Please structure your response as follows:
 SUMMARY:
-[Write a single comprehensive paragraph that covers all the key points, main clauses, and important aspects of the legal document. This should be a flowing narrative that explains what the terms mean in plain language.]
+[Write a single comprehensive paragraph that explains the main clauses, obligations, and important aspects of the contract in plain language. Focus on what the terms mean for the parties involved.]
 
 RED FLAGS:
 - [Red flag 1]
-- [Red flag 2]
-- [Red flag 3]
+- [etc (add more points as needed)]
 
-ASSESSMENT:
-[Overall assessment paragraph]
+OVERALL ASSESSMENT:
+[Provide an overall assessment of the contract, including its strengths, weaknesses, and whether it is balanced and fair. Suggest if any terms should be negotiated or clarified.]
 
-Remember to maintain the ${tone} tone throughout your analysis.`;
-}
+Remember to maintain the ${tone} tone throughout your analysis.`;}
 
 function parseAnalysisResponse(text: string): { summary: Array<{ title: string; description: string }>; red_flags: string[] } {
   const summary: Array<{ title: string; description: string }> = [];
