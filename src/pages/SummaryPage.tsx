@@ -29,7 +29,7 @@ import { supabase } from '@/lib/supabase';
 
 // Validation schemas
 const urlSchema = z.string().url().max(2048);
-const textSchema = z.string().min(10).max(7500);
+const textSchema = z.string().min(10).max(2800);
 const fileSchema = z.object({
   size: z.number().max(20 * 1024 * 1024),
   type: z.string().refine(type => 
@@ -147,7 +147,7 @@ export default function SummaryPage() {
       if (error instanceof z.ZodError) {
         setValidationErrors(prev => ({
           ...prev,
-          text: text.length < 10 ? 'Text is too short' : 'Text is too long (max 7,500 characters)'
+          text: text.length < 10 ? 'Text is too short' : 'Text is too long (max 2,800 characters)'
         }));
       }
       return false;
@@ -211,11 +211,11 @@ export default function SummaryPage() {
     try {
       let text = await file.text();
       
-      if (text.length > 7500) {
-        text = text.substring(0, 7500);
+      if (text.length > 2800) {
+        text = text.substring(0, 2800);
         toast({
           title: "File content truncated",
-          description: "File content was truncated to 7,500 characters to fit within analysis limits",
+          description: "File content was truncated to 2,800 characters to fit within analysis limits",
           variant: "default"
         });
       }
@@ -513,7 +513,7 @@ export default function SummaryPage() {
                     <p className="text-sm text-destructive">{validationErrors.text}</p>
                   )}
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{legalText.length}/7,500 characters</span>
+                    <span>{legalText.length}/2,800 characters</span>
                     <Badge variant="outline" className="text-xs">
                       {legalText.length > 0 ? 'Text ready' : 'Enter text'}
                     </Badge>

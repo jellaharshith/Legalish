@@ -29,7 +29,7 @@ POST /functions/v1/analyze-legal-terms
 
 ```json
 {
-  "legal_terms": "string (required, 10-100000 characters)",
+  "legal_terms": "string (required, 10-2800 characters)",
   "tone": "string (optional, default: 'serious')",
   "max_tokens": "number (optional, 100-4000, default: 2000)",
   "temperature": "number (optional, 0-2, default: 0.7)"

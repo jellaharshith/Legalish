@@ -86,8 +86,8 @@ function validateInput(body: any): { isValid: boolean; error?: string; data?: An
       return { isValid: false, error: 'legal_terms must be at least 10 characters long' };
     }
 
-    if (body.legal_terms.length > 7500) {
-      return { isValid: false, error: 'legal_terms must be less than 7,500 characters' };
+    if (body.legal_terms.length > 2800) {
+      return { isValid: false, error: 'legal_terms must be less than 2,800 characters' };
     }
   }
 
@@ -177,7 +177,7 @@ async function fetchUrlContent(url: string): Promise<string> {
     }
 
     // Truncate if too long (keep within AI model limits)
-    const maxLength = 7500; // Reduced from 400,000 to 7,500
+    const maxLength = 2800; // Reduced from 7500 to 2800
     if (text.length > maxLength) {
       console.log(`Content too long (${text.length} chars), truncating to ${maxLength}`);
       text = text.substring(0, maxLength) + '\n\n[Content truncated due to length...]';

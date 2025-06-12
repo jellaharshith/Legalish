@@ -128,8 +128,8 @@ export class AnalysisService {
         return { isValid: false, error: 'Legal terms must be at least 10 characters long' };
       }
 
-      if (request.legal_terms!.length > 7500) {
-        return { isValid: false, error: 'Legal terms must be less than 7,500 characters' };
+      if (request.legal_terms!.length > 2800) {
+        return { isValid: false, error: 'Legal terms must be less than 2,800 characters' };
       }
     }
 
