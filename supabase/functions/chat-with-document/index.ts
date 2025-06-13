@@ -1,19 +1,19 @@
 /*
   # Chat with Document Edge Function
 
-  This function enables multi-turn conversations about legal documents using Google Gemini.
+  This function enables multi-turn conversations about legal documents using OpenAI GPT-4.
   It maintains conversation context and provides follow-up Q&A capabilities.
 
   ## Features:
   - Multi-turn conversation support with context retention
-  - Integration with Google Gemini 1.5 Pro via Pica API
+  - Integration with OpenAI GPT-4 via Pica API
   - Tone-aware responses (serious, sarcastic, etc.)
   - Document context preservation
   - Error handling and CORS support
 
   ## Environment Variables Required:
   - PICA_SECRET_KEY
-  - PICA_GEMINI_CONNECTION_KEY
+  - PICA_OPENAI_CONNECTION_KEY
 */
 
 interface ChatMessage {
@@ -91,101 +91,111 @@ function validateChatRequest(body: any): { isValid: boolean; error?: string; dat
   };
 }
 
-function buildChatPrompt(documentText: string, conversationHistory: ChatMessage[], userQuestion: string, tone: string): any {
+function buildChatMessages(documentText: string, conversationHistory: ChatMessage[], userQuestion: string, tone: string): any[] {
   const toneInstruction = TONE_INSTRUCTIONS[tone as keyof typeof TONE_INSTRUCTIONS];
   
-  // Build conversation context
-  let conversationContext = '';
-  if (conversationHistory.length > 0) {
-    conversationContext = '\n\nPrevious conversation:\n';
-    conversationHistory.forEach(msg => {
-      conversationContext += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
-    });
-  }
-
-  const systemPrompt = `You are a legal assistant chatbot specializing in analyzing and explaining legal documents. ${toneInstruction}
+  const systemMessage = {
+    role: "system",
+    content: `You are a legal assistant chatbot specializing in analyzing and explaining legal documents. ${toneInstruction}
 
 Your task is to answer questions about the following legal document. Provide helpful, accurate information while maintaining the specified tone.
 
 Document to reference:
-${documentText}${conversationContext}
+${documentText}
 
-Current user question: ${userQuestion}
-
-Please provide a helpful response that directly addresses the user's question about the document. Keep your response concise but informative, and maintain the ${tone} tone throughout.`;
-
-  return {
-    contents: [
-      {
-        parts: [
-          {
-            text: systemPrompt
-          }
-        ]
-      }
-    ]
+Please provide helpful responses that directly address the user's questions about the document. Keep your responses concise but informative, and maintain the ${tone} tone throughout.`
   };
+
+  const messages = [systemMessage];
+
+  // Add conversation history (limit to last 10 messages to stay within token limits)
+  const recentHistory = conversationHistory.slice(-10);
+  recentHistory.forEach(msg => {
+    messages.push({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    });
+  });
+
+  // Add current user question
+  messages.push({
+    role: "user",
+    content: userQuestion
+  });
+
+  return messages;
 }
 
-async function callGeminiAPI(prompt: any): Promise<string> {
+async function callOpenAIAPI(messages: any[]): Promise<string> {
   const PICA_SECRET_KEY = Deno.env.get('PICA_SECRET_KEY');
-  const PICA_GEMINI_CONNECTION_KEY = Deno.env.get('PICA_GEMINI_CONNECTION_KEY');
+  const PICA_OPENAI_CONNECTION_KEY = Deno.env.get('PICA_OPENAI_CONNECTION_KEY');
 
   console.log('Environment check:', {
     hasSecretKey: !!PICA_SECRET_KEY,
-    hasGeminiKey: !!PICA_GEMINI_CONNECTION_KEY,
+    hasOpenAIKey: !!PICA_OPENAI_CONNECTION_KEY,
     secretKeyLength: PICA_SECRET_KEY?.length || 0,
-    geminiKeyLength: PICA_GEMINI_CONNECTION_KEY?.length || 0
+    openaiKeyLength: PICA_OPENAI_CONNECTION_KEY?.length || 0
   });
 
-  if (!PICA_SECRET_KEY || !PICA_GEMINI_CONNECTION_KEY) {
-    throw new Error('Missing required environment variables: PICA_SECRET_KEY or PICA_GEMINI_CONNECTION_KEY');
+  if (!PICA_SECRET_KEY || !PICA_OPENAI_CONNECTION_KEY) {
+    throw new Error('Missing required environment variables: PICA_SECRET_KEY or PICA_OPENAI_CONNECTION_KEY');
   }
 
-  console.log('Making request to Gemini API via Pica:', {
-    url: 'https://api.picaos.com/v1/passthrough/models/gemini-1.5-pro:generateContent',
-    promptSize: JSON.stringify(prompt).length
+  const requestBody = {
+    model: 'gpt-4',
+    messages: messages,
+    max_tokens: 1000,
+    temperature: 0.7,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0
+  };
+
+  console.log('Making request to OpenAI API via Pica:', {
+    url: 'https://api.picaos.com/v1/passthrough/chat/completions',
+    messagesCount: messages.length,
+    bodySize: JSON.stringify(requestBody).length
   });
 
   try {
-    const response = await fetch('https://api.picaos.com/v1/passthrough/models/gemini-1.5-pro:generateContent', {
+    const response = await fetch('https://api.picaos.com/v1/passthrough/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-pica-secret': PICA_SECRET_KEY,
-        'x-pica-connection-key': PICA_GEMINI_CONNECTION_KEY,
-        'x-pica-action-id': 'conn_mod_def::GCmd5BQE388::PISTzTbvRSqXx0N0rMa-Lw'
+        'x-pica-connection-key': PICA_OPENAI_CONNECTION_KEY,
+        'x-pica-action-id': 'conn_mod_def::GDzgIxPFYP0::2bW4lQ29TAuimPnr1tYXww'
       },
-      body: JSON.stringify(prompt)
+      body: JSON.stringify(requestBody)
     });
 
-    console.log('Gemini API response status:', response.status);
+    console.log('OpenAI API response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error response:', {
+      console.error('OpenAI API error response:', {
         status: response.status,
         statusText: response.statusText,
         body: errorText
       });
-      throw new Error(`Gemini API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(`OpenAI API request failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Gemini API success response:', {
-      hasCandidates: !!data.candidates,
-      candidatesLength: data.candidates?.length || 0,
-      hasContent: !!(data.candidates?.[0]?.content?.parts?.[0]?.text)
+    console.log('OpenAI API success response:', {
+      hasChoices: !!data.choices,
+      choicesLength: data.choices?.length || 0,
+      hasMessage: !!(data.choices?.[0]?.message?.content)
     });
     
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0] || !data.candidates[0].content.parts[0].text) {
-      console.error('Invalid Gemini API response format:', data);
-      throw new Error('Invalid response format from Gemini API');
+    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+      console.error('Invalid OpenAI API response format:', data);
+      throw new Error('Invalid response format from OpenAI API');
     }
 
-    return data.candidates[0].content.parts[0].text.trim();
+    return data.choices[0].message.content.trim();
   } catch (error) {
-    console.error('Error in callGeminiAPI:', error);
+    console.error('Error in callOpenAIAPI:', error);
     throw error;
   }
 }
@@ -251,17 +261,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const { document_text, conversation_history, user_question, tone } = validation.data!;
 
-    // Build the chat prompt
-    const prompt = buildChatPrompt(document_text, conversation_history, user_question, tone!);
-    console.log('Built prompt for Gemini');
+    // Build the chat messages
+    const messages = buildChatMessages(document_text, conversation_history, user_question, tone!);
+    console.log('Built messages for OpenAI, count:', messages.length);
 
-    // Call the Gemini API
+    // Call the OpenAI API
     let responseText: string;
     try {
-      responseText = await callGeminiAPI(prompt);
-      console.log('Gemini API call successful, response length:', responseText.length);
+      responseText = await callOpenAIAPI(messages);
+      console.log('OpenAI API call successful, response length:', responseText.length);
     } catch (error) {
-      console.error('Error calling Gemini API:', error);
+      console.error('Error calling OpenAI API:', error);
       return new Response(
         JSON.stringify({ 
           success: false, 

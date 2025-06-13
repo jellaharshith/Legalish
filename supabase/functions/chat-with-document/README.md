@@ -1,6 +1,6 @@
 # Chat with Document Edge Function
 
-This Supabase Edge Function enables multi-turn conversations about legal documents using Google Gemini 1.5 Pro via the Pica API.
+This Supabase Edge Function enables multi-turn conversations about legal documents using OpenAI GPT-4 via the Pica API.
 
 ## Features
 
@@ -16,7 +16,7 @@ Set these environment variables in your Supabase project:
 
 ```bash
 PICA_SECRET_KEY=your_pica_secret_key
-PICA_GEMINI_CONNECTION_KEY=your_pica_gemini_connection_key
+PICA_OPENAI_CONNECTION_KEY=your_pica_openai_connection_key
 ```
 
 ## API Endpoint
@@ -129,13 +129,13 @@ The function handles various error scenarios:
 - Missing required fields
 - Invalid tone selection
 - API communication errors
-- Gemini API response parsing errors
+- OpenAI API response parsing errors
 
 All errors return appropriate HTTP status codes and descriptive error messages.
 
 ## Rate Limiting
 
-Consider implementing rate limiting in your client application to avoid overwhelming the Gemini API and to manage costs effectively.
+Consider implementing rate limiting in your client application to avoid overwhelming the OpenAI API and to manage costs effectively.
 
 ## Security
 
@@ -144,3 +144,15 @@ Consider implementing rate limiting in your client application to avoid overwhel
 - CORS headers allow controlled access
 - No sensitive data is logged
 - Request size limits prevent abuse
+
+## Model Configuration
+
+The function uses GPT-4 with the following settings:
+- **Model**: `gpt-4`
+- **Max Tokens**: 1000
+- **Temperature**: 0.7
+- **Top P**: 1
+- **Frequency Penalty**: 0
+- **Presence Penalty**: 0
+
+These settings provide a good balance between creativity and consistency for legal document analysis.
