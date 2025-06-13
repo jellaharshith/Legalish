@@ -5,8 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Zap, Shield, Clock, Users, Star, CheckCircle } from 'lucide-react';
 import { useLegalTerms } from '@/context/LegalTermsContext';
-import { SplineBackground } from '@/components/ui/spline-background';
 import { HeroScrollDemo } from '@/components/demo/HeroScrollDemo';
+import { SplineSceneBasic } from '@/components/demo/SplineSceneBasic';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -63,15 +63,17 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Spline Background */}
+      {/* Hero Section with Spline 3D Background */}
       <section className="relative overflow-hidden min-h-screen flex items-center justify-center">
-        {/* Spline 3D Background */}
-        <SplineBackground />
+        {/* 3D Spline Background */}
+        <div className="absolute inset-0 z-0">
+          <SplineSceneBasic />
+        </div>
         
         {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/30 z-0"></div>
+        <div className="absolute inset-0 bg-black/40 z-10"></div>
         
-        <div className="container mx-auto px-4 relative z-10 pt-32">
+        <div className="container mx-auto px-4 relative z-20 pt-32">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
