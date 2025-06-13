@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Zap, Shield, Clock, Users, Star, CheckCircle } from 'lucide-react';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { HeroScrollDemo } from '@/components/demo/HeroScrollDemo';
-import { SplineSceneBasic } from '@/components/demo/SplineSceneBasic';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -63,28 +62,20 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Spline 3D Background */}
-      <section className="relative overflow-hidden min-h-screen flex items-center justify-center">
-        {/* 3D Spline Background */}
-        <div className="absolute inset-0 z-0">
-          <SplineSceneBasic />
-        </div>
-        
-        {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/40 z-10"></div>
-        
-        <div className="container mx-auto px-4 relative z-20 pt-32">
+      {/* Fullscreen Hero Section */}
+      <section className="relative overflow-hidden h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/10">
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium bg-white/10 border-white/20 text-white backdrop-blur-sm">
+            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium bg-primary/10 border-primary/20">
               🚀 Trusted by 10,000+ users worldwide
             </Badge>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
               Never read
               <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
                 {" "}legal terms{" "}
@@ -92,7 +83,7 @@ export default function HomePage() {
               again
             </h1>
             
-            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
               V.O.L.T uses AI to translate complex legal documents into plain English, 
               highlighting red flags and saving you hours of reading.
             </p>
@@ -101,7 +92,7 @@ export default function HomePage() {
               <Button 
                 size="lg" 
                 onClick={() => navigate('/summary')}
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
+                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Start Analyzing Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -110,24 +101,24 @@ export default function HomePage() {
                 size="lg" 
                 variant="outline"
                 onClick={handleStartDemo}
-                className="px-8 py-6 text-lg font-semibold rounded-xl border-2 border-white/30 text-white hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
+                className="px-8 py-6 text-lg font-semibold rounded-xl border-2 transition-all duration-300"
               >
                 Try Demo
               </Button>
             </div>
 
             {/* Trust indicators */}
-            <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-white/80">
+            <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-400" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-400" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 <span>Free forever plan</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-400" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 <span>30-second analysis</span>
               </div>
             </div>
