@@ -9,6 +9,7 @@
   - Integration with OpenAI GPT-4 via Pica API
   - Tone-aware responses (serious, sarcastic, etc.)
   - Document context preservation
+  - General legal questions support
   - Error handling and CORS support
 
   ## Environment Variables Required:
@@ -94,9 +95,31 @@ function validateChatRequest(body: any): { isValid: boolean; error?: string; dat
 function buildChatMessages(documentText: string, conversationHistory: ChatMessage[], userQuestion: string, tone: string): any[] {
   const toneInstruction = TONE_INSTRUCTIONS[tone as keyof typeof TONE_INSTRUCTIONS];
   
-  const systemMessage = {
-    role: "system",
-    content: `You are a legal assistant chatbot specializing in analyzing and explaining legal documents. ${toneInstruction}
+  // Check if this is a general question (no specific document)
+  const isGeneralQuestion = documentText.includes("No specific document provided");
+  
+  let systemMessage;
+  
+  if (isGeneralQuestion) {
+    systemMessage = {
+      role: "system",
+      content: `You are a knowledgeable legal assistant chatbot. ${toneInstruction}
+
+Your task is to answer general legal questions and provide helpful legal information. You should:
+- Provide accurate, helpful legal information
+- Explain legal concepts in plain language
+- Suggest when someone should consult with a lawyer
+- Clarify that you're providing general information, not legal advice
+- Be helpful while maintaining appropriate disclaimers
+
+Please provide helpful responses that directly address the user's questions. Keep your responses concise but informative, and maintain the ${tone} tone throughout.
+
+Important: Always remind users that this is general information and not legal advice, and they should consult with a qualified attorney for specific legal matters.`
+    };
+  } else {
+    systemMessage = {
+      role: "system",
+      content: `You are a legal assistant chatbot specializing in analyzing and explaining legal documents. ${toneInstruction}
 
 Your task is to answer questions about the following legal document. Provide helpful, accurate information while maintaining the specified tone.
 
@@ -104,7 +127,8 @@ Document to reference:
 ${documentText}
 
 Please provide helpful responses that directly address the user's questions about the document. Keep your responses concise but informative, and maintain the ${tone} tone throughout.`
-  };
+    };
+  }
 
   const messages = [systemMessage];
 
@@ -234,7 +258,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
         documentTextLength: body.document_text?.length || 0,
         userQuestion: body.user_question,
         conversationHistoryLength: body.conversation_history?.length || 0,
-        tone: body.tone
+        tone: body.tone,
+        isGeneralQuestion: body.document_text?.includes("No specific document provided")
       });
     } catch (error) {
       console.error('JSON parsing error:', error);

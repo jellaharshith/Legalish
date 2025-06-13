@@ -47,11 +47,15 @@ export default function ChatBot({ isOpen, onToggle }: ChatBotProps) {
 
   // Initialize chat with welcome message
   useEffect(() => {
-    if (isOpen && messages.length === 0 && legalText) {
+    if (isOpen && messages.length === 0) {
+      const welcomeMessage = legalText 
+        ? "Hi! I've analyzed your legal document. Feel free to ask me any questions about the terms, clauses, or anything else you'd like to understand better."
+        : "Hi! I'm your legal assistant. You can ask me general legal questions, or paste a document above and analyze it first for specific document-related questions.";
+      
       setMessages([{
         id: '1',
         role: 'assistant',
-        content: "Hi! I've analyzed your legal document. Feel free to ask me any questions about the terms, clauses, or anything else you'd like to understand better.",
+        content: welcomeMessage,
         timestamp: new Date()
       }]);
     }
@@ -59,15 +63,6 @@ export default function ChatBot({ isOpen, onToggle }: ChatBotProps) {
 
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
-
-    if (!legalText) {
-      toast({
-        title: "No Document",
-        description: "Please analyze a document first before asking questions.",
-        variant: "destructive"
-      });
-      return;
-    }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -77,10 +72,14 @@ export default function ChatBot({ isOpen, onToggle }: ChatBotProps) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentQuestion = inputValue.trim();
     setInputValue('');
     setIsLoading(true);
 
     try {
+      // Use document text if available, otherwise use a placeholder for general questions
+      const documentText = legalText || "No specific document provided. This is a general legal question.";
+      
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-with-document`, {
         method: 'POST',
         headers: {
@@ -88,9 +87,9 @@ export default function ChatBot({ isOpen, onToggle }: ChatBotProps) {
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          document_text: legalText,
+          document_text: documentText,
           conversation_history: messages,
-          user_question: inputValue.trim(),
+          user_question: currentQuestion,
           tone: tone
         }),
       });
@@ -155,14 +154,17 @@ export default function ChatBot({ isOpen, onToggle }: ChatBotProps) {
 
   const clearChat = () => {
     setMessages([]);
-    if (legalText) {
-      setMessages([{
-        id: '1',
-        role: 'assistant',
-        content: "Chat cleared! Feel free to ask me any questions about your legal document.",
-        timestamp: new Date()
-      }]);
-    }
+    // Reset with appropriate welcome message
+    const welcomeMessage = legalText 
+      ? "Chat cleared! Feel free to ask me any questions about your legal document."
+      : "Chat cleared! You can ask me general legal questions, or analyze a document first for specific document-related questions.";
+    
+    setMessages([{
+      id: '1',
+      role: 'assistant',
+      content: welcomeMessage,
+      timestamp: new Date()
+    }]);
   };
 
   if (!isOpen) {
@@ -301,13 +303,13 @@ export default function ChatBot({ isOpen, onToggle }: ChatBotProps) {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask about the document..."
-                disabled={isLoading || !legalText}
+                placeholder={legalText ? "Ask about the document..." : "Ask a legal question..."}
+                disabled={isLoading}
                 className="flex-1"
               />
               <Button
                 onClick={sendMessage}
-                disabled={!inputValue.trim() || isLoading || !legalText}
+                disabled={!inputValue.trim() || isLoading}
                 size="sm"
                 className="px-3"
               >
@@ -318,11 +320,11 @@ export default function ChatBot({ isOpen, onToggle }: ChatBotProps) {
                 )}
               </Button>
             </div>
-            {!legalText && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Analyze a document first to start chatting
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground mt-2">
+              {legalText 
+                ? "Ask questions about your analyzed document" 
+                : "Ask general legal questions or analyze a document first"}
+            </p>
           </div>
         </CardContent>
       </Card>
