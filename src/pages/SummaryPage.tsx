@@ -64,7 +64,7 @@ export default function SummaryPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [tab, setTab] = useState('summary');
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(true);
   const { legalText, setLegalText, summary, redFlags, tone, setTone, selectedVoiceId, setSelectedVoiceId, documentType, setDocumentType } = useLegalTerms();
   const [urlInput, setUrlInput] = useState('');
   const { isAnalyzing, analyze } = useAnalysis();
