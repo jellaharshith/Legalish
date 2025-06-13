@@ -105,7 +105,20 @@ export default function HomePage() {
               <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium bg-white/10 border-white/20 text-white backdrop-blur-sm">
                 🚀 Trusted by 10,000+ users worldwide
               </Badge>
-              
+            </motion.div>
+          </div>
+          
+          {/* Scroll Animation Component */}
+          <HeroScrollDemo />
+          
+          {/* Action Buttons Below Animation */}
+          <div className="container mx-auto px-4 pb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-center max-w-4xl mx-auto"
+            >
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                 <Button 
                   size="lg" 
@@ -142,9 +155,6 @@ export default function HomePage() {
               </div>
             </motion.div>
           </div>
-          
-          {/* Scroll Animation Component */}
-          <HeroScrollDemo />
         </div>
       </section>
 
