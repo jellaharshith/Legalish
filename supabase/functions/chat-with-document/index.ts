@@ -157,7 +157,7 @@ Please provide helpful responses that directly address the user's questions abou
 
 async function callOpenAIAPI(messages: OpenAIMessage[]): Promise<string> {
   const PICA_SECRET_KEY = Deno.env.get('PICA_SECRET_KEY');
-  const PICA_OPENAI_CONNECTION_KEY = Deno.env.get('PICA_OPENAI_CONNECTION_KEY');
+  const PICA_OPENAI_CONNECTION_KEY = 'test::openai::default::ddcbdb37f1834a4abbdc1342ad3df625';
 
   console.log('Environment check:', {
     hasSecretKey: !!PICA_SECRET_KEY,
@@ -166,8 +166,8 @@ async function callOpenAIAPI(messages: OpenAIMessage[]): Promise<string> {
     openaiKeyLength: PICA_OPENAI_CONNECTION_KEY?.length || 0
   });
 
-  if (!PICA_SECRET_KEY || !PICA_OPENAI_CONNECTION_KEY) {
-    throw new Error('Missing required environment variables: PICA_SECRET_KEY or PICA_OPENAI_CONNECTION_KEY');
+  if (!PICA_SECRET_KEY) {
+    throw new Error('Missing required environment variable: PICA_SECRET_KEY');
   }
 
   const requestBody = {
