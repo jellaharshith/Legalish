@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SpeedrunTimer from '@/components/shared/SpeedrunTimer';
-import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Link as LinkIcon, Upload, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle } from 'lucide-react';
+import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Link as LinkIcon, Upload, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle, Database } from 'lucide-react';
 import RedFlagBadge from '@/components/summary/RedFlagBadge';
 import SummaryHighlights from '@/components/summary/SummaryHighlights';
 import { useLegalTerms } from '@/context/LegalTermsContext';
@@ -65,7 +65,7 @@ export default function SummaryPage() {
   const [tab, setTab] = useState('summary');
   const { legalText, setLegalText, summary, redFlags, tone, setTone, selectedVoiceId, setSelectedVoiceId, documentType, setDocumentType } = useLegalTerms();
   const [urlInput, setUrlInput] = useState('');
-  const { isAnalyzing, analyze } = useAnalysis();
+  const { isAnalyzing, analyze, lastResult } = useAnalysis();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [validationErrors, setValidationErrors] = useState<{
@@ -288,9 +288,10 @@ export default function SummaryPage() {
 
       if (result?.success) {
         setTab('summary');
+        const chunksUsed = result.data?.chunks_used || 0;
         toast({
-          title: "Analysis Complete!",
-          description: `Found ${result.data?.red_flags.length || 0} red flags in ${((result.data?.processing_time_ms || 0) / 1000).toFixed(2)}s`,
+          title: "RAG Analysis Complete!",
+          description: `Found ${result.data?.red_flags.length || 0} red flags in ${((result.data?.processing_time_ms || 0) / 1000).toFixed(2)}s using ${chunksUsed} context examples`,
         });
       }
     } catch (error) {
@@ -395,11 +396,11 @@ export default function SummaryPage() {
   const getDocumentTypeDescription = (type: string) => {
     switch (type) {
       case 'general':
-        return 'Standard legal document analysis';
+        return 'Standard legal document analysis with general contract examples';
       case 'lease':
-        return 'Specialized for rental agreements and lease contracts';
+        return 'Specialized for rental agreements with lease-specific context';
       case 'employment':
-        return 'Optimized for job contracts and employment terms';
+        return 'Optimized for job contracts with employment law examples';
       default:
         return 'Standard legal document analysis';
     }
@@ -414,6 +415,12 @@ export default function SummaryPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-6"
         >
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Database className="h-6 w-6 text-primary" />
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+              RAG-Enhanced Analysis
+            </Badge>
+          </div>
           <h1 className="text-2xl md:text-3xl font-bold mb-2">
             Legal Document
             <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
@@ -421,7 +428,7 @@ export default function SummaryPage() {
             </span>
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            Upload your legal document and get instant analysis with red flag detection
+            AI-powered analysis with contextual examples for more accurate legal insights
           </p>
         </motion.div>
 
@@ -440,6 +447,9 @@ export default function SummaryPage() {
                     <FileText className="h-4 w-4 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold">Document Type</h3>
+                  <Badge variant="outline" className="ml-auto bg-green-500/10 text-green-500 border-green-500/20 text-xs">
+                    RAG Context
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent>
@@ -453,7 +463,7 @@ export default function SummaryPage() {
                         <FileText className="h-5 w-5 text-blue-500" />
                         <div>
                           <div className="font-medium">General</div>
-                          <div className="text-xs text-muted-foreground">Standard legal document analysis</div>
+                          <div className="text-xs text-muted-foreground">Standard contracts with general examples</div>
                         </div>
                       </div>
                     </SelectItem>
@@ -462,7 +472,7 @@ export default function SummaryPage() {
                         <Home className="h-5 w-5 text-green-500" />
                         <div>
                           <div className="font-medium">Lease Contract</div>
-                          <div className="text-xs text-muted-foreground">Specialized for rental agreements</div>
+                          <div className="text-xs text-muted-foreground">Rental agreements with lease-specific context</div>
                         </div>
                       </div>
                     </SelectItem>
@@ -471,7 +481,7 @@ export default function SummaryPage() {
                         <Briefcase className="h-5 w-5 text-purple-500" />
                         <div>
                           <div className="font-medium">Employment Contract</div>
-                          <div className="text-xs text-muted-foreground">Optimized for job contracts</div>
+                          <div className="text-xs text-muted-foreground">Job contracts with employment law examples</div>
                         </div>
                       </div>
                     </SelectItem>
@@ -571,12 +581,12 @@ export default function SummaryPage() {
                   {isAnalyzing ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Analyzing Document...
+                      Analyzing with RAG...
                     </>
                   ) : (
                     <>
-                      <Zap className="mr-2 h-5 w-5" />
-                      Analyze Document
+                      <Database className="mr-2 h-5 w-5" />
+                      Analyze with RAG
                     </>
                   )}
                 </Button>
@@ -585,6 +595,14 @@ export default function SummaryPage() {
                   <p className="text-sm text-muted-foreground text-center">
                     Please provide text, URL, or file to analyze
                   </p>
+                )}
+
+                {lastResult?.data?.chunks_used !== undefined && (
+                  <div className="text-center">
+                    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                      Used {lastResult.data.chunks_used} context examples
+                    </Badge>
+                  </div>
                 )}
               </CardContent>
             </Card>

@@ -17,12 +17,13 @@ export interface AnalysisResponse {
     analysis_text: string;
     tone_used: string;
     processing_time_ms: number;
+    chunks_used?: number;
   };
   error?: string;
 }
 
 export class AnalysisService {
-  private static readonly FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-legal-terms`;
+  private static readonly FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-legal-terms-rag`;
   private static readonly SYNTHESIZE_SPEECH_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/synthesize-speech`;
 
   static async analyzeLegalTerms(request: AnalysisRequest): Promise<AnalysisResponse> {
