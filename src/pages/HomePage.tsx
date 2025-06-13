@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Zap, Shield, Clock, Users, Star, CheckCircle } from 'lucide-react';
 import { useLegalTerms } from '@/context/LegalTermsContext';
-import { HeroScrollDemo } from '@/components/demo/HeroScrollDemo';
+import { SplineBackground } from '@/components/ui/spline-background';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -62,20 +62,26 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Fullscreen Hero Section */}
-      <section className="relative overflow-hidden h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/10">
-        <div className="container mx-auto px-4 relative z-10">
+      {/* Hero Section with Spline Background */}
+      <section className="relative overflow-hidden min-h-screen flex items-center justify-center">
+        {/* Spline 3D Background */}
+        <SplineBackground />
+        
+        {/* Dark overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/30 z-0"></div>
+        
+        <div className="container mx-auto px-4 relative z-10 pt-32">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium bg-primary/10 border-primary/20">
+            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium bg-white/10 border-white/20 text-white backdrop-blur-sm">
               🚀 Trusted by 10,000+ users worldwide
             </Badge>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
               Never read
               <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
                 {" "}legal terms{" "}
@@ -83,7 +89,7 @@ export default function HomePage() {
               again
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
               V.O.L.T uses AI to translate complex legal documents into plain English, 
               highlighting red flags and saving you hours of reading.
             </p>
@@ -92,7 +98,7 @@ export default function HomePage() {
               <Button 
                 size="lg" 
                 onClick={() => navigate('/summary')}
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
               >
                 Start Analyzing Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -101,24 +107,24 @@ export default function HomePage() {
                 size="lg" 
                 variant="outline"
                 onClick={handleStartDemo}
-                className="px-8 py-6 text-lg font-semibold rounded-xl border-2 transition-all duration-300"
+                className="px-8 py-6 text-lg font-semibold rounded-xl border-2 border-white/30 text-white hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
               >
                 Try Demo
               </Button>
             </div>
 
             {/* Trust indicators */}
-            <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-white/80">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-400" />
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-400" />
                 <span>Free forever plan</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-400" />
                 <span>30-second analysis</span>
               </div>
             </div>
@@ -166,9 +172,68 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Scroll Animation Demo Section */}
-      <section className="bg-background">
-        <HeroScrollDemo />
+      {/* Demo Section */}
+      <section className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <Badge variant="outline" className="mb-4 px-3 py-1 text-sm bg-primary/10 border-primary/20">
+                See it in action
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                From legal gibberish to 
+                <span className="text-primary"> plain English</span>
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                Watch how V.O.L.T transforms complex legal documents into easy-to-understand summaries, 
+                complete with red flag detection and multiple voice options.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Instant analysis in under 30 seconds</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Automatic red flag detection</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Multiple voice personalities</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <Card className="p-8 bg-gradient-to-br from-primary/5 to-purple-500/5 border-primary/20">
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-6">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Zap className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-muted-foreground">Interactive Demo</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleStartDemo}
+                  className="w-full bg-primary hover:bg-primary/90"
+                >
+                  Try Demo Now
+                </Button>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
       </section>
 
       {/* Testimonials */}
