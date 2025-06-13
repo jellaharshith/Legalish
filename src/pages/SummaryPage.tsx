@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SpeedrunTimer from '@/components/shared/SpeedrunTimer';
+import ChatBot from '@/components/chat/ChatBot';
 import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Link as LinkIcon, Upload, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle } from 'lucide-react';
 import RedFlagBadge from '@/components/summary/RedFlagBadge';
 import SummaryHighlights from '@/components/summary/SummaryHighlights';
@@ -63,6 +64,7 @@ export default function SummaryPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [tab, setTab] = useState('summary');
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const { legalText, setLegalText, summary, redFlags, tone, setTone, selectedVoiceId, setSelectedVoiceId, documentType, setDocumentType } = useLegalTerms();
   const [urlInput, setUrlInput] = useState('');
   const { isAnalyzing, analyze } = useAnalysis();
@@ -708,6 +710,9 @@ export default function SummaryPage() {
           </motion.div>
         </div>
       </div>
+
+      {/* ChatBot Component */}
+      <ChatBot isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} />
     </div>
   );
 }
