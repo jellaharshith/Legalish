@@ -4,31 +4,23 @@ import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
 export function HeroScrollDemo() {
   return (
-    <div className="flex flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden pb-[500px] pt-[1000px]">
       <ContainerScroll
         titleComponent={
           <>
-            <h1 className="text-4xl font-semibold text-white mb-4">
-              Never read <br />
-              <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                legal terms
-              </span>
-              <br />
-              <span className="text-4xl md:text-[5rem] font-bold mt-1 leading-none text-white">
-                again
+            <h1 className="text-4xl font-semibold text-black dark:text-white">
+              Unleash the power of <br />
+              <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
+                Scroll Animations
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-              V.O.L.T uses AI to translate complex legal documents into plain English, 
-              highlighting red flags and saving you hours of reading.
-            </p>
           </>
         }
       >
         <img
-          src="https://images.pexels.com/photos/5668772/pexels-photo-5668772.jpeg?auto=compress&cs=tinysrgb&w=1400&h=720&dpr=2"
-          alt="V.O.L.T legal document analysis interface showing AI-powered contract review"
-          className="mx-auto rounded-2xl object-cover h-full object-center w-full"
+          src="https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1400&h=720&dpr=2"
+          alt="Legal document analysis dashboard"
+          className="mx-auto rounded-2xl object-cover h-full object-left-top w-full"
           draggable={false}
         />
       </ContainerScroll>
