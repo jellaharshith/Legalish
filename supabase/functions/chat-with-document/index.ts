@@ -92,18 +92,16 @@ function validateChatRequest(body: any): { isValid: boolean; error?: string; dat
   };
 }
 
-function buildChatMessages(documentText: string, conversationHistory: ChatMessage[], userQuestion: string, tone: string): any[] {
+function buildPrompt(documentText: string, conversationHistory: ChatMessage[], userQuestion: string, tone: string): string {
   const toneInstruction = TONE_INSTRUCTIONS[tone as keyof typeof TONE_INSTRUCTIONS];
   
   // Check if this is a general question (no specific document)
   const isGeneralQuestion = documentText.includes("No specific document provided");
   
-  let systemMessage;
+  let systemPrompt;
   
   if (isGeneralQuestion) {
-    systemMessage = {
-      role: "system",
-      content: `You are a knowledgeable legal assistant chatbot. ${toneInstruction}
+    systemPrompt = `You are a knowledgeable legal assistant chatbot. ${toneInstruction}
 
 Your task is to answer general legal questions and provide helpful legal information. You should:
 - Provide accurate, helpful legal information
@@ -114,43 +112,38 @@ Your task is to answer general legal questions and provide helpful legal informa
 
 Please provide helpful responses that directly address the user's questions. Keep your responses concise but informative, and maintain the ${tone} tone throughout.
 
-Important: Always remind users that this is general information and not legal advice, and they should consult with a qualified attorney for specific legal matters.`
-    };
+Important: Always remind users that this is general information and not legal advice, and they should consult with a qualified attorney for specific legal matters.`;
   } else {
-    systemMessage = {
-      role: "system",
-      content: `You are a legal assistant chatbot specializing in analyzing and explaining legal documents. ${toneInstruction}
+    systemPrompt = `You are a legal assistant chatbot specializing in analyzing and explaining legal documents. ${toneInstruction}
 
 Your task is to answer questions about the following legal document. Provide helpful, accurate information while maintaining the specified tone.
 
 Document to reference:
 ${documentText}
 
-Please provide helpful responses that directly address the user's questions about the document. Keep your responses concise but informative, and maintain the ${tone} tone throughout.`
-    };
+Please provide helpful responses that directly address the user's questions about the document. Keep your responses concise but informative, and maintain the ${tone} tone throughout.`;
   }
 
-  const messages = [systemMessage];
+  let prompt = systemPrompt + "\n\n";
 
   // Add conversation history (limit to last 10 messages to stay within token limits)
   const recentHistory = conversationHistory.slice(-10);
-  recentHistory.forEach(msg => {
-    messages.push({
-      role: msg.role === 'user' ? 'user' : 'assistant',
-      content: msg.content
+  if (recentHistory.length > 0) {
+    prompt += "Previous conversation:\n";
+    recentHistory.forEach(msg => {
+      const role = msg.role === 'user' ? 'Human' : 'Assistant';
+      prompt += `${role}: ${msg.content}\n`;
     });
-  });
+    prompt += "\n";
+  }
 
   // Add current user question
-  messages.push({
-    role: "user",
-    content: userQuestion
-  });
+  prompt += `Human: ${userQuestion}\n\nAssistant:`;
 
-  return messages;
+  return prompt;
 }
 
-async function callOpenAIAPI(messages: any[]): Promise<string> {
+async function callOpenAIAPI(prompt: string): Promise<string> {
   const PICA_SECRET_KEY = Deno.env.get('PICA_SECRET_KEY');
   const PICA_OPENAI_CONNECTION_KEY = Deno.env.get('PICA_OPENAI_CONNECTION_KEY');
 
@@ -167,7 +160,7 @@ async function callOpenAIAPI(messages: any[]): Promise<string> {
 
   const requestBody = {
     model: 'gpt-4',
-    messages: messages,
+    prompt: prompt,
     max_tokens: 1000,
     temperature: 0.7,
     top_p: 1,
@@ -177,7 +170,7 @@ async function callOpenAIAPI(messages: any[]): Promise<string> {
 
   console.log('Making request to OpenAI API via Pica:', {
     url: 'https://api.picaos.com/v1/passthrough/chat/completions',
-    messagesCount: messages.length,
+    promptLength: prompt.length,
     bodySize: JSON.stringify(requestBody).length
   });
 
@@ -209,15 +202,15 @@ async function callOpenAIAPI(messages: any[]): Promise<string> {
     console.log('OpenAI API success response:', {
       hasChoices: !!data.choices,
       choicesLength: data.choices?.length || 0,
-      hasMessage: !!(data.choices?.[0]?.message?.content)
+      hasText: !!(data.choices?.[0]?.text)
     });
     
-    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+    if (!data.choices || !data.choices[0] || !data.choices[0].text) {
       console.error('Invalid OpenAI API response format:', data);
       throw new Error('Invalid response format from OpenAI API');
     }
 
-    return data.choices[0].message.content.trim();
+    return data.choices[0].text.trim();
   } catch (error) {
     console.error('Error in callOpenAIAPI:', error);
     throw error;
@@ -286,14 +279,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const { document_text, conversation_history, user_question, tone } = validation.data!;
 
-    // Build the chat messages
-    const messages = buildChatMessages(document_text, conversation_history, user_question, tone!);
-    console.log('Built messages for OpenAI, count:', messages.length);
+    // Build the prompt
+    const prompt = buildPrompt(document_text, conversation_history, user_question, tone!);
+    console.log('Built prompt for OpenAI, length:', prompt.length);
 
     // Call the OpenAI API
     let responseText: string;
     try {
-      responseText = await callOpenAIAPI(messages);
+      responseText = await callOpenAIAPI(prompt);
       console.log('OpenAI API call successful, response length:', responseText.length);
     } catch (error) {
       console.error('Error calling OpenAI API:', error);
