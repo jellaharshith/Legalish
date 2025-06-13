@@ -95,8 +95,20 @@ export default function ChatBot({ isOpen, onToggle }: ChatBotProps) {
         }),
       });
 
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // Try to parse the response body for more detailed error information
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (parseError) {
+          // If we can't parse the response, use the generic HTTP error
+          console.warn('Failed to parse error response:', parseError);
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
