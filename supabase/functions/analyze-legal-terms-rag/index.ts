@@ -6,13 +6,13 @@
 
   ## Features:
   - RAG system using contract_chunks for context
-  - OpenRouter integration for improved AI responses
+  - OpenAI integration for improved AI responses
   - Document type-specific analysis
   - Multiple tone options with enhanced prompting
   - Structured response parsing
 
   ## Environment Variables Required:
-  - OPENROUTER_API_KEY
+  - OPENAI_API_KEY
 */
 
 interface AnalysisRequest {
@@ -253,11 +253,11 @@ OVERALL ASSESSMENT:
 Remember to maintain the ${tone} tone throughout your analysis.`;
 }
 
-async function callOpenRouter(prompt: string, maxTokens: number, temperature: number): Promise<string> {
-  const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+async function callOpenAI(prompt: string, maxTokens: number, temperature: number): Promise<string> {
+  const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-  if (!OPENROUTER_API_KEY) {
-    throw new Error('Missing required environment variable: OPENROUTER_API_KEY');
+  if (!OPENAI_API_KEY) {
+    throw new Error('Missing required environment variable: OPENAI_API_KEY');
   }
 
   const requestBody = {
@@ -269,40 +269,38 @@ async function callOpenRouter(prompt: string, maxTokens: number, temperature: nu
     temperature: temperature,
   };
 
-  console.log('Making request to OpenRouter API');
+  console.log('Making request to OpenAI API');
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://volt-legal.com',
-        'X-Title': 'V.O.L.T Legal Analysis'
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenRouter API error response:', {
+      console.error('OpenAI API error response:', {
         status: response.status,
         statusText: response.statusText,
         body: errorText
       });
-      throw new Error(`OpenRouter API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(`OpenAI API request failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-      console.error('Invalid OpenRouter API response format:', data);
-      throw new Error('Invalid response format from OpenRouter API');
+      console.error('Invalid OpenAI API response format:', data);
+      throw new Error('Invalid response format from OpenAI API');
     }
 
     return data.choices[0].message.content.trim();
   } catch (error) {
-    console.error('Error in callOpenRouter:', error);
+    console.error('Error in callOpenAI:', error);
     throw error;
   }
 }
@@ -463,10 +461,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Build the RAG-enhanced prompt
     const prompt = buildRAGPrompt(legalTermsText, tone!, document_type!, chunks);
 
-    // Call OpenRouter API
+    // Call OpenAI API
     let analysisText: string;
     try {
-      analysisText = await callOpenRouter(prompt, max_tokens!, temperature!);
+      analysisText = await callOpenAI(prompt, max_tokens!, temperature!);
     } catch (error) {
       return new Response(
         JSON.stringify({ 
