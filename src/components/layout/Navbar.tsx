@@ -157,11 +157,6 @@ export default function Navbar() {
               ))}
               
               <div className="pt-4 border-t border-border space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Theme</span>
-                  <ThemeToggle />
-                </div>
-                
                 {user ? (
                   <div className="space-y-2">
                     <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
