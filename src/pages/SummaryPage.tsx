@@ -16,10 +16,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SpeedrunTimer from '@/components/shared/SpeedrunTimer';
-import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Link as LinkIcon, Upload, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle, BookOpen } from 'lucide-react';
+import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Link as LinkIcon, Upload, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle } from 'lucide-react';
 import RedFlagBadge from '@/components/summary/RedFlagBadge';
 import SummaryHighlights from '@/components/summary/SummaryHighlights';
-import LegalGlossary from '@/components/lingo/LegalGlossary';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -610,10 +609,6 @@ export default function SummaryPage() {
                         <AlertTriangle className="h-4 w-4 mr-2" />
                         Red Flags
                       </TabsTrigger>
-                      <TabsTrigger value="glossary" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white px-6 py-2">
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        Glossary
-                      </TabsTrigger>
                     </TabsList>
                     
                     <div className="flex items-center gap-3">
@@ -664,10 +659,6 @@ export default function SummaryPage() {
                         )}
                       </div>
                     </div>
-                  </TabsContent>
-
-                  <TabsContent value="glossary" className="mt-0">
-                    <LegalGlossary />
                   </TabsContent>
                 </CardContent>
                 
