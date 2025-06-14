@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Zap, User, Menu, X } from 'lucide-react';
-import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuth } from '@/context/AuthContext';
 import AuthModal from '@/components/auth/AuthModal';
 
@@ -79,7 +78,6 @@ export default function Navbar() {
         
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <ThemeToggle />
           {user ? (
             <div className="flex items-center gap-2">
               <Button
