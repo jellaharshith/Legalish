@@ -45,7 +45,7 @@ export default function DashboardPage() {
   const [updating, setUpdating] = useState(false);
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true); // Start in edit mode by default
 
   useEffect(() => {
     if (loading) return;
@@ -91,6 +91,10 @@ export default function DashboardPage() {
           setProfile(data);
           setFullName(data.full_name || '');
           setAvatarUrl(data.avatar_url || '');
+          // If user already has a name, don't start in edit mode
+          if (data.full_name && data.full_name.trim()) {
+            setIsEditing(false);
+          }
         }
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -323,7 +327,7 @@ export default function DashboardPage() {
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
                     className="h-10"
-                    disabled={!isEditing}
+                    disabled={!isEditing || updating}
                     maxLength={100}
                   />
                   {isEditing && (
@@ -341,7 +345,7 @@ export default function DashboardPage() {
                     onChange={(e) => setAvatarUrl(e.target.value)}
                     placeholder="https://example.com/your-avatar.jpg"
                     className="h-10"
-                    disabled={!isEditing}
+                    disabled={!isEditing || updating}
                     type="url"
                   />
                   {isEditing && (
