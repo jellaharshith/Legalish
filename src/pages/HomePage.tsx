@@ -181,9 +181,6 @@ export default function HomePage() {
                 <Card className="p-8 h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-background/80 backdrop-blur-sm">
                   <div className="flex items-start gap-4 mb-4">
                     <div className="text-3xl">{feature.emoji}</div>
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <feature.icon className="h-6 w-6 text-primary" />
-                    </div>
                   </div>
                   <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                   <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
