@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { User, Settings, Key, FileText, Link as LinkIcon, Upload, CreditCard } from 'lucide-react';
+import { User, Settings, Key, FileText, Link as LinkIcon, Upload, CreditCard, Save, Edit } from 'lucide-react';
 
 interface Profile {
   full_name: string | null;
@@ -45,6 +45,7 @@ export default function DashboardPage() {
   const [updating, setUpdating] = useState(false);
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -62,11 +63,35 @@ export default function DashboardPage() {
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          // If profile doesn't exist, create one
+          if (error.code === 'PGRST116') {
+            const { data: newProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                email: user.email || '',
+                full_name: null,
+                avatar_url: null,
+                subscription_tier: 'free',
+                terms_analyzed: 0
+              })
+              .select('full_name, avatar_url, subscription_tier, terms_analyzed')
+              .single();
 
-        setProfile(data);
-        setFullName(data.full_name || '');
-        setAvatarUrl(data.avatar_url || '');
+            if (createError) throw createError;
+            
+            setProfile(newProfile);
+            setFullName(newProfile.full_name || '');
+            setAvatarUrl(newProfile.avatar_url || '');
+          } else {
+            throw error;
+          }
+        } else {
+          setProfile(data);
+          setFullName(data.full_name || '');
+          setAvatarUrl(data.avatar_url || '');
+        }
       } catch (error) {
         console.error('Error loading profile:', error);
         toast({
@@ -101,7 +126,7 @@ export default function DashboardPage() {
 
         if (error) throw error;
 
-        setAnalyses(data);
+        setAnalyses(data || []);
       } catch (error) {
         console.error('Error loading analyses:', error);
         toast({
@@ -122,19 +147,45 @@ export default function DashboardPage() {
   const handleUpdateProfile = async () => {
     if (!user) return;
 
+    // Validate inputs
+    if (fullName.trim().length === 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Full name cannot be empty',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (avatarUrl && !isValidUrl(avatarUrl)) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a valid URL for the avatar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setUpdating(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          full_name: fullName,
-          avatar_url: avatarUrl,
+          full_name: fullName.trim(),
+          avatar_url: avatarUrl.trim() || null,
         })
         .eq('id', user.id);
 
       if (error) throw error;
 
-      setProfile(prev => prev ? { ...prev, full_name: fullName, avatar_url: avatarUrl } : null);
+      setProfile(prev => prev ? { 
+        ...prev, 
+        full_name: fullName.trim(), 
+        avatar_url: avatarUrl.trim() || null 
+      } : null);
+      
+      setIsEditing(false);
+      
       toast({
         title: 'Success',
         description: 'Profile updated successfully',
@@ -148,6 +199,21 @@ export default function DashboardPage() {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setFullName(profile?.full_name || '');
+    setAvatarUrl(profile?.avatar_url || '');
+    setIsEditing(false);
+  };
+
+  const isValidUrl = (string: string) => {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
     }
   };
 
@@ -203,7 +269,9 @@ export default function DashboardPage() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold truncate">{profile?.full_name || 'Your Profile'}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold truncate">
+                {profile?.full_name || user?.email?.split('@')[0] || 'Your Profile'}
+              </h1>
               <p className="text-muted-foreground text-sm sm:text-base truncate">{user?.email}</p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
                 <Badge variant={getSubscriptionBadgeVariant()}>
@@ -223,40 +291,101 @@ export default function DashboardPage() {
             {/* Profile Settings Card */}
             <Card className="border-2 border-muted shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                  <Settings className="h-5 w-5" />
-                  Profile Settings
-                </CardTitle>
-                <CardDescription className="text-sm">Update your personal information</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                      <Settings className="h-5 w-5" />
+                      Profile Settings
+                    </CardTitle>
+                    <CardDescription className="text-sm">Update your personal information</CardDescription>
+                  </div>
+                  {!isEditing && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(true)}
+                      className="h-8"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
+                  <Label htmlFor="fullName" className="text-sm font-medium">
+                    Full Name <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
                     className="h-10"
+                    disabled={!isEditing}
+                    maxLength={100}
                   />
+                  {isEditing && (
+                    <p className="text-xs text-muted-foreground">
+                      {fullName.length}/100 characters
+                    </p>
+                  )}
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="avatarUrl" className="text-sm font-medium">Avatar URL</Label>
                   <Input
                     id="avatarUrl"
                     value={avatarUrl}
                     onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="Enter avatar URL"
+                    placeholder="https://example.com/your-avatar.jpg"
                     className="h-10"
+                    disabled={!isEditing}
+                    type="url"
                   />
+                  {isEditing && (
+                    <p className="text-xs text-muted-foreground">
+                      Optional: Enter a URL to your profile picture
+                    </p>
+                  )}
                 </div>
-                <Button
-                  onClick={handleUpdateProfile}
-                  disabled={updating}
-                  className="w-full h-10"
-                >
-                  {updating ? 'Updating...' : 'Update Profile'}
-                </Button>
+
+                {isEditing && (
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={handleUpdateProfile}
+                      disabled={updating || !fullName.trim()}
+                      className="flex-1 h-10"
+                    >
+                      {updating ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Changes
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                      disabled={updating}
+                      className="h-10"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+
+                {!isEditing && (
+                  <div className="pt-2 text-sm text-muted-foreground">
+                    Click "Edit" to update your profile information
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -279,7 +408,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                     <span className="font-medium text-sm">Terms Analyzed</span>
-                    <span className="text-sm">{profile?.terms_analyzed}</span>
+                    <span className="text-sm">{profile?.terms_analyzed || 0}</span>
                   </div>
                   {subscription?.subscription_status === 'active' && (
                     <>
