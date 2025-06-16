@@ -34,7 +34,7 @@ export default function HomePage() {
     },
     {
       icon: Users,
-      title: "Trusted by 10K+",
+      title: "Trusted by Thousands",
       description: "Join thousands who've simplified their legal reading"
     }
   ];
@@ -78,7 +78,7 @@ export default function HomePage() {
             className="text-center max-w-4xl mx-auto"
           >
             <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium bg-white/10 border-white/20 text-white backdrop-blur-sm">
-              🚀 Trusted by 10,000+ users worldwide
+              🚀 Legal Terms Speedrun Any%
             </Badge>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
@@ -115,10 +115,6 @@ export default function HomePage() {
 
             {/* Trust indicators */}
             <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-white/80">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-400" />
-                <span>No credit card required</span>
-              </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-400" />
                 <span>Free forever plan</span>
