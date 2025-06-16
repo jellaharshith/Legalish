@@ -64,6 +64,29 @@ export default function HomePage() {
     }
   ];
 
+  const benefits = [
+    {
+      icon: Zap,
+      title: "Lightning Fast Analysis",
+      description: "Get results in under 30 seconds"
+    },
+    {
+      icon: Shield,
+      title: "Advanced Red Flag Detection",
+      description: "AI identifies concerning clauses automatically"
+    },
+    {
+      icon: Clock,
+      title: "Save Hours of Reading",
+      description: "No more endless legal jargon"
+    },
+    {
+      icon: Users,
+      title: "Trusted by Thousands",
+      description: "Join 10,000+ satisfied users"
+    }
+  ];
+
   return (
     <div className="min-h-screen">
       {/* Hero Section with Spline Background */}
@@ -83,7 +106,7 @@ export default function HomePage() {
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
               Never read
-              <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
                 {" "}legal terms{" "}
               </span>
               again
@@ -98,7 +121,7 @@ export default function HomePage() {
               <Button 
                 size="lg" 
                 onClick={() => navigate('/summary')}
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
+                className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
               >
                 Start Analyzing Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -214,7 +237,7 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <Card className="p-8 bg-gradient-to-br from-primary/5 to-purple-500/5 border-primary/20">
+              <Card className="p-8 bg-gradient-to-br from-primary/5 to-blue-500/5 border-primary/20">
                 <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-6">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -301,7 +324,7 @@ export default function HomePage() {
               <Button 
                 size="lg" 
                 onClick={() => navigate('/summary')}
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl"
+                className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl"
               >
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
