@@ -77,10 +77,6 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium bg-white/10 border-white/20 text-white backdrop-blur-sm">
-              🚀 Legal Terms Speedrun Any%
-            </Badge>
-            
             <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
               Never read
               <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
