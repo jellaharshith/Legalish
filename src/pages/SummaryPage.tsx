@@ -16,10 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SpeedrunTimer from '@/components/shared/SpeedrunTimer';
-import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Link as LinkIcon, Upload, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle, MessageCircle } from 'lucide-react';
+import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Link as LinkIcon, Upload, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle } from 'lucide-react';
 import RedFlagBadge from '@/components/summary/RedFlagBadge';
 import SummaryHighlights from '@/components/summary/SummaryHighlights';
-import FollowUpChatbot from '@/components/summary/FollowUpChatbot';
+import FloatingChatbot from '@/components/summary/FloatingChatbot';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -610,10 +610,6 @@ export default function SummaryPage() {
                         <AlertTriangle className="h-4 w-4 mr-2" />
                         Red Flags
                       </TabsTrigger>
-                      <TabsTrigger value="chat" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white px-6 py-2">
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Chat
-                      </TabsTrigger>
                     </TabsList>
                     
                     <div className="flex items-center gap-3">
@@ -665,15 +661,6 @@ export default function SummaryPage() {
                       </div>
                     </div>
                   </TabsContent>
-
-                  <TabsContent value="chat" className="mt-0">
-                    <FollowUpChatbot 
-                      legalText={legalText}
-                      summary={summary}
-                      redFlags={redFlags}
-                      documentType={documentType}
-                    />
-                  </TabsContent>
                 </CardContent>
                 
                 {/* Audio Controls */}
@@ -722,6 +709,14 @@ export default function SummaryPage() {
           </motion.div>
         </div>
       </div>
+
+      {/* Floating Chatbot */}
+      <FloatingChatbot 
+        legalText={legalText}
+        summary={summary}
+        redFlags={redFlags}
+        documentType={documentType}
+      />
     </div>
   );
 }
