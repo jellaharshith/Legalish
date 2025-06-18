@@ -58,9 +58,20 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Check if user has analyzed a document
+  // Check if user has analyzed a document - improved detection
   useEffect(() => {
-    const hasDocument = legalText.trim().length > 0 && summary.length > 0;
+    // A document is considered analyzed if we have both summary data AND red flags
+    // This works for all input methods: text, URL, or file upload
+    const hasDocument = summary.length > 0 && Array.isArray(redFlags);
+    
+    console.log('Chatbot detection check:', {
+      legalTextLength: legalText.length,
+      summaryLength: summary.length,
+      redFlagsLength: redFlags.length,
+      hasDocument,
+      documentType
+    });
+    
     setHasAnalyzedDocument(hasDocument);
 
     if (hasDocument && messages.length === 0) {
@@ -78,7 +89,7 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
         setHasNewMessage(true);
       }
     }
-  }, [legalText, summary, redFlags, documentType, messages.length, isOpen]);
+  }, [summary, redFlags, documentType, messages.length, isOpen, legalText]);
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
@@ -229,6 +240,11 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
     setIsMinimized(false);
   };
 
+  // Only show the chatbot if a document has been analyzed
+  if (!hasAnalyzedDocument) {
+    return null;
+  }
+
   return (
     <>
       {/* Floating Chat Button */}
@@ -259,9 +275,7 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
               )}
               
               {/* Pulse Animation */}
-              {hasAnalyzedDocument && (
-                <div className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-20"></div>
-              )}
+              <div className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-20"></div>
             </Button>
           </motion.div>
         )}
@@ -287,7 +301,7 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
                     <div>
                       <h3 className="font-semibold text-sm">V.O.L.T Assistant</h3>
                       <p className="text-xs text-blue-100">
-                        {hasAnalyzedDocument ? 'Ready to help!' : 'Analyze a document first'}
+                        Ready to help with your {documentType} document!
                       </p>
                     </div>
                   </div>
@@ -314,152 +328,138 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
 
               {/* Chat Content */}
               <CardContent className="flex-1 flex flex-col p-0">
-                {!hasAnalyzedDocument ? (
-                  <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                    <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
-                      <MessageCircle className="h-8 w-8 text-blue-500" />
-                    </div>
-                    <h3 className="font-semibold mb-2">No Document Analyzed</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Analyze a legal document first, then I'll be ready to answer your questions about it!
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Messages Area */}
-                    <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
-                      <div className="space-y-4">
-                        <AnimatePresence>
-                          {messages.map((message) => (
-                            <motion.div
-                              key={message.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                              {message.role === 'assistant' && (
-                                <Avatar className="w-7 h-7 mt-1 shrink-0">
-                                  <AvatarFallback className="bg-blue-500/10 text-blue-600">
-                                    <Bot className="h-4 w-4" />
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                              
-                              <div className={`max-w-[75%] rounded-2xl px-3 py-2 ${
-                                message.role === 'user' 
-                                  ? 'bg-blue-500 text-white rounded-br-md' 
-                                  : 'bg-muted/80 text-foreground rounded-bl-md'
-                              }`}>
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                  {message.content}
-                                </p>
-                                <p className={`text-xs mt-1 ${
-                                  message.role === 'user' 
-                                    ? 'text-blue-100' 
-                                    : 'text-muted-foreground'
-                                }`}>
-                                  {message.timestamp.toLocaleTimeString([], { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                  })}
-                                </p>
-                              </div>
-
-                              {message.role === 'user' && (
-                                <Avatar className="w-7 h-7 mt-1 shrink-0">
-                                  <AvatarFallback className="bg-muted">
-                                    <User className="h-4 w-4" />
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
-
-                        {isLoading && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex gap-2 justify-start"
-                          >
+                {/* Messages Area */}
+                <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+                  <div className="space-y-4">
+                    <AnimatePresence>
+                      {messages.map((message) => (
+                        <motion.div
+                          key={message.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          {message.role === 'assistant' && (
                             <Avatar className="w-7 h-7 mt-1 shrink-0">
                               <AvatarFallback className="bg-blue-500/10 text-blue-600">
                                 <Bot className="h-4 w-4" />
                               </AvatarFallback>
                             </Avatar>
-                            <div className="bg-muted/80 rounded-2xl rounded-bl-md px-3 py-2">
-                              <div className="flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                                <span className="text-sm text-muted-foreground">Thinking...</span>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* Suggested Questions */}
-                        {messages.length <= 1 && !isLoading && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-2"
-                          >
-                            <p className="text-xs text-muted-foreground text-center">
-                              Quick questions:
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {suggestedQuestions.map((question, index) => (
-                                <Button
-                                  key={index}
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleSuggestedQuestion(question)}
-                                  className="text-xs h-auto py-1 px-2 rounded-full border-blue-200 hover:bg-blue-50 hover:border-blue-300"
-                                  disabled={isLoading}
-                                >
-                                  {question}
-                                </Button>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </div>
-                    </ScrollArea>
-
-                    {/* Input Area */}
-                    <div className="p-4 border-t border-border bg-background/50">
-                      <div className="flex gap-2">
-                        <Input
-                          ref={inputRef}
-                          value={inputValue}
-                          onChange={(e) => setInputValue(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Ask about your document..."
-                          disabled={isLoading}
-                          className="flex-1 rounded-full border-blue-200 focus:border-blue-400"
-                        />
-                        <Button
-                          onClick={sendMessage}
-                          disabled={!inputValue.trim() || isLoading}
-                          size="icon"
-                          className="shrink-0 rounded-full bg-blue-500 hover:bg-blue-600"
-                        >
-                          {isLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Send className="h-4 w-4" />
                           )}
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-center mt-2">
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Sparkles className="h-3 w-3" />
-                          Powered by V.O.L.T AI
+                          
+                          <div className={`max-w-[75%] rounded-2xl px-3 py-2 ${
+                            message.role === 'user' 
+                              ? 'bg-blue-500 text-white rounded-br-md' 
+                              : 'bg-muted/80 text-foreground rounded-bl-md'
+                          }`}>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                              {message.content}
+                            </p>
+                            <p className={`text-xs mt-1 ${
+                              message.role === 'user' 
+                                ? 'text-blue-100' 
+                                : 'text-muted-foreground'
+                            }`}>
+                              {message.timestamp.toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </p>
+                          </div>
+
+                          {message.role === 'user' && (
+                            <Avatar className="w-7 h-7 mt-1 shrink-0">
+                              <AvatarFallback className="bg-muted">
+                                <User className="h-4 w-4" />
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+
+                    {isLoading && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-2 justify-start"
+                      >
+                        <Avatar className="w-7 h-7 mt-1 shrink-0">
+                          <AvatarFallback className="bg-blue-500/10 text-blue-600">
+                            <Bot className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="bg-muted/80 rounded-2xl rounded-bl-md px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                            <span className="text-sm text-muted-foreground">Thinking...</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Suggested Questions */}
+                    {messages.length <= 1 && !isLoading && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-2"
+                      >
+                        <p className="text-xs text-muted-foreground text-center">
+                          Quick questions:
                         </p>
-                      </div>
-                    </div>
-                  </>
-                )}
+                        <div className="flex flex-wrap gap-1">
+                          {suggestedQuestions.map((question, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSuggestedQuestion(question)}
+                              className="text-xs h-auto py-1 px-2 rounded-full border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                              disabled={isLoading}
+                            >
+                              {question}
+                            </Button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </ScrollArea>
+
+                {/* Input Area */}
+                <div className="p-4 border-t border-border bg-background/50">
+                  <div className="flex gap-2">
+                    <Input
+                      ref={inputRef}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Ask about your document..."
+                      disabled={isLoading}
+                      className="flex-1 rounded-full border-blue-200 focus:border-blue-400"
+                    />
+                    <Button
+                      onClick={sendMessage}
+                      disabled={!inputValue.trim() || isLoading}
+                      size="icon"
+                      className="shrink-0 rounded-full bg-blue-500 hover:bg-blue-600"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-center mt-2">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      Powered by V.O.L.T AI
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
