@@ -378,6 +378,9 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
   if (!isOpen) return null;
 
+  // Get the current step's icon component
+  const CurrentIcon = steps[currentStep].icon;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -406,7 +409,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-r from-primary to-purple-600 rounded-full flex items-center justify-center">
-                        <steps[currentStep].icon className="h-5 w-5 text-white" />
+                        <CurrentIcon className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold">{steps[currentStep].title}</h2>
