@@ -6,6 +6,7 @@ interface TutorialContextType {
   startTutorial: () => void;
   hasCompletedTutorial: boolean;
   isFirstTimeUser: boolean;
+  isLoading: boolean;
 }
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
@@ -33,25 +34,24 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
     skipTutorial
   } = useOnboarding();
 
-  if (isLoading) {
-    return <>{children}</>;
-  }
-
   return (
     <TutorialContext.Provider
       value={{
         startTutorial,
         hasCompletedTutorial,
-        isFirstTimeUser
+        isFirstTimeUser,
+        isLoading
       }}
     >
       {children}
       
-      <OnboardingTutorial
-        isOpen={shouldShowTutorial}
-        onClose={skipTutorial}
-        onComplete={completeTutorial}
-      />
+      {!isLoading && (
+        <OnboardingTutorial
+          isOpen={shouldShowTutorial}
+          onClose={skipTutorial}
+          onComplete={completeTutorial}
+        />
+      )}
     </TutorialContext.Provider>
   );
 }
