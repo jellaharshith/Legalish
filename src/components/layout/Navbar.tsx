@@ -109,15 +109,6 @@ export default function Navbar() {
               </Button>
             </AuthModal>
           )}
-          <Link to="/summary">
-            <Button
-              variant="default"
-              size="sm"
-              className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-medium px-6"
-            >
-              Try Free
-            </Button>
-          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -185,15 +176,6 @@ export default function Navbar() {
                     </Button>
                   </AuthModal>
                 )}
-                
-                <Link to="/summary" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Try Free
-                  </Button>
-                </Link>
               </div>
             </div>
           </motion.div>
