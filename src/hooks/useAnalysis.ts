@@ -15,7 +15,7 @@ export function useAnalysis(): UseAnalysisReturn {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastResult, setLastResult] = useState<AnalysisResponse | null>(null);
   const { toast } = useToast();
-  const { setSummary, setRedFlags } = useLegalTerms();
+  const { setSummary, setRedFlags, setLegalText } = useLegalTerms();
   const { user } = useAuth();
 
   const saveAnalysis = async (request: AnalysisRequest, result: AnalysisResponse) => {
@@ -61,6 +61,7 @@ export function useAnalysis(): UseAnalysisReturn {
         // Update the context with real data
         setSummary(result.data.summary);
         setRedFlags(result.data.red_flags);
+        setLegalText(result.data.analysis_text);
 
         // Save to database if user is logged in
         await saveAnalysis(request, result);
