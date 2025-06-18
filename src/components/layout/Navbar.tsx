@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Zap, User, Menu, X } from 'lucide-react';
+import { Zap, User, Menu, X, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useTutorial } from '@/components/onboarding/TutorialProvider';
 import AuthModal from '@/components/auth/AuthModal';
 
 export default function Navbar() {
@@ -11,6 +12,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { startTutorial } = useTutorial();
 
   // Change navbar style on scroll
   if (typeof window !== 'undefined') {
@@ -78,6 +80,17 @@ export default function Navbar() {
         
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Tutorial Help Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={startTutorial}
+            className="text-sm flex items-center gap-2"
+          >
+            <HelpCircle className="h-4 w-4" />
+            Tutorial
+          </Button>
+
           {user ? (
             <div className="flex items-center gap-2">
               <Button
@@ -146,6 +159,19 @@ export default function Navbar() {
               ))}
               
               <div className="pt-4 border-t border-border space-y-3">
+                {/* Tutorial Button */}
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    startTutorial();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full justify-start"
+                >
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Tutorial
+                </Button>
+
                 {user ? (
                   <div className="space-y-2">
                     <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>

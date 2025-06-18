@@ -485,7 +485,7 @@ export default function SummaryPage() {
             </Card>
 
             {/* Input Methods */}
-            <Card className="border-2 border-muted shadow-lg">
+            <Card className="border-2 border-muted shadow-lg" data-tutorial="upload-section">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -568,6 +568,7 @@ export default function SummaryPage() {
                   disabled={isAnalyzing || hasValidationErrors() || !hasValidInput()}
                   className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 rounded-xl"
                   size="lg"
+                  data-tutorial="analyze-button"
                 >
                   {isAnalyzing ? (
                     <>
@@ -597,7 +598,7 @@ export default function SummaryPage() {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            <Card className="border-2 border-muted shadow-lg h-fit">
+            <Card className="border-2 border-muted shadow-lg h-fit" data-tutorial="results-section">
               <Tabs value={tab} onValueChange={setTab} className="w-full">
                 <CardHeader className="pb-4">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -613,7 +614,7 @@ export default function SummaryPage() {
                     </TabsList>
                     
                     <div className="flex items-center gap-3">
-                      <Select value={tone} onValueChange={(value) => setTone(value as any)}>
+                      <Select value={tone} onValueChange={(value) => setTone(value as any)} data-tutorial="tone-selector">
                         <SelectTrigger className="w-[140px]">
                           <SelectValue placeholder="Voice tone" />
                         </SelectTrigger>
@@ -664,7 +665,7 @@ export default function SummaryPage() {
                 </CardContent>
                 
                 {/* Audio Controls */}
-                <div className="border-t bg-muted/30 p-4">
+                <div className="border-t bg-muted/30 p-4" data-tutorial="audio-controls">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <Button 
