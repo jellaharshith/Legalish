@@ -96,7 +96,9 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
     if (scrollAreaRef.current) {
       const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
+        setTimeout(() => {
+          scrollElement.scrollTop = scrollElement.scrollHeight;
+        }, 100);
       }
     }
   }, [messages]);
@@ -328,8 +330,8 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
 
               {/* Chat Content */}
               <CardContent className="flex-1 flex flex-col p-0">
-                {/* Messages Area */}
-                <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+                {/* Messages Area with Enhanced Scrolling */}
+                <ScrollArea ref={scrollAreaRef} className="flex-1 p-4" style={{ maxHeight: '400px' }}>
                   <div className="space-y-4">
                     <AnimatePresence>
                       {messages.map((message) => (
@@ -353,9 +355,16 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
                               ? 'bg-blue-500 text-white rounded-br-md' 
                               : 'bg-muted/80 text-foreground rounded-bl-md'
                           }`}>
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                              {message.content}
-                            </p>
+                            {/* Scrollable message content for long messages */}
+                            <div className={`${
+                              message.content.length > 300 
+                                ? 'max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent' 
+                                : ''
+                            }`}>
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                {message.content}
+                              </p>
+                            </div>
                             <p className={`text-xs mt-1 ${
                               message.role === 'user' 
                                 ? 'text-blue-100' 
@@ -465,6 +474,23 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Custom scrollbar styles */}
+      <style jsx>{`
+        .scrollbar-thin {
+          scrollbar-width: thin;
+        }
+        .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+          background-color: #d1d5db;
+          border-radius: 4px;
+        }
+        .scrollbar-track-transparent::-webkit-scrollbar-track {
+          background-color: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 4px;
+        }
+      `}</style>
     </>
   );
 }
