@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Typewriter } from '@/components/ui/typewriter';
 import { 
   Zap, 
   Upload, 
@@ -57,7 +58,19 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           <div className="w-20 h-20 bg-gradient-to-r from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Zap className="h-10 w-10 text-white" />
           </div>
-          <h2 className="text-2xl font-bold">Ready to roast some legal terms? 👩‍⚖️🔥</h2>
+          <h2 className="text-2xl font-bold">
+            <Typewriter
+              text={[
+                "Ready to roast some legal terms? 👩‍⚖️🔥",
+                "Time to decode legal gibberish! 📜✨",
+                "Let's speedrun those contracts! ⚡🏃‍♂️"
+              ]}
+              speed={50}
+              waitTime={2000}
+              deleteSpeed={30}
+              className="text-primary"
+            />
+          </h2>
           <p className="text-muted-foreground max-w-md mx-auto">
             We'll walk you through how to analyze legal documents in seconds, not hours. 
             No law degree required!
@@ -79,7 +92,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       showOverlay: true,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Choose your weapon of choice:</h3>
+          <h3 className="text-lg font-semibold">
+            <Typewriter
+              text="Choose your weapon of choice:"
+              speed={40}
+              showCursor={false}
+            />
+          </h3>
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
               <FileText className="h-5 w-5 text-blue-500" />
@@ -119,7 +138,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       showOverlay: true,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Choose your narrator personality:</h3>
+          <h3 className="text-lg font-semibold">
+            <Typewriter
+              text="Choose your narrator personality:"
+              speed={40}
+              showCursor={false}
+            />
+          </h3>
           <div className="grid grid-cols-2 gap-2">
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
               <p className="font-medium text-blue-700">😐 Serious</p>
@@ -155,7 +180,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       showOverlay: true,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Watch the speedrun timer! ⏱️</h3>
+          <h3 className="text-lg font-semibold">
+            <Typewriter
+              text="Watch the speedrun timer! ⏱️"
+              speed={40}
+              showCursor={false}
+            />
+          </h3>
           <div className="bg-gradient-to-r from-primary/10 to-purple-600/10 p-4 rounded-lg border border-primary/20">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
@@ -194,7 +225,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       showOverlay: true,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Two tabs of legal wisdom:</h3>
+          <h3 className="text-lg font-semibold">
+            <Typewriter
+              text="Two tabs of legal wisdom:"
+              speed={40}
+              showCursor={false}
+            />
+          </h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <FileText className="h-5 w-5 text-blue-500 mt-0.5" />
@@ -231,7 +268,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       showOverlay: true,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Sit back and listen! 🎵</h3>
+          <h3 className="text-lg font-semibold">
+            <Typewriter
+              text="Sit back and listen! 🎵"
+              speed={40}
+              showCursor={false}
+            />
+          </h3>
           <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg border border-green-200">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
@@ -262,7 +305,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       icon: MessageCircle,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Meet your legal buddy! 🤖</h3>
+          <h3 className="text-lg font-semibold">
+            <Typewriter
+              text="Meet your legal buddy! 🤖"
+              speed={40}
+              showCursor={false}
+            />
+          </h3>
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
@@ -293,7 +342,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       icon: Crown,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Ready to level up? 🚀</h3>
+          <h3 className="text-lg font-semibold">
+            <Typewriter
+              text="Ready to level up? 🚀"
+              speed={40}
+              showCursor={false}
+            />
+          </h3>
           <div className="grid grid-cols-1 gap-3">
             <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
               <Crown className="h-5 w-5 text-yellow-600" />
@@ -523,7 +578,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
                   >
-                    <h2 className="text-2xl font-bold mb-2">You're Ready! 🎉</h2>
+                    <h2 className="text-2xl font-bold mb-2">
+                      <Typewriter
+                        text="You're Ready! 🎉"
+                        speed={60}
+                        showCursor={false}
+                      />
+                    </h2>
                     <p className="text-muted-foreground mb-6">
                       Time to analyze some legal documents and become a terms & conditions ninja!
                     </p>

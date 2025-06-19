@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Zap, Shield, Clock, Users, Star, CheckCircle, AlertTriangle, Brain, FileSearch } from 'lucide-react';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { SplineBackground } from '@/components/ui/spline-background';
+import { Typewriter } from '@/components/ui/typewriter';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -112,10 +113,25 @@ export default function HomePage() {
               again
             </h1>
             
-            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
-              V.O.L.T uses AI to translate complex legal documents into plain English, 
-              highlighting red flags and saving you hours of reading.
-            </p>
+            <div className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+              <p className="whitespace-pre-wrap">
+                <span>{"V.O.L.T uses AI to translate complex legal documents into plain English, highlighting red flags and saving you "}</span>
+                <Typewriter
+                  text={[
+                    "hours of reading",
+                    "expensive lawyer fees",
+                    "confusing legal jargon",
+                    "hidden contract traps",
+                    "time and money"
+                  ]}
+                  speed={70}
+                  className="text-primary font-semibold"
+                  waitTime={1500}
+                  deleteSpeed={40}
+                  cursorChar={"_"}
+                />
+              </p>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Button 
