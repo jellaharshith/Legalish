@@ -7,6 +7,7 @@ import { ArrowRight, Zap, Shield, Clock, Users, Star, CheckCircle, AlertTriangle
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { SplineBackground } from '@/components/ui/spline-background';
 import { Typewriter } from '@/components/ui/typewriter';
+import SectionWithMockup from '@/components/ui/section-with-mockup';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -167,6 +168,28 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Why Choose V.O.L.T Section with SectionWithMockup */}
+      <SectionWithMockup
+        title={
+          <>
+            Why choose
+            <br />
+            <span className="text-primary">V.O.L.T?</span>
+          </>
+        }
+        description={
+          <>
+            Because nobody has time for legal jargon. V.O.L.T breaks it down — fast, smart, and backed by real legal data.
+            <br /><br />
+            Get instant analysis with AI-powered red flag detection, multiple voice personalities, and plain-English summaries 
+            that actually make sense. From terms of service to employment contracts, we've got you covered.
+          </>
+        }
+        primaryImageSrc="https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg?auto=compress&cs=tinysrgb&w=800"
+        secondaryImageSrc="https://images.pexels.com/photos/8721342/pexels-photo-8721342.jpeg?auto=compress&cs=tinysrgb&w=800"
+        reverseLayout={false}
+      />
+
       {/* Features Section */}
       <section className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
         <div className="container mx-auto px-4">
@@ -178,10 +201,10 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="text-2xl">⚖️</span> Why Choose V.O.L.T?
+              <span className="text-2xl">⚖️</span> Powerful Features
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Because nobody has time for legal jargon. V.O.L.T breaks it down — fast, smart, and backed by real legal data.
+              V.O.L.T combines cutting-edge AI with legal expertise to deliver unmatched document analysis.
             </p>
           </motion.div>
 
