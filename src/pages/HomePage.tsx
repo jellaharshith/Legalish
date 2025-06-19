@@ -7,6 +7,7 @@ import { ArrowRight, Zap, Shield, Clock, Users, Star, CheckCircle, AlertTriangle
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { SplineBackground } from '@/components/ui/spline-background';
 import { Typewriter } from '@/components/ui/typewriter';
+import InteractiveDemo from '@/components/home/InteractiveDemo';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -167,6 +168,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Interactive Demo Section - Full Screen */}
+      <InteractiveDemo />
+
       {/* Features Section */}
       <section className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
         <div className="container mx-auto px-4">
@@ -203,70 +207,6 @@ export default function HomePage() {
                 </Card>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Demo Section */}
-      <section className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <Badge variant="outline" className="mb-4 px-3 py-1 text-sm bg-primary/10 border-primary/20">
-                See it in action
-              </Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                From legal gibberish to 
-                <span className="text-primary"> plain English</span>
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                Watch how V.O.L.T transforms complex legal documents into easy-to-understand summaries, 
-                complete with red flag detection and multiple voice options.
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span>Instant analysis in under 30 seconds</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span>Automatic red flag detection</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span>Multiple voice personalities</span>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <Card className="p-8 bg-gradient-to-br from-primary/5 to-blue-500/5 border-primary/20">
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-6">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Zap className="h-8 w-8 text-primary" />
-                    </div>
-                    <p className="text-muted-foreground">Interactive Demo</p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={handleStartDemo}
-                  className="w-full bg-primary hover:bg-primary/90"
-                >
-                  Try Demo Now
-                </Button>
-              </Card>
-            </motion.div>
           </div>
         </div>
       </section>
