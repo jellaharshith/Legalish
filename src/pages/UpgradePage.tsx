@@ -3,20 +3,19 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, X, CreditCard, Zap, Share2, Headphones, Laugh, Loader2, ArrowRight, Shield, Clock, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useStripe } from '@/hooks/useStripe';
 import { stripeProducts } from '@/stripe-config';
+import { Pricing } from '@/components/ui/pricing';
 
 export default function UpgradePage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { loading, redirectToCheckout, getSubscription } = useStripe();
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
 
@@ -65,38 +64,73 @@ export default function UpgradePage() {
 
   const isSubscribed = currentSubscription?.subscription_status === 'active';
 
-  const features = [
+  const pricingPlans = [
     {
-      id: 'celebrities',
-      name: 'Celebrity Voices',
-      description: 'Famous voices read your legal terms',
-      icon: Headphones,
-      free: false,
-      pro: true
+      name: "FREE",
+      price: "0",
+      yearlyPrice: "0",
+      period: "forever",
+      features: [
+        "5 analyses per month",
+        "Basic summaries & red flags",
+        "2 voice options (Serious, Sarcastic)",
+        "General document analysis",
+        "Community support"
+      ],
+      description: "Perfect for getting started with legal document analysis",
+      buttonText: isSubscribed ? "Current Plan" : "Get Started Free",
+      href: "/summary",
+      isPopular: false,
+      onClick: () => navigate('/summary')
     },
     {
-      id: 'compare',
-      name: 'Side-by-Side Comparison',
-      description: 'See original text next to the translation',
-      icon: Zap,
-      free: false,
-      pro: true
+      name: "PRO",
+      price: "9.99",
+      yearlyPrice: "7.99",
+      period: "month",
+      features: [
+        "Unlimited analyses",
+        "Advanced summaries & red flags",
+        "8 premium voice options",
+        "Specialized contract analysis (Lease, Employment)",
+        "Priority support",
+        "Celebrity voices",
+        "Side-by-side comparison",
+        "Reddit meme sharing",
+        "Advanced red flag detection"
+      ],
+      description: "Everything you need for professional legal document analysis",
+      buttonText: isSubscribed ? "Manage Subscription" : "Upgrade to Pro",
+      href: "/upgrade",
+      isPopular: true,
+      onClick: isSubscribed ? () => navigate('/dashboard') : handlePurchase
     },
     {
-      id: 'reddit',
-      name: 'Reddit Meme Share',
-      description: 'Share ridiculous terms as Reddit-ready memes',
-      icon: Share2,
-      free: false,
-      pro: true
-    },
-    {
-      id: 'unlimited',
-      name: 'Unlimited Analyses',
-      description: 'No monthly limits on terms you can analyze',
-      icon: Laugh,
-      free: false,
-      pro: true
+      name: "ENTERPRISE",
+      price: "49",
+      yearlyPrice: "39",
+      period: "month",
+      features: [
+        "Everything in Pro",
+        "Custom AI training",
+        "Dedicated account manager",
+        "API access",
+        "SSO Authentication",
+        "Advanced security",
+        "Custom contracts",
+        "SLA agreement",
+        "White-label options"
+      ],
+      description: "For large organizations with specific legal analysis needs",
+      buttonText: "Contact Sales",
+      href: "/contact",
+      isPopular: false,
+      onClick: () => {
+        toast({
+          title: "Enterprise Sales",
+          description: "Enterprise features coming soon! Contact us for early access.",
+        });
+      }
     }
   ];
 
@@ -140,7 +174,7 @@ export default function UpgradePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-6xl mx-auto"
+          className="max-w-7xl mx-auto"
         >
           {/* Header */}
           <div className="text-center mb-16">
@@ -164,181 +198,22 @@ export default function UpgradePage() {
                 ✓ Currently Subscribed to Pro
               </Badge>
             )}
-            
-            {/* Billing Toggle */}
-            <div className="flex items-center justify-center mt-8 space-x-4">
-              <span className={`text-sm ${billingCycle === 'monthly' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                Monthly
-              </span>
-              <Switch
-                checked={billingCycle === 'yearly'}
-                onCheckedChange={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-              />
-              <span className={`text-sm flex items-center gap-2 ${billingCycle === 'yearly' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                Yearly
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                  Save 20%
-                </Badge>
-              </span>
-            </div>
           </div>
           
-          {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
-            {/* Free Plan */}
-            <Card className="border-2 border-muted relative overflow-hidden shadow-lg">
-              <CardHeader className="pb-6">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl">Free</CardTitle>
-                  {!isSubscribed && (
-                    <Badge variant="outline" className="bg-muted/50">
-                      Current Plan
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription className="text-base">Perfect for getting started</CardDescription>
-              </CardHeader>
-              <CardContent className="pb-6">
-                <div className="mb-6">
-                  <p className="text-4xl font-bold">$0</p>
-                  <p className="text-muted-foreground">Forever free</p>
-                </div>
-                
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span>5 analyses per month</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span>Basic summaries & red flags</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span>2 voice options</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span>General document analysis</span>
-                  </li>
-                  {features.map(feature => (
-                    <li key={feature.id} className="flex items-start gap-3 text-muted-foreground">
-                      <X className="text-muted-foreground/50 mt-1 flex-shrink-0" size={18} />
-                      <span>{feature.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  className="w-full h-12"
-                  onClick={() => navigate('/summary')}
-                >
-                  {!isSubscribed ? 'Current Plan' : 'Use Free Features'}
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            {/* Pro Plan */}
-            <Card className={`border-2 relative overflow-hidden shadow-xl ${
-              isSubscribed ? 'border-green-500/50 bg-green-500/5' : 'border-primary bg-primary/5'
-            }`}>
-              <div className="absolute top-0 right-0 w-20 h-20">
-                <div className={`absolute transform rotate-45 text-xs font-bold text-center py-1 right-[-40px] top-[22px] w-[170px] ${
-                  isSubscribed 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-primary text-primary-foreground'
-                }`}>
-                  {isSubscribed ? 'ACTIVE' : 'POPULAR'}
-                </div>
-              </div>
-              
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-2xl">Pro</CardTitle>
-                  <Star className="text-yellow-500 fill-yellow-500" size={20} />
-                </div>
-                <CardDescription className="text-base">Everything you need for professional use</CardDescription>
-              </CardHeader>
-              <CardContent className="pb-6">
-                <div className="mb-6">
-                  <p className="text-4xl font-bold">
-                    ${billingCycle === 'monthly' ? '9.99' : '7.99'}
-                    <span className="text-lg font-normal text-muted-foreground">
-                      /{billingCycle === 'monthly' ? 'month' : 'month'}
-                    </span>
-                  </p>
-                  {billingCycle === 'yearly' && (
-                    <p className="text-muted-foreground">
-                      Billed annually ($95.88/year)
-                    </p>
-                  )}
-                </div>
-                
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span className="font-medium">Unlimited analyses</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span>Advanced summaries & red flags</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span>8 premium voice options</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span>Specialized contract analysis</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                    <span>Priority support</span>
-                  </li>
-                  {features.map(feature => (
-                    <li key={feature.id} className="flex items-start gap-3">
-                      <Check className="text-green-500 mt-1 flex-shrink-0" size={18} />
-                      <span>{feature.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {isSubscribed ? (
-                  <Button 
-                    variant="outline"
-                    className="w-full h-12 border-green-500 text-green-500 hover:bg-green-500/10"
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    Manage Subscription
-                  </Button>
-                ) : (
-                  <Button 
-                    className="w-full h-12 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-semibold"
-                    onClick={handlePurchase}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        Upgrade to Pro
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-          </div>
+          {/* Advanced Pricing Component */}
+          <Pricing
+            plans={pricingPlans}
+            title="Choose Your V.O.L.T Experience"
+            description="From casual document reviews to professional legal analysis\nEvery plan includes our core AI-powered analysis engine"
+            onPlanSelect={(plan) => {
+              if (plan.onClick) {
+                plan.onClick();
+              }
+            }}
+          />
           
           {/* Benefits Section */}
-          <div className="mb-16">
+          <div className="mt-20 mb-16">
             <h3 className="text-2xl font-bold text-center mb-8">Why choose V.O.L.T Pro?</h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {benefits.map((benefit, index) => (
@@ -361,23 +236,57 @@ export default function UpgradePage() {
             </div>
           </div>
 
-          {/* Feature Toggles */}
+          {/* Feature Comparison */}
           <div className="bg-card border-2 border-border rounded-xl p-8 mb-12">
-            <h3 className="text-xl font-bold mb-6 text-center">Pro Features in Detail</h3>
+            <h3 className="text-xl font-bold mb-6 text-center">What's Included</h3>
             <div className="grid md:grid-cols-2 gap-6">
-              {features.map(feature => (
-                <div 
-                  key={feature.id}
-                  className="flex items-center p-4 border border-border rounded-lg bg-background/50"
-                >
-                  <feature.icon className="text-primary mr-4 flex-shrink-0" size={24} />
-                  <div className="flex-grow">
-                    <p className="font-medium">{feature.name}</p>
-                    <p className="text-sm text-muted-foreground">{feature.description}</p>
+              <div className="space-y-4">
+                <h4 className="font-semibold text-primary">Free Features</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">5 analyses per month</span>
                   </div>
-                  <Switch disabled checked={true} id={feature.id} />
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Basic summaries & red flags</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">2 voice options</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">General document analysis</span>
+                  </div>
                 </div>
-              ))}
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="font-semibold text-primary">Pro Features</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm">Unlimited analyses</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm">8 premium voice options</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm">Celebrity voices</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm">Specialized contract analysis</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm">Advanced red flag detection</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
