@@ -18,6 +18,7 @@ import RedFlagBadge from '@/components/summary/RedFlagBadge';
 import SummaryHighlights from '@/components/summary/SummaryHighlights';
 import FloatingChatbot from '@/components/summary/FloatingChatbot';
 import DocumentInputSelector from '@/components/summary/DocumentInputSelector';
+import DocumentTypeSelector from '@/components/summary/DocumentTypeSelector';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -432,55 +433,10 @@ export default function SummaryPage() {
             className="space-y-6"
           >
             {/* Document Type Selection */}
-            <Card className="border-2 border-primary/20 shadow-lg">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Document Type</h3>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Select value={documentType} onValueChange={(value) => setDocumentType(value as any)}>
-                  <SelectTrigger className="w-full h-12">
-                    <SelectValue placeholder="Select document type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">
-                      <div className="flex items-center gap-3 py-2">
-                        <FileText className="h-5 w-5 text-blue-500" />
-                        <div>
-                          <div className="font-medium">General</div>
-                          <div className="text-xs text-muted-foreground">Standard legal document analysis</div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="lease">
-                      <div className="flex items-center gap-3 py-2">
-                        <Home className="h-5 w-5 text-green-500" />
-                        <div>
-                          <div className="font-medium">Lease Contract</div>
-                          <div className="text-xs text-muted-foreground">Specialized for rental agreements</div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="employment">
-                      <div className="flex items-center gap-3 py-2">
-                        <Briefcase className="h-5 w-5 text-purple-500" />
-                        <div>
-                          <div className="font-medium">Employment Contract</div>
-                          <div className="text-xs text-muted-foreground">Optimized for job contracts</div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {getDocumentTypeDescription(documentType)}
-                </p>
-              </CardContent>
-            </Card>
+            <DocumentTypeSelector
+              documentType={documentType}
+              setDocumentType={setDocumentType}
+            />
 
             {/* Enhanced Input Methods with Action Search Bar */}
             <DocumentInputSelector
