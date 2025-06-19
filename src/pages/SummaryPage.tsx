@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -16,10 +13,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SpeedrunTimer from '@/components/shared/SpeedrunTimer';
-import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Link as LinkIcon, Upload, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle } from 'lucide-react';
+import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle } from 'lucide-react';
 import RedFlagBadge from '@/components/summary/RedFlagBadge';
 import SummaryHighlights from '@/components/summary/SummaryHighlights';
 import FloatingChatbot from '@/components/summary/FloatingChatbot';
+import DocumentInputSelector from '@/components/summary/DocumentInputSelector';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -484,85 +482,32 @@ export default function SummaryPage() {
               </CardContent>
             </Card>
 
-            {/* Input Methods */}
-            <Card className="border-2 border-muted shadow-lg" data-tutorial="upload-section">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
+            {/* Enhanced Input Methods with Action Search Bar */}
+            <DocumentInputSelector
+              legalText={legalText}
+              setLegalText={setLegalText}
+              urlInput={urlInput}
+              setUrlInput={setUrlInput}
+              onFileChange={handleFileChange}
+              fileInputRef={fileInputRef}
+              validationErrors={validationErrors}
+              onTextChange={handleTextChange}
+              onUrlChange={handleUrlChange}
+            />
+
+            {/* Analyze Button with Timer */}
+            <Card className="border-2 border-primary/20 shadow-lg bg-gradient-to-r from-primary/5 to-purple-600/5">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Upload className="h-4 w-4 text-primary" />
+                      <Wand2 className="h-4 w-4 text-primary" />
                     </div>
-                    <h3 className="text-lg font-semibold">Input Document</h3>
+                    <h3 className="text-lg font-semibold">AI Analysis</h3>
                   </div>
                   <SpeedrunTimer isRunning={isTimerRunning} time={time} />
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Text Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="text" className="text-base font-medium">Paste Text</Label>
-                  <Textarea 
-                    id="text"
-                    value={legalText}
-                    onChange={handleTextChange}
-                    placeholder="Paste your legal document text here..."
-                    className={`min-h-[200px] resize-none font-mono text-sm ${
-                      validationErrors.text ? 'border-destructive' : ''
-                    }`}
-                  />
-                  {validationErrors.text && (
-                    <p className="text-sm text-destructive">{validationErrors.text}</p>
-                  )}
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{legalText.length}/2,800 characters</span>
-                    <Badge variant="outline" className="text-xs">
-                      {legalText.length > 0 ? 'Text ready' : 'Enter text'}
-                    </Badge>
-                  </div>
-                </div>
 
-                {/* URL Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="url" className="text-base font-medium flex items-center gap-2">
-                    <LinkIcon className="h-4 w-4" />
-                    Or enter URL
-                  </Label>
-                  <Input
-                    id="url"
-                    type="url"
-                    value={urlInput}
-                    onChange={handleUrlChange}
-                    placeholder="https://example.com/terms-of-service"
-                    className={`h-12 ${validationErrors.url ? 'border-destructive' : ''}`}
-                  />
-                  {validationErrors.url && (
-                    <p className="text-sm text-destructive">{validationErrors.url}</p>
-                  )}
-                </div>
-
-                {/* File Upload */}
-                <div className="space-y-2">
-                  <Label htmlFor="file" className="text-base font-medium flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    Or upload document
-                  </Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".txt,.doc,.docx,.pdf,.rtf"
-                    className={`h-12 cursor-pointer ${validationErrors.file ? 'border-destructive' : ''}`}
-                  />
-                  {validationErrors.file && (
-                    <p className="text-sm text-destructive">{validationErrors.file}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Supported: TXT, DOC, DOCX, PDF, RTF (max 20MB)
-                  </p>
-                </div>
-
-                {/* Analyze Button */}
                 <Button 
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || hasValidationErrors() || !hasValidInput()}
@@ -584,7 +529,7 @@ export default function SummaryPage() {
                 </Button>
                 
                 {!hasValidInput() && !isAnalyzing && (
-                  <p className="text-sm text-muted-foreground text-center">
+                  <p className="text-sm text-muted-foreground text-center mt-3">
                     Please provide text, URL, or file to analyze
                   </p>
                 )}
