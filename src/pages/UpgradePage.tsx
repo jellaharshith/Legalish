@@ -97,40 +97,14 @@ export default function UpgradePage() {
         "Celebrity voices",
         "Side-by-side comparison",
         "Reddit meme sharing",
-        "Advanced red flag detection"
+        "Advanced red flag detection",
+        "Interactive chatbot assistant"
       ],
       description: "Everything you need for professional legal document analysis",
       buttonText: isSubscribed ? "Manage Subscription" : "Upgrade to Pro",
       href: "/upgrade",
       isPopular: true,
       onClick: isSubscribed ? () => navigate('/dashboard') : handlePurchase
-    },
-    {
-      name: "ENTERPRISE",
-      price: "49",
-      yearlyPrice: "39",
-      period: "month",
-      features: [
-        "Everything in Pro",
-        "Custom AI training",
-        "Dedicated account manager",
-        "API access",
-        "SSO Authentication",
-        "Advanced security",
-        "Custom contracts",
-        "SLA agreement",
-        "White-label options"
-      ],
-      description: "For large organizations with specific legal analysis needs",
-      buttonText: "Contact Sales",
-      href: "/contact",
-      isPopular: false,
-      onClick: () => {
-        toast({
-          title: "Enterprise Sales",
-          description: "Enterprise features coming soon! Contact us for early access.",
-        });
-      }
     }
   ];
 
@@ -174,7 +148,7 @@ export default function UpgradePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-7xl mx-auto"
+          className="max-w-6xl mx-auto"
         >
           {/* Header */}
           <div className="text-center mb-16">
@@ -280,6 +254,10 @@ export default function UpgradePage() {
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="text-sm">Specialized contract analysis</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm">Interactive chatbot assistant</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
