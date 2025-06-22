@@ -10,14 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { User, Settings, Key, FileText, Link as LinkIcon, Upload, CreditCard, Save, Edit } from 'lucide-react';
+import { User, Settings, Key, FileText, Link as LinkIcon, Upload, CreditCard, Save, Edit, Camera, Mail, Calendar, Shield } from 'lucide-react';
 
 interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   subscription_tier: string;
   terms_analyzed: number;
+  created_at: string;
+  email: string;
 }
 
 interface Analysis {
@@ -45,7 +48,7 @@ export default function DashboardPage() {
   const [updating, setUpdating] = useState(false);
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [isEditing, setIsEditing] = useState(true); // Start in edit mode by default
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -59,7 +62,7 @@ export default function DashboardPage() {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name, avatar_url, subscription_tier, terms_analyzed')
+          .select('full_name, avatar_url, subscription_tier, terms_analyzed, created_at, email')
           .eq('id', user.id)
           .single();
 
@@ -76,7 +79,7 @@ export default function DashboardPage() {
                 subscription_tier: 'free',
                 terms_analyzed: 0
               })
-              .select('full_name, avatar_url, subscription_tier, terms_analyzed')
+              .select('full_name, avatar_url, subscription_tier, terms_analyzed, created_at, email')
               .single();
 
             if (createError) throw createError;
@@ -84,6 +87,7 @@ export default function DashboardPage() {
             setProfile(newProfile);
             setFullName(newProfile.full_name || '');
             setAvatarUrl(newProfile.avatar_url || '');
+            setIsEditing(true); // Start in edit mode for new profiles
           } else {
             throw error;
           }
@@ -91,9 +95,9 @@ export default function DashboardPage() {
           setProfile(data);
           setFullName(data.full_name || '');
           setAvatarUrl(data.avatar_url || '');
-          // If user already has a name, don't start in edit mode
-          if (data.full_name && data.full_name.trim()) {
-            setIsEditing(false);
+          // Start in edit mode if profile is incomplete
+          if (!data.full_name || !data.full_name.trim()) {
+            setIsEditing(true);
           }
         }
       } catch (error) {
@@ -191,14 +195,14 @@ export default function DashboardPage() {
       setIsEditing(false);
       
       toast({
-        title: 'Success',
-        description: 'Profile updated successfully',
+        title: 'Profile Updated',
+        description: 'Your profile has been updated successfully',
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update profile',
+        title: 'Update Failed',
+        description: 'Failed to update profile. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -240,6 +244,14 @@ export default function DashboardPage() {
     return 'outline';
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   if (loading || profileLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -264,99 +276,168 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-6xl mx-auto space-y-8"
         >
-          {/* Profile Header - Responsive */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8">
-            <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
-              <AvatarImage src={profile?.avatar_url || ''} />
-              <AvatarFallback>
-                <User className="h-6 w-6 sm:h-8 sm:w-8" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold truncate">
-                {profile?.full_name || user?.email?.split('@')[0] || 'Your Profile'}
-              </h1>
-              <p className="text-muted-foreground text-sm sm:text-base truncate">{user?.email}</p>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
-                <Badge variant={getSubscriptionBadgeVariant()}>
-                  {getSubscriptionStatus()}
-                </Badge>
-                {subscription?.subscription_status === 'active' && subscription?.current_period_end && (
-                  <span className="text-xs text-muted-foreground">
-                    Renews {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
-                  </span>
-                )}
+          {/* Enhanced Profile Header */}
+          <Card className="border-2 border-primary/20 shadow-lg bg-gradient-to-r from-primary/5 to-purple-600/5">
+            <CardContent className="p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <div className="relative">
+                  <Avatar className="h-24 w-24 border-4 border-primary/20">
+                    <AvatarImage src={profile?.avatar_url || ''} />
+                    <AvatarFallback className="text-2xl font-bold bg-primary/10">
+                      <User className="h-8 w-8" />
+                    </AvatarFallback>
+                  </Avatar>
+                  {isEditing && (
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                      <Camera className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <h1 className="text-3xl font-bold truncate">
+                        {profile?.full_name || user?.email?.split('@')[0] || 'Welcome!'}
+                      </h1>
+                      <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                        <Mail className="h-4 w-4" />
+                        <span className="truncate">{profile?.email || user?.email}</span>
+                      </div>
+                      {profile?.created_at && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>Member since {formatDate(profile.created_at)}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-col gap-2">
+                      <Badge variant={getSubscriptionBadgeVariant()} className="text-center">
+                        <Shield className="h-3 w-3 mr-1" />
+                        {getSubscriptionStatus()}
+                      </Badge>
+                      {subscription?.subscription_status === 'active' && subscription?.current_period_end && (
+                        <span className="text-xs text-muted-foreground text-center">
+                          Renews {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Quick Stats */}
+                  <div className="flex gap-6 pt-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-primary">{profile?.terms_analyzed || 0}</div>
+                      <div className="text-sm text-muted-foreground">Documents Analyzed</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{analyses.length}</div>
+                      <div className="text-sm text-muted-foreground">Recent Analyses</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Main Content Grid - Responsive */}
+          {/* Main Content Grid */}
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Profile Settings Card */}
+            {/* Enhanced Profile Settings Card */}
             <Card className="border-2 border-muted shadow-lg">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <CardTitle className="flex items-center gap-2 text-xl">
                       <Settings className="h-5 w-5" />
                       Profile Settings
                     </CardTitle>
-                    <CardDescription className="text-sm">Update your personal information</CardDescription>
+                    <CardDescription>Manage your personal information and preferences</CardDescription>
                   </div>
                   {!isEditing && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setIsEditing(true)}
-                      className="h-8"
+                      className="h-9 px-4"
                     >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Profile
                     </Button>
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-sm font-medium">
-                    Full Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="h-10"
-                    disabled={!isEditing || updating}
-                    maxLength={100}
-                  />
-                  {isEditing && (
-                    <p className="text-xs text-muted-foreground">
-                      {fullName.length}/100 characters
-                    </p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="avatarUrl" className="text-sm font-medium">Avatar URL</Label>
-                  <Input
-                    id="avatarUrl"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://example.com/your-avatar.jpg"
-                    className="h-10"
-                    disabled={!isEditing || updating}
-                    type="url"
-                  />
-                  {isEditing && (
-                    <p className="text-xs text-muted-foreground">
-                      Optional: Enter a URL to your profile picture
-                    </p>
-                  )}
+              <CardContent className="space-y-6">
+                {/* Profile Picture Section */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Profile Picture</Label>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16 border-2 border-muted">
+                      <AvatarImage src={avatarUrl || profile?.avatar_url || ''} />
+                      <AvatarFallback>
+                        <User className="h-6 w-6" />
+                      </AvatarFallback>
+                    </Avatar>
+                    {isEditing && (
+                      <div className="flex-1">
+                        <Input
+                          value={avatarUrl}
+                          onChange={(e) => setAvatarUrl(e.target.value)}
+                          placeholder="Enter image URL (e.g., https://example.com/photo.jpg)"
+                          className="h-10"
+                          disabled={updating}
+                          type="url"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Enter a URL to your profile picture
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
+                <Separator />
+
+                {/* Personal Information */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Personal Information</h4>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-sm font-medium">
+                      Full Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Enter your full name"
+                      className="h-10"
+                      disabled={!isEditing || updating}
+                      maxLength={100}
+                    />
+                    {isEditing && (
+                      <p className="text-xs text-muted-foreground">
+                        {fullName.length}/100 characters
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Email Address</Label>
+                    <Input
+                      value={profile?.email || user?.email || ''}
+                      disabled
+                      className="h-10 bg-muted/50"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Email cannot be changed here. Contact support if needed.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
                 {isEditing && (
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-3 pt-4 border-t">
                     <Button
                       onClick={handleUpdateProfile}
                       disabled={updating || !fullName.trim()}
@@ -378,7 +459,7 @@ export default function DashboardPage() {
                       variant="outline"
                       onClick={handleCancelEdit}
                       disabled={updating}
-                      className="h-10"
+                      className="h-10 px-6"
                     >
                       Cancel
                     </Button>
@@ -386,8 +467,10 @@ export default function DashboardPage() {
                 )}
 
                 {!isEditing && (
-                  <div className="pt-2 text-sm text-muted-foreground">
-                    Click "Edit" to update your profile information
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground text-center">
+                      Click "Edit Profile" to update your information
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -396,37 +479,39 @@ export default function DashboardPage() {
             {/* Subscription Details Card */}
             <Card className="border-2 border-muted shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <CardTitle className="flex items-center gap-2 text-xl">
                   <Key className="h-5 w-5" />
-                  Subscription Details
+                  Subscription & Billing
                 </CardTitle>
-                <CardDescription className="text-sm">Your current plan and usage</CardDescription>
+                <CardDescription>Your current plan and usage details</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                    <span className="font-medium text-sm">Current Plan</span>
-                    <Badge variant={getSubscriptionBadgeVariant()}>
+              <CardContent className="space-y-6">
+                <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Current Plan</span>
+                    <Badge variant={getSubscriptionBadgeVariant()} className="px-3 py-1">
                       {getSubscriptionStatus()}
                     </Badge>
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                    <span className="font-medium text-sm">Terms Analyzed</span>
-                    <span className="text-sm">{profile?.terms_analyzed || 0}</span>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Documents Analyzed</span>
+                    <span className="text-lg font-bold text-primary">{profile?.terms_analyzed || 0}</span>
                   </div>
+                  
                   {subscription?.subscription_status === 'active' && (
                     <>
                       {subscription.current_period_end && (
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                          <span className="font-medium text-sm">Next Billing</span>
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">Next Billing Date</span>
                           <span className="text-sm">
                             {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
                           </span>
                         </div>
                       )}
                       {subscription.payment_method_brand && subscription.payment_method_last4 && (
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                          <span className="font-medium text-sm">Payment Method</span>
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">Payment Method</span>
                           <span className="text-sm">
                             {subscription.payment_method_brand.toUpperCase()} •••• {subscription.payment_method_last4}
                           </span>
@@ -435,7 +520,8 @@ export default function DashboardPage() {
                     </>
                   )}
                 </div>
-                <div className="space-y-2">
+                
+                <div className="space-y-3">
                   {subscription?.subscription_status === 'active' ? (
                     <Button
                       variant="outline"
@@ -443,7 +529,7 @@ export default function DashboardPage() {
                       onClick={() => {
                         toast({
                           title: "Manage Subscription",
-                          description: "Subscription management would be implemented here in a real app.",
+                          description: "Subscription management portal would open here.",
                         });
                       }}
                     >
@@ -452,10 +538,11 @@ export default function DashboardPage() {
                     </Button>
                   ) : (
                     <Button
-                      className="w-full h-10"
+                      className="w-full h-10 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
                       onClick={() => navigate('/upgrade')}
                     >
-                      Upgrade Plan
+                      <Key className="mr-2 h-4 w-4" />
+                      Upgrade to Pro
                     </Button>
                   )}
                 </div>
@@ -463,28 +550,28 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Recent Activity Card - Full Width */}
+          {/* Recent Activity Card */}
           <Card className="border-2 border-muted shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <CardTitle className="flex items-center gap-2 text-xl">
                 <FileText className="h-5 w-5" />
                 Recent Activity
               </CardTitle>
-              <CardDescription className="text-sm">Your recent terms analysis history</CardDescription>
+              <CardDescription>Your recent legal document analyses</CardDescription>
             </CardHeader>
             <CardContent>
               {analysesLoading ? (
                 <div className="animate-pulse space-y-4">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-20 sm:h-24 bg-muted rounded-lg" />
+                    <div key={i} className="h-20 bg-muted rounded-lg" />
                   ))}
                 </div>
               ) : analyses.length > 0 ? (
                 <div className="space-y-4">
                   {analyses.map((analysis) => (
-                    <Card key={analysis.id} className="border border-border">
+                    <Card key={analysis.id} className="border border-border hover:border-primary/50 transition-colors">
                       <CardContent className="p-4">
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="space-y-2 flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               {analysis.input_url ? (
@@ -494,7 +581,7 @@ export default function DashboardPage() {
                               ) : (
                                 <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                               )}
-                              <p className="font-medium text-sm sm:text-base truncate">
+                              <p className="font-medium truncate">
                                 {analysis.input_url
                                   ? 'URL Analysis'
                                   : analysis.input_file_name
@@ -502,13 +589,19 @@ export default function DashboardPage() {
                                   : 'Text Analysis'}
                               </p>
                             </div>
-                            <p className="text-xs sm:text-sm text-muted-foreground">
-                              {new Date(analysis.created_at).toLocaleDateString()}
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(analysis.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
                             </p>
                           </div>
-                          <div className="flex sm:flex-col sm:text-right gap-4 sm:gap-1">
+                          <div className="flex gap-6 text-right">
                             <div>
-                              <p className="text-sm font-mono">
+                              <p className="text-sm font-mono font-medium">
                                 {(analysis.analysis_time_ms / 1000).toFixed(2)}s
                               </p>
                               <p className="text-xs text-muted-foreground">
@@ -516,7 +609,7 @@ export default function DashboardPage() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-sm font-medium">
+                              <p className="text-sm font-medium text-destructive">
                                 {analysis.red_flags_data.length}
                               </p>
                               <p className="text-xs text-muted-foreground">
@@ -530,15 +623,20 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <p className="text-sm sm:text-base">No analyses yet. Start by analyzing some terms!</p>
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No analyses yet</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Start analyzing legal documents to see your history here
+                  </p>
                   <Button
-                    variant="outline"
                     onClick={() => navigate('/summary')}
-                    className="mt-4 h-10"
+                    className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
                   >
-                    Analyze Terms
+                    <FileText className="mr-2 h-4 w-4" />
+                    Analyze Your First Document
                   </Button>
                 </div>
               )}
