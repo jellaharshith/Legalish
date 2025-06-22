@@ -146,30 +146,6 @@ export default function DocumentTypeSelector({ documentType, setDocumentType }: 
               defaultExpanded={true}
             />
 
-            {/* Type Comparison */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {documentTypeActions.map((action) => (
-                <div
-                  key={action.id}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                    documentType === action.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                  }`}
-                  onClick={() => handleTypeSelect(action)}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    {action.icon}
-                    <span className="font-medium text-sm">{action.label}</span>
-                    {documentType === action.id && (
-                      <Check className="h-4 w-4 text-primary ml-auto" />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{action.description}</p>
-                </div>
-              ))}
-            </div>
-
             {/* Benefits of Specialized Analysis */}
             <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
               <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
