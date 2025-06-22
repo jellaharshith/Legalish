@@ -51,7 +51,9 @@ export default function AuthModal({ children }: AuthModalProps) {
       }
       setIsOpen(false);
       // Redirect to analyze page after successful sign in
-      navigate('/summary');
+      setTimeout(() => {
+        navigate('/summary');
+      }, 100);
     } catch (error) {
       toast({
         title: 'Error',
@@ -73,7 +75,9 @@ export default function AuthModal({ children }: AuthModalProps) {
         description: 'Successfully signed in with Google.',
       });
       // Redirect to analyze page after successful Google sign in
-      navigate('/summary');
+      setTimeout(() => {
+        navigate('/summary');
+      }, 100);
     } catch (error) {
       toast({
         title: 'Error',

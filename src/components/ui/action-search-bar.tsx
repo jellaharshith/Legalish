@@ -6,11 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Search,
     Send,
-    FileText,
-    Link as LinkIcon,
-    Upload,
-    Loader2,
-    Wand2,
+    BarChart2,
+    Globe,
+    Video,
+    PlaneTakeoff,
+    AudioLines,
 } from "lucide-react";
 
 function useDebounce<T>(value: T, delay: number = 500): T {
@@ -49,24 +49,69 @@ interface ActionSearchBarProps {
     placeholder?: string;
     label?: string;
     className?: string;
+    defaultExpanded?: boolean;
 }
 
+const defaultActions = [
+    {
+        id: "1",
+        label: "Book tickets",
+        icon: <PlaneTakeoff className="h-4 w-4 text-blue-500" />,
+        description: "Operator",
+        short: "⌘K",
+        end: "Agent",
+    },
+    {
+        id: "2",
+        label: "Summarize",
+        icon: <BarChart2 className="h-4 w-4 text-orange-500" />,
+        description: "gpt-4o",
+        short: "⌘cmd+p",
+        end: "Command",
+    },
+    {
+        id: "3",
+        label: "Screen Studio",
+        icon: <Video className="h-4 w-4 text-purple-500" />,
+        description: "gpt-4o",
+        short: "",
+        end: "Application",
+    },
+    {
+        id: "4",
+        label: "Talk to Jarvis",
+        icon: <AudioLines className="h-4 w-4 text-green-500" />,
+        description: "gpt-4o voice",
+        short: "",
+        end: "Active",
+    },
+    {
+        id: "5",
+        label: "Translate",
+        icon: <Globe className="h-4 w-4 text-blue-500" />,
+        description: "gpt-4o",
+        short: "",
+        end: "Command",
+    },
+];
+
 function ActionSearchBar({ 
-    actions = [], 
+    actions = defaultActions, 
     onActionSelect,
-    placeholder = "What would you like to do?",
-    label = "Choose Input Method",
-    className = ""
+    placeholder = "What's up?",
+    label = "Search Commands",
+    className = "",
+    defaultExpanded = false
 }: ActionSearchBarProps) {
     const [query, setQuery] = useState("");
     const [result, setResult] = useState<SearchResult | null>(null);
-    const [isFocused, setIsFocused] = useState(false);
+    const [isFocused, setIsFocused] = useState(defaultExpanded);
     const [isTyping, setIsTyping] = useState(false);
     const [selectedAction, setSelectedAction] = useState<Action | null>(null);
     const debouncedQuery = useDebounce(query, 200);
 
     useEffect(() => {
-        if (!isFocused) {
+        if (!isFocused && !defaultExpanded) {
             setResult(null);
             return;
         }
@@ -83,11 +128,21 @@ function ActionSearchBar({
         });
 
         setResult({ actions: filteredActions });
-    }, [debouncedQuery, isFocused, actions]);
+    }, [debouncedQuery, isFocused, actions, defaultExpanded]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setQuery(e.target.value);
         setIsTyping(true);
+    };
+
+    const handleActionClick = (action: Action) => {
+        setSelectedAction(action);
+        if (onActionSelect) {
+            onActionSelect(action);
+        }
+        if (action.onClick) {
+            action.onClick();
+        }
     };
 
     const container = {
@@ -140,23 +195,12 @@ function ActionSearchBar({
         setIsFocused(true);
     };
 
-    const handleActionClick = (action: Action) => {
-        setSelectedAction(action);
-        setIsFocused(false);
-        if (action.onClick) {
-            action.onClick();
-        }
-        if (onActionSelect) {
-            onActionSelect(action);
-        }
-    };
-
     return (
         <div className={`w-full max-w-xl mx-auto ${className}`}>
-            <div className="relative flex flex-col justify-start items-center min-h-[200px]">
-                <div className="w-full sticky top-0 bg-background z-10 pt-4 pb-1">
+            <div className="relative flex flex-col justify-start items-center min-h-[300px]">
+                <div className="w-full max-w-sm sticky top-0 bg-background z-10 pt-4 pb-1">
                     <label
-                        className="text-sm font-medium text-muted-foreground mb-2 block"
+                        className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block"
                         htmlFor="search"
                     >
                         {label}
@@ -169,11 +213,11 @@ function ActionSearchBar({
                             onChange={handleInputChange}
                             onFocus={handleFocus}
                             onBlur={() =>
-                                setTimeout(() => setIsFocused(false), 200)
+                                setTimeout(() => setIsFocused(defaultExpanded), 200)
                             }
-                            className="pl-3 pr-9 py-3 h-12 text-base rounded-xl focus-visible:ring-offset-0 border-2 border-muted hover:border-primary/50 focus:border-primary transition-colors"
+                            className="pl-3 pr-9 py-1.5 h-9 text-sm rounded-lg focus-visible:ring-offset-0"
                         />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4">
                             <AnimatePresence mode="popLayout">
                                 {query.length > 0 ? (
                                     <motion.div
@@ -183,7 +227,7 @@ function ActionSearchBar({
                                         exit={{ y: 20, opacity: 0 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <Send className="w-5 h-5 text-muted-foreground" />
+                                        <Send className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                                     </motion.div>
                                 ) : (
                                     <motion.div
@@ -193,7 +237,7 @@ function ActionSearchBar({
                                         exit={{ y: 20, opacity: 0 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <Search className="w-5 h-5 text-muted-foreground" />
+                                        <Search className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -201,66 +245,52 @@ function ActionSearchBar({
                     </div>
                 </div>
 
-                <div className="w-full">
+                <div className="w-full max-w-sm">
                     <AnimatePresence>
-                        {isFocused && result && !selectedAction && (
+                        {(isFocused || defaultExpanded) && result && !selectedAction && (
                             <motion.div
-                                className="w-full border-2 border-primary/20 rounded-xl shadow-lg overflow-hidden bg-background mt-2"
+                                className="w-full border rounded-md shadow-sm overflow-hidden dark:border-gray-800 bg-white dark:bg-black mt-1"
                                 variants={container}
                                 initial="hidden"
                                 animate="show"
                                 exit="exit"
                             >
-                                <motion.ul className="p-2">
+                                <motion.ul>
                                     {result.actions.map((action) => (
                                         <motion.li
                                             key={action.id}
-                                            className="px-4 py-3 flex items-center justify-between hover:bg-primary/5 cursor-pointer rounded-lg transition-colors border border-transparent hover:border-primary/20"
+                                            className="px-3 py-2 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-zinc-900  cursor-pointer rounded-md"
                                             variants={item}
                                             layout
                                             onClick={() => handleActionClick(action)}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                                                    {action.icon}
-                                                </div>
-                                                <div>
-                                                    <span className="text-base font-medium text-foreground block">
+                                            <div className="flex items-center gap-2 justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-gray-500">
+                                                        {action.icon}
+                                                    </span>
+                                                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                         {action.label}
                                                     </span>
-                                                    {action.description && (
-                                                        <span className="text-sm text-muted-foreground">
-                                                            {action.description}
-                                                        </span>
-                                                    )}
+                                                    <span className="text-xs text-gray-400">
+                                                        {action.description}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {action.short && (
-                                                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                                                        {action.short}
-                                                    </span>
-                                                )}
-                                                {action.end && (
-                                                    <span className="text-xs text-primary font-medium">
-                                                        {action.end}
-                                                    </span>
-                                                )}
+                                                <span className="text-xs text-gray-400">
+                                                    {action.short}
+                                                </span>
+                                                <span className="text-xs text-gray-400 text-right">
+                                                    {action.end}
+                                                </span>
                                             </div>
                                         </motion.li>
                                     ))}
                                 </motion.ul>
-                                
-                                {result.actions.length === 0 && (
-                                    <div className="p-6 text-center text-muted-foreground">
-                                        <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                        <p>No matching options found</p>
-                                    </div>
-                                )}
-                                
-                                <div className="px-4 py-3 border-t border-border bg-muted/30">
-                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                        <span>Choose your preferred input method</span>
+                                <div className="mt-2 px-3 py-2 border-t border-gray-100 dark:border-gray-800">
+                                    <div className="flex items-center justify-between text-xs text-gray-500">
+                                        <span>Press ⌘K to open commands</span>
                                         <span>ESC to cancel</span>
                                     </div>
                                 </div>
@@ -273,4 +303,4 @@ function ActionSearchBar({
     );
 }
 
-export { ActionSearchBar };
+export { ActionSearchBar, type Action };
