@@ -18,7 +18,7 @@ import RedFlagBadge from '@/components/summary/RedFlagBadge';
 import SummaryHighlights from '@/components/summary/SummaryHighlights';
 import FloatingChatbot from '@/components/summary/FloatingChatbot';
 import DocumentInputSelector from '@/components/summary/DocumentInputSelector';
-import DocumentTypeSelectorHero from '@/components/summary/DocumentTypeSelectorHero';
+import DocumentTypeSelector from '@/components/summary/DocumentTypeSelector';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -63,7 +63,6 @@ export default function SummaryPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [tab, setTab] = useState('summary');
-  const [showDocumentTypeSelector, setShowDocumentTypeSelector] = useState(false);
   const { legalText, setLegalText, summary, redFlags, tone, setTone, selectedVoiceId, setSelectedVoiceId, documentType, setDocumentType } = useLegalTerms();
   const [urlInput, setUrlInput] = useState('');
   const { isAnalyzing, analyze } = useAnalysis();
@@ -406,17 +405,6 @@ export default function SummaryPage() {
     }
   };
 
-  // Show document type selector hero if requested
-  if (showDocumentTypeSelector) {
-    return (
-      <DocumentTypeSelectorHero
-        documentType={documentType}
-        setDocumentType={setDocumentType}
-        onComplete={() => setShowDocumentTypeSelector(false)}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container mx-auto px-4 pt-24 pb-8">
@@ -444,45 +432,11 @@ export default function SummaryPage() {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            {/* Document Type Selection with Hero Button */}
-            <Card className="border-2 border-primary/20 shadow-lg">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <FileText className="h-4 w-4 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-semibold">Document Type</h3>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowDocumentTypeSelector(true)}
-                    className="bg-gradient-to-r from-primary/10 to-purple-600/10 border-primary/20 hover:from-primary/20 hover:to-purple-600/20"
-                  >
-                    Interactive Selector
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/20">
-                  <div className="flex items-center gap-3">
-                    {React.createElement(getDocumentTypeIcon(documentType), { 
-                      className: "h-5 w-5 text-primary" 
-                    })}
-                    <div>
-                      <p className="font-medium capitalize">{documentType} Contract</p>
-                      <p className="text-sm text-muted-foreground">
-                        {getDocumentTypeDescription(documentType)}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                    Selected
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Document Type Selection */}
+            <DocumentTypeSelector
+              documentType={documentType}
+              setDocumentType={setDocumentType}
+            />
 
             {/* Enhanced Input Methods with Action Search Bar */}
             <DocumentInputSelector
