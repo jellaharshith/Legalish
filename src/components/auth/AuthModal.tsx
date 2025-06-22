@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,6 +29,7 @@ export default function AuthModal({ children }: AuthModalProps) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +50,8 @@ export default function AuthModal({ children }: AuthModalProps) {
         });
       }
       setIsOpen(false);
+      // Redirect to analyze page after successful sign in
+      navigate('/summary');
     } catch (error) {
       toast({
         title: 'Error',
@@ -68,6 +72,8 @@ export default function AuthModal({ children }: AuthModalProps) {
         title: 'Welcome!',
         description: 'Successfully signed in with Google.',
       });
+      // Redirect to analyze page after successful Google sign in
+      navigate('/summary');
     } catch (error) {
       toast({
         title: 'Error',
