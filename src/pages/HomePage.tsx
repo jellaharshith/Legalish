@@ -105,17 +105,6 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
-            {/* Logo in Hero */}
-            <div className="flex justify-center mb-8">
-              <div className="w-24 h-24 flex items-center justify-center">
-                <img 
-                  src="/Logo-version-1.png" 
-                  alt="V.O.L.T Logo" 
-                  className="w-24 h-24 object-contain drop-shadow-2xl"
-                />
-              </div>
-            </div>
-
             <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
               Never read
               <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
