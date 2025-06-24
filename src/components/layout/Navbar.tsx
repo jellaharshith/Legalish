@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Zap, User, Menu, X, HelpCircle } from 'lucide-react';
+import { User, Menu, X, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTutorial } from '@/components/onboarding/TutorialProvider';
 import AuthModal from '@/components/auth/AuthModal';
@@ -45,8 +45,12 @@ export default function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 z-50">
-          <div className="rounded-xl bg-gradient-to-r from-primary to-purple-600 w-10 h-10 flex items-center justify-center shadow-lg">
-            <Zap className="h-6 w-6 text-white" />
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img 
+              src="/Logo-version-1.png" 
+              alt="V.O.L.T Logo" 
+              className="w-10 h-10 object-contain"
+            />
           </div>
           <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
             V.O.L.T

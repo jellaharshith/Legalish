@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Typewriter } from '@/components/ui/typewriter';
 import { 
-  Zap, 
   Upload, 
   Wand2, 
   AlertTriangle, 
@@ -55,8 +54,12 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       icon: Rocket,
       content: (
         <div className="text-center space-y-4">
-          <div className="w-20 h-20 bg-gradient-to-r from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Zap className="h-10 w-10 text-white" />
+          <div className="w-20 h-20 flex items-center justify-center mx-auto mb-4">
+            <img 
+              src="/Logo-version-1.png" 
+              alt="V.O.L.T Logo" 
+              className="w-20 h-20 object-contain"
+            />
           </div>
           <h2 className="text-2xl font-bold">
             <Typewriter
@@ -115,7 +118,11 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-              <Zap className="h-5 w-5 text-purple-500" />
+              <img 
+                src="/Logo-version-1.png" 
+                alt="V.O.L.T Logo" 
+                className="h-5 w-5 object-contain"
+              />
               <div>
                 <p className="font-medium">Enter URL</p>
                 <p className="text-sm text-muted-foreground">Direct link to terms of service</p>
@@ -189,8 +196,12 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           </h3>
           <div className="bg-gradient-to-r from-primary/10 to-purple-600/10 p-4 rounded-lg border border-primary/20">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                <Zap className="h-4 w-4 text-primary" />
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img 
+                  src="/Logo-version-1.png" 
+                  alt="V.O.L.T Logo" 
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div>
                 <p className="font-medium">AI Analysis Engine</p>
@@ -314,8 +325,12 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           </h3>
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                <MessageCircle className="h-4 w-4 text-blue-600" />
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img 
+                  src="/Logo-version-1.png" 
+                  alt="V.O.L.T Logo" 
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div>
                 <p className="font-medium">V.O.L.T Assistant</p>

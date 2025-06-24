@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Zap, Shield, Clock, Users, Star, CheckCircle, AlertTriangle, Brain, FileSearch } from 'lucide-react';
+import { ArrowRight, Shield, Clock, Users, Star, CheckCircle, AlertTriangle, Brain, FileSearch } from 'lucide-react';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { SplineBackground } from '@/components/ui/spline-background';
 import { Typewriter } from '@/components/ui/typewriter';
@@ -19,7 +19,7 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: Zap,
+      icon: Brain,
       title: "Analyze in a Flash",
       description: "Upload → Understand in seconds. V.O.L.T delivers full analysis in under 30 seconds — no legal background needed.",
       emoji: "⚡"
@@ -67,7 +67,7 @@ export default function HomePage() {
 
   const benefits = [
     {
-      icon: Zap,
+      icon: Brain,
       title: "Lightning Fast Analysis",
       description: "Get results in under 30 seconds"
     },
@@ -105,6 +105,17 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
+            {/* Logo in Hero */}
+            <div className="flex justify-center mb-8">
+              <div className="w-24 h-24 flex items-center justify-center">
+                <img 
+                  src="/Logo-version-1.png" 
+                  alt="V.O.L.T Logo" 
+                  className="w-24 h-24 object-contain drop-shadow-2xl"
+                />
+              </div>
+            </div>
+
             <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
               Never read
               <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
@@ -253,8 +264,12 @@ export default function HomePage() {
               <Card className="p-8 bg-gradient-to-br from-primary/5 to-blue-500/5 border-primary/20">
                 <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-6">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Zap className="h-8 w-8 text-primary" />
+                    <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                      <img 
+                        src="/Logo-version-1.png" 
+                        alt="V.O.L.T Logo" 
+                        className="w-16 h-16 object-contain"
+                      />
                     </div>
                     <p className="text-muted-foreground">Interactive Demo</p>
                   </div>
