@@ -30,7 +30,8 @@ import {
   AlertTriangle,
   Clock,
   Eye,
-  Lock
+  Lock,
+  X
 } from 'lucide-react';
 
 interface Profile {
@@ -67,7 +68,7 @@ export default function DashboardPage() {
   const [updating, setUpdating] = useState(false);
   const [passwordUpdating, setPasswordUpdating] = useState(false);
   
-  // Form states
+  // Form states - Initialize with empty strings to ensure controlled inputs
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -95,6 +96,7 @@ export default function DashboardPage() {
 
         if (error) {
           if (error.code === 'PGRST116') {
+            // Profile doesn't exist, create one
             const { data: newProfile, error: createError } = await supabase
               .from('profiles')
               .insert({
@@ -111,18 +113,22 @@ export default function DashboardPage() {
             if (createError) throw createError;
             
             setProfile(newProfile);
+            // Set form values with proper fallbacks
             setFullName(newProfile.full_name || '');
-            setEmail(newProfile.email || '');
+            setEmail(newProfile.email || user.email || '');
             setAvatarUrl(newProfile.avatar_url || '');
-            setIsEditing(true);
+            setIsEditing(true); // Auto-enable editing for new profiles
           } else {
             throw error;
           }
         } else {
           setProfile(data);
+          // Set form values with proper fallbacks
           setFullName(data.full_name || '');
-          setEmail(data.email || '');
+          setEmail(data.email || user.email || '');
           setAvatarUrl(data.avatar_url || '');
+          
+          // Auto-enable editing if profile is incomplete
           if (!data.full_name || !data.full_name.trim()) {
             setIsEditing(true);
           }
@@ -306,8 +312,9 @@ export default function DashboardPage() {
   };
 
   const handleCancelEdit = () => {
+    // Reset form values to original profile data
     setFullName(profile?.full_name || '');
-    setEmail(profile?.email || '');
+    setEmail(profile?.email || user?.email || '');
     setAvatarUrl(profile?.avatar_url || '');
     setIsEditing(false);
   };
@@ -393,7 +400,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24 border-4 border-primary/20">
-                    <AvatarImage src={profile?.avatar_url || ''} />
+                    <AvatarImage src={profile?.avatar_url || avatarUrl || ''} />
                     <AvatarFallback className="text-2xl font-bold bg-primary/10">
                       <User className="h-8 w-8" />
                     </AvatarFallback>
@@ -409,11 +416,11 @@ export default function DashboardPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <h1 className="text-3xl font-bold truncate">
-                        {profile?.full_name || user?.email?.split('@')[0] || 'Welcome!'}
+                        {profile?.full_name || fullName || user?.email?.split('@')[0] || 'Welcome!'}
                       </h1>
                       <div className="flex items-center gap-2 text-muted-foreground mt-1">
                         <Mail className="h-4 w-4" />
-                        <span className="truncate">{profile?.email || user?.email}</span>
+                        <span className="truncate">{profile?.email || email || user?.email}</span>
                       </div>
                       {profile?.created_at && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
