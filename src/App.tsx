@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from '@/pages/HomePage';
 import SummaryPage from '@/pages/SummaryPage';
 import UpgradePage from '@/pages/UpgradePage';
-import DashboardPage from '@/pages/DashboardPage';
 import SuccessPage from '@/pages/SuccessPage';
 import Navbar from '@/components/layout/Navbar';
 import { Toaster } from '@/components/ui/toaster';
@@ -26,7 +25,6 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/summary" element={<SummaryPage />} />
                     <Route path="/upgrade" element={<UpgradePage />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/success" element={<SuccessPage />} />
                   </Routes>
                 </main>

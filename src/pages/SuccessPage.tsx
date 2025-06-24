@@ -97,13 +97,6 @@ export default function SuccessPage() {
                 Start Analyzing Terms
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/dashboard')} 
-                className="w-full"
-              >
-                Go to Dashboard
-              </Button>
             </div>
           </CardContent>
         </Card>

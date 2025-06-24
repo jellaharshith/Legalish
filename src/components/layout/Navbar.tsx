@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { User, Menu, X, HelpCircle } from 'lucide-react';
+import { Menu, X, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTutorial } from '@/components/onboarding/TutorialProvider';
 import AuthModal from '@/components/auth/AuthModal';
@@ -96,25 +96,14 @@ export default function Navbar() {
           </Button>
 
           {user ? (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => signOut()}
-                className="text-sm"
-              >
-                Sign Out
-              </Button>
-              <Link to="/dashboard">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={`h-9 w-9 ${location.pathname === '/dashboard' ? 'border-primary text-primary bg-primary/10' : ''}`}
-                >
-                  <User className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => signOut()}
+              className="text-sm"
+            >
+              Sign Out
+            </Button>
           ) : (
             <AuthModal>
               <Button
@@ -177,24 +166,16 @@ export default function Navbar() {
                 </Button>
 
                 {user ? (
-                  <div className="space-y-2">
-                    <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full justify-start">
-                        <User className="mr-2 h-4 w-4" />
-                        Dashboard
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        signOut();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full justify-start"
-                    >
-                      Sign Out
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      signOut();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full justify-start"
+                  >
+                    Sign Out
+                  </Button>
                 ) : (
                   <AuthModal>
                     <Button
