@@ -5,35 +5,27 @@ import { useAuth } from '@/context/AuthContext';
 import { useStripe } from '@/hooks/useStripe';
 import { supabase, testSupabaseConnection } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { 
   User, 
-  Settings, 
-  Key, 
   FileText, 
   Link as LinkIcon, 
   Upload, 
   CreditCard, 
-  Save, 
-  Edit, 
-  Camera, 
   Mail, 
   Calendar, 
   Shield,
   AlertTriangle,
   Clock,
   Eye,
-  Lock,
   X,
   Wifi,
-  WifiOff
+  WifiOff,
+  Key
 } from 'lucide-react';
 
 interface Profile {
@@ -67,18 +59,7 @@ export default function DashboardPage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [analysesLoading, setAnalysesLoading] = useState(true);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [passwordUpdating, setPasswordUpdating] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
-  
-  // Form states - Initialize with empty strings to ensure controlled inputs
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
 
   useEffect(() => {
@@ -145,25 +126,11 @@ export default function DashboardPage() {
           if (createError) throw createError;
           
           setProfile(newProfile);
-          // Set form values with proper fallbacks
-          setFullName(newProfile.full_name || '');
-          setEmail(newProfile.email || user.email || '');
-          setAvatarUrl(newProfile.avatar_url || '');
-          setIsEditing(true); // Auto-enable editing for new profiles
         } else {
           throw error;
         }
       } else {
         setProfile(data);
-        // Set form values with proper fallbacks
-        setFullName(data.full_name || '');
-        setEmail(data.email || user.email || '');
-        setAvatarUrl(data.avatar_url || '');
-        
-        // Auto-enable editing if profile is incomplete
-        if (!data.full_name || !data.full_name.trim()) {
-          setIsEditing(true);
-        }
       }
     } catch (error: any) {
       console.error('Error loading profile:', error);
@@ -269,174 +236,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleUpdateProfile = async () => {
-    if (!user) return;
-
-    if (fullName.trim().length === 0) {
-      toast({
-        title: 'Validation Error',
-        description: 'Full name cannot be empty',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please enter a valid email address',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (avatarUrl && !isValidUrl(avatarUrl)) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please enter a valid URL for the avatar',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setUpdating(true);
-    try {
-      // Update email in auth if changed
-      if (email !== user.email) {
-        const { error: emailError } = await supabase.auth.updateUser({
-          email: email.trim()
-        });
-        if (emailError) throw emailError;
-      }
-
-      // Update profile
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: fullName.trim(),
-          avatar_url: avatarUrl.trim() || null,
-          email: email.trim(),
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      setProfile(prev => prev ? { 
-        ...prev, 
-        full_name: fullName.trim(), 
-        avatar_url: avatarUrl.trim() || null,
-        email: email.trim()
-      } : null);
-      
-      setIsEditing(false);
-      
-      toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been updated successfully',
-      });
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      
-      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
-        setConnectionError(true);
-        toast({
-          title: 'Connection Error',
-          description: 'Unable to update profile. Please check your internet connection.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Update Failed',
-          description: 'Failed to update profile. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleUpdatePassword = async () => {
-    if (!user) return;
-
-    if (newPassword.length < 6) {
-      toast({
-        title: 'Validation Error',
-        description: 'Password must be at least 6 characters long',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: 'Validation Error',
-        description: 'Passwords do not match',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setPasswordUpdating(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) throw error;
-
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      
-      toast({
-        title: 'Password Updated',
-        description: 'Your password has been updated successfully',
-      });
-    } catch (error: any) {
-      console.error('Error updating password:', error);
-      
-      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
-        setConnectionError(true);
-        toast({
-          title: 'Connection Error',
-          description: 'Unable to update password. Please check your internet connection.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Update Failed',
-          description: 'Failed to update password. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    } finally {
-      setPasswordUpdating(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    // Reset form values to original profile data
-    setFullName(profile?.full_name || '');
-    setEmail(profile?.email || user?.email || '');
-    setAvatarUrl(profile?.avatar_url || '');
-    setIsEditing(false);
-  };
-
-  const isValidUrl = (string: string) => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
-
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
   const getSubscriptionStatus = () => {
     if (subscriptionLoading) return 'Loading...';
     if (!subscription) return 'Free';
@@ -536,27 +335,22 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24 border-4 border-primary/20">
-                    <AvatarImage src={profile?.avatar_url || avatarUrl || ''} />
+                    <AvatarImage src={profile?.avatar_url || ''} />
                     <AvatarFallback className="text-2xl font-bold bg-primary/10">
                       <User className="h-8 w-8" />
                     </AvatarFallback>
                   </Avatar>
-                  {isEditing && (
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <Camera className="h-4 w-4 text-white" />
-                    </div>
-                  )}
                 </div>
                 
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <h1 className="text-3xl font-bold truncate">
-                        {profile?.full_name || fullName || user?.email?.split('@')[0] || 'Welcome!'}
+                        {profile?.full_name || user?.email?.split('@')[0] || 'Welcome!'}
                       </h1>
                       <div className="flex items-center gap-2 text-muted-foreground mt-1">
                         <Mail className="h-4 w-4" />
-                        <span className="truncate">{profile?.email || email || user?.email}</span>
+                        <span className="truncate">{profile?.email || user?.email}</span>
                       </div>
                       {profile?.created_at && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -596,12 +390,8 @@ export default function DashboardPage() {
           </Card>
 
           {/* Main Dashboard Tabs */}
-          <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="profile" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Profile Settings
-              </TabsTrigger>
+          <Tabs defaultValue="history" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="history" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Analysis History
@@ -611,206 +401,6 @@ export default function DashboardPage() {
                 Subscription
               </TabsTrigger>
             </TabsList>
-
-            {/* Profile Settings Tab */}
-            <TabsContent value="profile" className="space-y-6">
-              <div className="grid gap-6 lg:grid-cols-2">
-                {/* Personal Information */}
-                <Card className="border-2 border-muted shadow-lg">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2 text-xl">
-                          <User className="h-5 w-5" />
-                          Personal Information
-                        </CardTitle>
-                        <CardDescription>Update your personal details and profile picture</CardDescription>
-                      </div>
-                      {!isEditing && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsEditing(true)}
-                          className="h-9 px-4"
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Profile Picture */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Profile Picture</Label>
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-16 w-16 border-2 border-muted">
-                          <AvatarImage src={avatarUrl || profile?.avatar_url || ''} />
-                          <AvatarFallback>
-                            <User className="h-6 w-6" />
-                          </AvatarFallback>
-                        </Avatar>
-                        {isEditing && (
-                          <div className="flex-1">
-                            <Input
-                              value={avatarUrl}
-                              onChange={(e) => setAvatarUrl(e.target.value)}
-                              placeholder="Enter image URL (e.g., https://example.com/photo.jpg)"
-                              className="h-10"
-                              disabled={updating}
-                              type="url"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Enter a URL to your profile picture
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    {/* Form Fields */}
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="fullName" className="text-sm font-medium">
-                          Full Name <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="fullName"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          placeholder="Enter your full name"
-                          className="h-10"
-                          disabled={!isEditing || updating}
-                          maxLength={100}
-                        />
-                        {isEditing && (
-                          <p className="text-xs text-muted-foreground">
-                            {fullName.length}/100 characters
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-sm font-medium">
-                          Email Address <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter your email address"
-                          className="h-10"
-                          disabled={!isEditing || updating}
-                        />
-                        {isEditing && (
-                          <p className="text-xs text-muted-foreground">
-                            Changing your email will require verification
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    {isEditing && (
-                      <div className="flex gap-3 pt-4 border-t">
-                        <Button
-                          onClick={handleUpdateProfile}
-                          disabled={updating || !fullName.trim() || !email.trim()}
-                          className="flex-1 h-10"
-                        >
-                          {updating ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <Save className="h-4 w-4 mr-2" />
-                              Save Changes
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={handleCancelEdit}
-                          disabled={updating}
-                          className="h-10 px-6"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Password Change */}
-                <Card className="border-2 border-muted shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                      <Lock className="h-5 w-5" />
-                      Change Password
-                    </CardTitle>
-                    <CardDescription>Update your account password for security</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword" className="text-sm font-medium">
-                        New Password <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Enter new password"
-                        className="h-10"
-                        disabled={passwordUpdating}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                        Confirm New Password <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm new password"
-                        className="h-10"
-                        disabled={passwordUpdating}
-                      />
-                    </div>
-
-                    <Button
-                      onClick={handleUpdatePassword}
-                      disabled={passwordUpdating || !newPassword || !confirmPassword || newPassword !== confirmPassword}
-                      className="w-full h-10"
-                    >
-                      {passwordUpdating ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                          Updating...
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="h-4 w-4 mr-2" />
-                          Update Password
-                        </>
-                      )}
-                    </Button>
-
-                    <p className="text-xs text-muted-foreground">
-                      Password must be at least 6 characters long
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
 
             {/* Analysis History Tab */}
             <TabsContent value="history" className="space-y-6">
