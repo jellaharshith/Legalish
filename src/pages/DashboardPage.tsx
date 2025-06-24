@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useStripe } from '@/hooks/useStripe';
-import { supabase } from '@/lib/supabase';
+import { supabase, testSupabaseConnection } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,7 +31,9 @@ import {
   Clock,
   Eye,
   Lock,
-  X
+  X,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 
 interface Profile {
@@ -67,6 +69,7 @@ export default function DashboardPage() {
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [passwordUpdating, setPasswordUpdating] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
   
   // Form states - Initialize with empty strings to ensure controlled inputs
   const [fullName, setFullName] = useState('');
@@ -86,104 +89,185 @@ export default function DashboardPage() {
       return;
     }
 
-    async function loadProfile() {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url, subscription_tier, terms_analyzed, created_at, email')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          if (error.code === 'PGRST116') {
-            // Profile doesn't exist, create one
-            const { data: newProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert({
-                id: user.id,
-                email: user.email || '',
-                full_name: null,
-                avatar_url: null,
-                subscription_tier: 'free',
-                terms_analyzed: 0
-              })
-              .select('full_name, avatar_url, subscription_tier, terms_analyzed, created_at, email')
-              .single();
-
-            if (createError) throw createError;
-            
-            setProfile(newProfile);
-            // Set form values with proper fallbacks
-            setFullName(newProfile.full_name || '');
-            setEmail(newProfile.email || user.email || '');
-            setAvatarUrl(newProfile.avatar_url || '');
-            setIsEditing(true); // Auto-enable editing for new profiles
-          } else {
-            throw error;
-          }
-        } else {
-          setProfile(data);
-          // Set form values with proper fallbacks
-          setFullName(data.full_name || '');
-          setEmail(data.email || user.email || '');
-          setAvatarUrl(data.avatar_url || '');
-          
-          // Auto-enable editing if profile is incomplete
-          if (!data.full_name || !data.full_name.trim()) {
-            setIsEditing(true);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading profile:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load profile data',
-          variant: 'destructive',
-        });
-      } finally {
+    // Test Supabase connection first
+    const initializeData = async () => {
+      const connectionOk = await testSupabaseConnection();
+      if (!connectionOk) {
+        setConnectionError(true);
         setProfileLoading(false);
-      }
-    }
-
-    async function loadSubscription() {
-      try {
-        const subscriptionData = await getSubscription();
-        setSubscription(subscriptionData);
-      } catch (error) {
-        console.error('Error loading subscription:', error);
-      } finally {
+        setAnalysesLoading(false);
         setSubscriptionLoading(false);
-      }
-    }
-
-    async function loadAnalyses() {
-      try {
-        const { data, error } = await supabase
-          .from('analyses')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        if (error) throw error;
-
-        setAnalyses(data || []);
-      } catch (error) {
-        console.error('Error loading analyses:', error);
         toast({
-          title: 'Error',
-          description: 'Failed to load analysis history',
+          title: 'Connection Error',
+          description: 'Unable to connect to the database. Please check your internet connection and try again.',
           variant: 'destructive',
         });
-      } finally {
-        setAnalysesLoading(false);
+        return;
       }
-    }
 
-    loadProfile();
-    loadSubscription();
-    loadAnalyses();
-  }, [user, navigate, toast, loading, getSubscription]);
+      setConnectionError(false);
+      await Promise.all([
+        loadProfile(),
+        loadSubscription(),
+        loadAnalyses()
+      ]);
+    };
+
+    initializeData();
+  }, [user, navigate, toast, loading]);
+
+  const loadProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url, subscription_tier, terms_analyzed, created_at, email')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Profile doesn't exist, create one
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              email: user.email || '',
+              full_name: null,
+              avatar_url: null,
+              subscription_tier: 'free',
+              terms_analyzed: 0
+            })
+            .select('full_name, avatar_url, subscription_tier, terms_analyzed, created_at, email')
+            .single();
+
+          if (createError) throw createError;
+          
+          setProfile(newProfile);
+          // Set form values with proper fallbacks
+          setFullName(newProfile.full_name || '');
+          setEmail(newProfile.email || user.email || '');
+          setAvatarUrl(newProfile.avatar_url || '');
+          setIsEditing(true); // Auto-enable editing for new profiles
+        } else {
+          throw error;
+        }
+      } else {
+        setProfile(data);
+        // Set form values with proper fallbacks
+        setFullName(data.full_name || '');
+        setEmail(data.email || user.email || '');
+        setAvatarUrl(data.avatar_url || '');
+        
+        // Auto-enable editing if profile is incomplete
+        if (!data.full_name || !data.full_name.trim()) {
+          setIsEditing(true);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error loading profile:', error);
+      
+      // Handle specific network errors
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        setConnectionError(true);
+        toast({
+          title: 'Connection Error',
+          description: 'Unable to load profile data. Please check your internet connection.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to load profile data. Please try refreshing the page.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const loadSubscription = async () => {
+    try {
+      const subscriptionData = await getSubscription();
+      setSubscription(subscriptionData);
+    } catch (error: any) {
+      console.error('Error loading subscription:', error);
+      
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        setConnectionError(true);
+      }
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  const loadAnalyses = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('analyses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      setAnalyses(data || []);
+    } catch (error: any) {
+      console.error('Error loading analyses:', error);
+      
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        setConnectionError(true);
+        toast({
+          title: 'Connection Error',
+          description: 'Unable to load analysis history. Please check your internet connection.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to load analysis history. Please try refreshing the page.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setAnalysesLoading(false);
+    }
+  };
+
+  const handleRetryConnection = async () => {
+    setConnectionError(false);
+    setProfileLoading(true);
+    setAnalysesLoading(true);
+    setSubscriptionLoading(true);
+    
+    const connectionOk = await testSupabaseConnection();
+    if (connectionOk) {
+      await Promise.all([
+        loadProfile(),
+        loadSubscription(),
+        loadAnalyses()
+      ]);
+      toast({
+        title: 'Connection Restored',
+        description: 'Successfully reconnected to the database.',
+      });
+    } else {
+      setConnectionError(true);
+      setProfileLoading(false);
+      setAnalysesLoading(false);
+      setSubscriptionLoading(false);
+      toast({
+        title: 'Connection Failed',
+        description: 'Still unable to connect. Please try again later.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleUpdateProfile = async () => {
     if (!user) return;
@@ -250,13 +334,23 @@ export default function DashboardPage() {
         title: 'Profile Updated',
         description: 'Your profile has been updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast({
-        title: 'Update Failed',
-        description: 'Failed to update profile. Please try again.',
-        variant: 'destructive',
-      });
+      
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        setConnectionError(true);
+        toast({
+          title: 'Connection Error',
+          description: 'Unable to update profile. Please check your internet connection.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Update Failed',
+          description: 'Failed to update profile. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setUpdating(false);
     }
@@ -299,13 +393,23 @@ export default function DashboardPage() {
         title: 'Password Updated',
         description: 'Your password has been updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating password:', error);
-      toast({
-        title: 'Update Failed',
-        description: 'Failed to update password. Please try again.',
-        variant: 'destructive',
-      });
+      
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        setConnectionError(true);
+        toast({
+          title: 'Connection Error',
+          description: 'Unable to update password. Please check your internet connection.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Update Failed',
+          description: 'Failed to update password. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setPasswordUpdating(false);
     }
@@ -380,6 +484,38 @@ export default function DashboardPage() {
               <div className="h-[400px] bg-muted rounded-lg"></div>
               <div className="h-[400px] bg-muted rounded-lg"></div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Connection Error State
+  if (connectionError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-2 border-destructive/20 shadow-lg">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <WifiOff className="h-8 w-8 text-destructive" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Connection Error</h2>
+                <p className="text-muted-foreground mb-6">
+                  Unable to connect to the database. Please check your internet connection and try again.
+                </p>
+                <div className="space-y-3">
+                  <Button onClick={handleRetryConnection} className="w-full">
+                    <Wifi className="mr-2 h-4 w-4" />
+                    Retry Connection
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/')} className="w-full">
+                    Return to Home
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
