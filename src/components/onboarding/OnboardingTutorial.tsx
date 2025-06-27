@@ -473,6 +473,17 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
     onClose();
   };
 
+  // Handle close button click - this is the key fix
+  const handleClose = () => {
+    if (isCompleted) {
+      // If tutorial is completed, call onComplete to properly close
+      onComplete();
+    } else {
+      // If tutorial is not completed, call onClose to skip/close
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   // Get the current step's icon component
@@ -516,7 +527,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={handleSkip}
+                      onClick={handleClose}
                       className="text-muted-foreground hover:text-foreground"
                     >
                       <X className="h-4 w-4" />
@@ -606,6 +617,18 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             >
               <Card className="border-2 border-green-500/50 shadow-2xl bg-background max-w-md mx-4">
                 <CardContent className="p-8 text-center">
+                  {/* Close button for completion screen */}
+                  <div className="flex justify-end mb-4">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleClose}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -636,6 +659,14 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                         <Sparkles className="h-4 w-4 mr-2" />
                         Tutorial completed successfully
                       </Badge>
+                      
+                      <Button
+                        onClick={handleClose}
+                        className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+                      >
+                        Start Using Legalish
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
                     </div>
                   </motion.div>
                 </CardContent>
