@@ -45,7 +45,7 @@ export default function UpgradePage() {
       return;
     }
 
-    const product = stripeProducts[0]; // V.O.L.T Pro
+    const product = stripeProducts[0]; // Legalish Pro
     
     try {
       await redirectToCheckout({
@@ -177,7 +177,7 @@ export default function UpgradePage() {
           {/* Advanced Pricing Component */}
           <Pricing
             plans={pricingPlans}
-            title="Choose Your V.O.L.T Experience"
+            title="Choose Your Legalish Experience"
             description="From casual document reviews to professional legal analysis\nEvery plan includes our core AI-powered analysis engine"
             onPlanSelect={(plan) => {
               if (plan.onClick) {
@@ -188,7 +188,7 @@ export default function UpgradePage() {
           
           {/* Benefits Section */}
           <div className="mt-20 mb-16">
-            <h3 className="text-2xl font-bold text-center mb-8">Why choose V.O.L.T Pro?</h3>
+            <h3 className="text-2xl font-bold text-center mb-8">Why choose Legalish Pro?</h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {benefits.map((benefit, index) => (
                 <motion.div

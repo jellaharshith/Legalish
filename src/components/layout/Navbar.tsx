@@ -48,12 +48,12 @@ export default function Navbar() {
           <div className="w-10 h-10 flex items-center justify-center">
             <img 
               src="/Logo-version-1.png" 
-              alt="V.O.L.T Logo" 
+              alt="Legalish Logo" 
               className="w-10 h-10 object-contain"
             />
           </div>
           <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            V.O.L.T
+            Legalish
           </span>
         </Link>
 

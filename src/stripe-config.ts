@@ -8,7 +8,7 @@ export interface StripeProduct {
 export const stripeProducts: StripeProduct[] = [
   {
     priceId: 'price_1RXAXqJIz8cwPcMUHUZxcJ1o',
-    name: 'V.O.L.T Pro',
+    name: 'Legalish Pro',
     description: 'Premium legal term analysis with unlimited features and celebrity voices',
     mode: 'subscription'
   }

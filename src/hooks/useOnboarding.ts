@@ -37,8 +37,8 @@ export function useOnboarding() {
         }
 
         // Check localStorage for completion status
-        const localCompleted = localStorage.getItem('volt_tutorial_completed') === 'true';
-        const localSkipped = localStorage.getItem('volt_tutorial_skipped') === 'true';
+        const localCompleted = localStorage.getItem('legalish_tutorial_completed') === 'true';
+        const localSkipped = localStorage.getItem('legalish_tutorial_skipped') === 'true';
 
         if (localCompleted || localSkipped) {
           setOnboardingState({
@@ -116,8 +116,8 @@ export function useOnboarding() {
   };
 
   const completeTutorial = () => {
-    localStorage.setItem('volt_tutorial_completed', 'true');
-    localStorage.setItem('volt_tutorial_completed_at', new Date().toISOString());
+    localStorage.setItem('legalish_tutorial_completed', 'true');
+    localStorage.setItem('legalish_tutorial_completed_at', new Date().toISOString());
     setOnboardingState({
       shouldShowTutorial: false,
       isFirstTimeUser: false,
@@ -126,7 +126,7 @@ export function useOnboarding() {
   };
 
   const skipTutorial = () => {
-    localStorage.setItem('volt_tutorial_skipped', 'true');
+    localStorage.setItem('legalish_tutorial_skipped', 'true');
     setOnboardingState(prev => ({
       ...prev,
       shouldShowTutorial: false

@@ -21,13 +21,13 @@ export default function HomePage() {
     {
       icon: Brain,
       title: "Analyze in a Flash",
-      description: "Upload → Understand in seconds. V.O.L.T delivers full analysis in under 30 seconds — no legal background needed.",
+      description: "Upload → Understand in seconds. Legalish delivers full analysis in under 30 seconds — no legal background needed.",
       emoji: "⚡"
     },
     {
       icon: AlertTriangle,
       title: "Catch the Red Flags",
-      description: "AI that knows what to look for. V.O.L.T identifies risky clauses like hidden fees or one-sided terms using red flag detection trained on real-world legal documents.",
+      description: "AI that knows what to look for. Legalish identifies risky clauses like hidden fees or one-sided terms using red flag detection trained on real-world legal documents.",
       emoji: "🚩"
     },
     {
@@ -39,7 +39,7 @@ export default function HomePage() {
     {
       icon: Clock,
       title: "Save Hours of Reading",
-      description: "Legal clarity without the scroll. No more decoding contracts line by line. V.O.L.T turns dense documents into summaries and voice narration you'll actually understand.",
+      description: "Legal clarity without the scroll. No more decoding contracts line by line. Legalish turns dense documents into summaries and voice narration you'll actually understand.",
       emoji: "⏳"
     }
   ];
@@ -48,7 +48,7 @@ export default function HomePage() {
     {
       name: "Sarah Chen",
       role: "Startup Founder",
-      content: "V.O.L.T saved me hours on contract reviews. The red flag detection is incredibly accurate.",
+      content: "Legalish saved me hours on contract reviews. The red flag detection is incredibly accurate.",
       rating: 5
     },
     {
@@ -115,7 +115,7 @@ export default function HomePage() {
             
             <div className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
               <p className="whitespace-pre-wrap">
-                <span>{"V.O.L.T uses AI to translate complex legal documents into plain English, highlighting red flags and saving you "}</span>
+                <span>{"Legalish uses AI to translate complex legal documents into plain English, highlighting red flags and saving you "}</span>
                 <Typewriter
                   text={[
                     "hours of reading",
@@ -178,10 +178,10 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="text-2xl">⚖️</span> Why Choose V.O.L.T?
+              <span className="text-2xl">⚖️</span> Why Choose Legalish?
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Because nobody has time for legal jargon. V.O.L.T breaks it down — fast, smart, and backed by real legal data.
+              Because nobody has time for legal jargon. Legalish breaks it down — fast, smart, and backed by real legal data.
             </p>
           </motion.div>
 
@@ -225,7 +225,7 @@ export default function HomePage() {
                 <span className="text-primary"> plain English</span>
               </h2>
               <p className="text-lg text-muted-foreground mb-8">
-                Watch how V.O.L.T transforms complex legal documents into easy-to-understand summaries, 
+                Watch how Legalish transforms complex legal documents into easy-to-understand summaries, 
                 complete with red flag detection and multiple voice options.
               </p>
               <div className="space-y-4">
@@ -256,7 +256,7 @@ export default function HomePage() {
                     <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
                       <img 
                         src="/Logo-version-1.png" 
-                        alt="V.O.L.T Logo" 
+                        alt="Legalish Logo" 
                         className="w-16 h-16 object-contain"
                       />
                     </div>
@@ -289,7 +289,7 @@ export default function HomePage() {
               Loved by thousands
             </h2>
             <p className="text-lg text-muted-foreground">
-              See what our users are saying about V.O.L.T
+              See what our users are saying about Legalish
             </p>
           </motion.div>
 
@@ -334,7 +334,7 @@ export default function HomePage() {
               Ready to simplify your legal reading?
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join thousands of users who've already saved hours with V.O.L.T. 
+              Join thousands of users who've already saved hours with Legalish. 
               Start analyzing your legal documents today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

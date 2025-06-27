@@ -78,7 +78,7 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
       // Add welcome message when document is analyzed
       const welcomeMessage: Message = {
         id: 'welcome',
-        content: `Hi! I'm V.O.L.T Assistant 🤖\n\nI've analyzed your ${documentType} document and found ${redFlags.length} red flags. I can help you understand any part of your document!\n\nWhat would you like to know?`,
+        content: `Hi! I'm Legalish Assistant 🤖\n\nI've analyzed your ${documentType} document and found ${redFlags.length} red flags. I can help you understand any part of your document!\n\nWhat would you like to know?`,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -301,7 +301,7 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
                       <Bot className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-sm">V.O.L.T Assistant</h3>
+                      <h3 className="font-semibold text-sm">Legalish Assistant</h3>
                       <p className="text-xs text-blue-100">
                         Ready to help with your {documentType} document!
                       </p>
@@ -465,7 +465,7 @@ export default function FloatingChatbot({ legalText, summary, redFlags, document
                   <div className="flex items-center justify-center mt-2">
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Sparkles className="h-3 w-3" />
-                      Powered by V.O.L.T AI
+                      Powered by Legalish AI
                     </p>
                   </div>
                 </div>

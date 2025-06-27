@@ -1,7 +1,7 @@
-# V.O.L.T Chatbot Implementation - Complete ✅
+# Legalish Chatbot Implementation - Complete ✅
 
 ## Overview
-The V.O.L.T Assistant chatbot has been successfully implemented and is now fully functional. Users can have interactive conversations about their analyzed legal documents.
+The Legalish Assistant chatbot has been successfully implemented and is now fully functional. Users can have interactive conversations about their analyzed legal documents.
 
 ## Features Implemented
 

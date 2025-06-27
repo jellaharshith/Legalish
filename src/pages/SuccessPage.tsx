@@ -70,7 +70,7 @@ export default function SuccessPage() {
             </div>
             <CardTitle className="text-2xl">Payment Successful!</CardTitle>
             <CardDescription>
-              Welcome to V.O.L.T Pro! Your subscription is now active.
+              Welcome to Legalish Pro! Your subscription is now active.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

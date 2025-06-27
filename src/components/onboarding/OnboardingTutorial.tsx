@@ -49,7 +49,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
   const steps: OnboardingStep[] = [
     {
       id: 'welcome',
-      title: 'Welcome to V.O.L.T! 🚀',
+      title: 'Welcome to Legalish! 🚀',
       description: 'Your AI-powered legal document analyzer',
       icon: Rocket,
       content: (
@@ -57,7 +57,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           <div className="w-20 h-20 flex items-center justify-center mx-auto mb-4">
             <img 
               src="/Logo-version-1.png" 
-              alt="V.O.L.T Logo" 
+              alt="Legalish Logo" 
               className="w-20 h-20 object-contain"
             />
           </div>
@@ -120,7 +120,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
               <img 
                 src="/Logo-version-1.png" 
-                alt="V.O.L.T Logo" 
+                alt="Legalish Logo" 
                 className="h-5 w-5 object-contain"
               />
               <div>
@@ -199,7 +199,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               <div className="w-8 h-8 flex items-center justify-center">
                 <img 
                   src="/Logo-version-1.png" 
-                  alt="V.O.L.T Logo" 
+                  alt="Legalish Logo" 
                   className="w-8 h-8 object-contain"
                 />
               </div>
@@ -312,7 +312,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
     {
       id: 'chatbot',
       title: 'Step 6: Ask Follow-up Questions 💬',
-      description: 'Chat with V.O.L.T Assistant about your document',
+      description: 'Chat with Legalish Assistant about your document',
       icon: MessageCircle,
       content: (
         <div className="space-y-4">
@@ -328,12 +328,12 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               <div className="w-8 h-8 flex items-center justify-center">
                 <img 
                   src="/Logo-version-1.png" 
-                  alt="V.O.L.T Logo" 
+                  alt="Legalish Logo" 
                   className="w-8 h-8 object-contain"
                 />
               </div>
               <div>
-                <p className="font-medium">V.O.L.T Assistant</p>
+                <p className="font-medium">Legalish Assistant</p>
                 <p className="text-sm text-muted-foreground">Context-aware legal chatbot</p>
               </div>
             </div>
@@ -432,8 +432,8 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
     }
 
     // Save to localStorage as backup
-    localStorage.setItem('volt_tutorial_completed', 'true');
-    localStorage.setItem('volt_tutorial_completed_at', new Date().toISOString());
+    localStorage.setItem('legalish_tutorial_completed', 'true');
+    localStorage.setItem('legalish_tutorial_completed_at', new Date().toISOString());
 
     // Wait a moment for celebration, then complete
     setTimeout(() => {
@@ -442,7 +442,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
   };
 
   const handleSkip = () => {
-    localStorage.setItem('volt_tutorial_skipped', 'true');
+    localStorage.setItem('legalish_tutorial_skipped', 'true');
     onClose();
   };
 

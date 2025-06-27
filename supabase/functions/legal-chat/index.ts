@@ -90,7 +90,7 @@ function buildChatPrompt(question: string, context: ChatRequest['context']): str
   const summaryText = context.summary.map(item => `${item.title}: ${item.description}`).join('\n');
   const redFlagsText = context.red_flags.join('\n- ');
 
-  return `You are V.O.L.T Assistant, a helpful AI legal assistant specializing in contract analysis. You have already analyzed a ${context.document_type} document for the user.
+  return `You are Legalish Assistant, a helpful AI legal assistant specializing in contract analysis. You have already analyzed a ${context.document_type} document for the user.
 
 DOCUMENT CONTEXT:
 Document Type: ${context.document_type}
