@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Shield, Clock, Users, CheckCircle, Brain, FileSearch } from 'lucide-react';
+import { ArrowRight, CheckCircle, Brain, FileSearch, Clock } from 'lucide-react';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { SplineBackground } from '@/components/ui/spline-background';
 import { Typewriter } from '@/components/ui/typewriter';
@@ -41,29 +41,6 @@ export default function HomePage() {
       title: "Save Hours of Reading",
       description: "Legal clarity without the scroll. No more decoding contracts line by line. Legalish turns dense documents into summaries and voice narration you'll actually understand.",
       emoji: "⏳"
-    }
-  ];
-
-  const benefits = [
-    {
-      icon: Brain,
-      title: "Lightning Fast Analysis",
-      description: "Get results in under 30 seconds"
-    },
-    {
-      icon: Shield,
-      title: "Advanced Red Flag Detection",
-      description: "AI identifies concerning clauses automatically"
-    },
-    {
-      icon: Clock,
-      title: "Save Hours of Reading",
-      description: "No more endless legal jargon"
-    },
-    {
-      icon: Users,
-      title: "Trusted by Thousands",
-      description: "Join 10,000+ satisfied users"
     }
   ];
 
@@ -250,76 +227,6 @@ export default function HomePage() {
                 </Button>
               </Card>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why Document Type Matters
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Our AI provides specialized analysis tailored to your specific document type
-            </p>
-          </motion.div>
-
-          <div className="max-w-4xl mx-auto">
-            <Card className="p-8 bg-gradient-to-br from-primary/5 to-blue-500/5 border-primary/20 shadow-xl">
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <FileSearch className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-primary mb-2">Specialized Analysis:</h3>
-                      <p className="text-sm text-muted-foreground">Each type uses domain-specific knowledge</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Shield className="h-4 w-4 text-red-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-red-500 mb-2">Relevant Red Flags:</h3>
-                      <p className="text-sm text-muted-foreground">Identifies issues specific to that document type</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Brain className="h-4 w-4 text-blue-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-blue-500 mb-2">Better Context:</h3>
-                      <p className="text-sm text-muted-foreground">AI understands the purpose and common clauses</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-green-500 mb-2">Accurate Summaries:</h3>
-                      <p className="text-sm text-muted-foreground">Focuses on what matters most for that contract type</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
           </div>
         </div>
       </section>
