@@ -319,45 +319,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to simplify your legal reading?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Join thousands of users who've already saved hours with Legalish. 
-              Start analyzing your legal documents today.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                onClick={() => navigate('/summary')}
-                className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl"
-              >
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={() => navigate('/upgrade')}
-                className="px-8 py-6 text-lg font-semibold rounded-xl border-2"
-              >
-                View Pricing
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
     </div>
   );
 }
