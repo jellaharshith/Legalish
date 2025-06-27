@@ -189,7 +189,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">
             <Typewriter
-              text="Watch the speedrun timer! ⏱️"
+              text="Watch the AI work its magic! 🪄"
               speed={40}
               showCursor={false}
             />
@@ -271,7 +271,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
     },
     {
       id: 'voice',
-      title: 'Step 5: Listen to Your Analysis 🎧',
+      title: 'Step 5: Premium AI Voices 🎧',
       description: 'AI voices read the summary aloud',
       icon: Play,
       targetElement: '[data-tutorial="audio-controls"]',
@@ -281,7 +281,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">
             <Typewriter
-              text="Sit back and listen! 🎵"
+              text="Premium AI voices! 🎵"
               speed={40}
               showCursor={false}
             />
@@ -297,23 +297,37 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               </div>
             </div>
             <div className="space-y-2">
-              <p className="text-sm">✨ Your chosen tone comes to life</p>
-              <p className="text-sm">🎭 Multiple voice personalities</p>
-              <p className="text-sm">⚡ Instant audio generation</p>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">✨</span>
+                <p className="text-sm">Your chosen tone comes to life</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🎭</span>
+                <p className="text-sm">Multiple voice personalities</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">⚡</span>
+                <p className="text-sm">Instant audio generation</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🎪</span>
+                <p className="text-sm">Celebrity voices (Pro only)</p>
+              </div>
             </div>
           </div>
-          <Badge variant="outline" className="w-full justify-center">
-            <Crown className="h-3 w-3 mr-1" />
-            Premium voices unlock with Pro subscription
+          <Badge variant="outline" className="w-full justify-center bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200">
+            <Crown className="h-3 w-3 mr-1 text-yellow-600" />
+            <span className="text-yellow-700">Premium voices unlock with Pro subscription</span>
           </Badge>
         </div>
       )
     },
     {
       id: 'chatbot',
-      title: 'Step 6: Ask Follow-up Questions 💬',
+      title: 'Step 6: Meet your legal buddy! 🤖',
       description: 'Chat with Legalish Assistant about your document',
       icon: MessageCircle,
+      showOverlay: true,
       content: (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">
@@ -338,14 +352,27 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               </div>
             </div>
             <div className="space-y-2 text-sm">
-              <p>💡 "What are my termination rights?"</p>
-              <p>💡 "Explain the red flags you found"</p>
-              <p>💡 "Are there any hidden costs?"</p>
-              <p>💡 "Is this contract fair?"</p>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💡</span>
+                <p>"What are my termination rights?"</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💡</span>
+                <p>"Explain the red flags you found"</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💡</span>
+                <p>"Are there any hidden costs?"</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💡</span>
+                <p>"Is this contract fair?"</p>
+              </div>
             </div>
           </div>
-          <Badge variant="outline" className="w-full justify-center">
-            🧠 Powered by the same AI that analyzed your document
+          <Badge variant="outline" className="w-full justify-center bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <MessageCircle className="h-3 w-3 mr-1 text-purple-600" />
+            <span className="text-purple-700">Powered by the same AI that analyzed your document</span>
           </Badge>
         </div>
       )
@@ -389,7 +416,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           </div>
           <div className="text-center">
             <Badge variant="outline" className="bg-gradient-to-r from-primary to-purple-600 text-white border-0">
-              💰 Starting at $9.99/month
+              💰 Starting at $10/month
             </Badge>
           </div>
         </div>
