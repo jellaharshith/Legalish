@@ -30,14 +30,25 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement;
+    
+    // Remove any existing theme classes
     root.classList.remove("light", "dark");
+    
+    // Always apply dark theme
     root.classList.add("dark");
+    
+    // Set CSS custom properties for brand colors
+    root.style.setProperty('--brand-primary', '299 45% 64%');
+    root.style.setProperty('--brand-destructive', '9 64% 56%');
+    root.style.setProperty('--brand-base', '220 33% 37%');
+    root.style.setProperty('--brand-deep', '267 35% 24%');
+    root.style.setProperty('--brand-white', '0 0% 100%');
   }, []);
 
   const value = {
     theme: "dark" as Theme,
     setTheme: (theme: Theme) => {
-      // Always keep dark theme
+      // Always keep dark theme - this is a dark-mode-only app
       localStorage.setItem(storageKey, "dark");
       setTheme("dark");
     },
