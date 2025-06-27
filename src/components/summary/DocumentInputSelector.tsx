@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ActionSearchBar, Action } from '@/components/ui/action-search-bar';
-import { FileText, Link as LinkIcon, Upload, Zap, X, Check } from 'lucide-react';
+import { FileText, Link as LinkIcon, Upload, Zap, X, Check, Lock, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface DocumentInputSelectorProps {
   legalText: string;
@@ -24,6 +25,7 @@ interface DocumentInputSelectorProps {
   };
   onTextChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onUrlChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isAnalysisDisabled?: boolean;
 }
 
 type InputMethod = 'text' | 'url' | 'file' | null;
@@ -37,10 +39,12 @@ export default function DocumentInputSelector({
   fileInputRef,
   validationErrors,
   onTextChange,
-  onUrlChange
+  onUrlChange,
+  isAnalysisDisabled = false
 }: DocumentInputSelectorProps) {
   const [selectedMethod, setSelectedMethod] = useState<InputMethod>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const inputActions: Action[] = [
     {
@@ -73,6 +77,15 @@ export default function DocumentInputSelector({
   ];
 
   const handleMethodSelect = (action: Action) => {
+    if (isAnalysisDisabled) {
+      toast({
+        title: "Demo Mode",
+        description: "Custom input is disabled in demo mode. Upgrade to Pro to analyze your own documents.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSelectedMethod(action.id as InputMethod);
     
     // Clear other inputs when switching methods
@@ -93,6 +106,8 @@ export default function DocumentInputSelector({
   };
 
   const clearSelection = () => {
+    if (isAnalysisDisabled) return;
+    
     setSelectedMethod(null);
     setLegalText('');
     setUrlInput('');
@@ -126,7 +141,12 @@ export default function DocumentInputSelector({
             </div>
             <div>
               <h3 className="text-lg font-semibold">Input Document</h3>
-              <p className="text-sm text-muted-foreground">Choose how you'd like to provide your legal document</p>
+              <p className="text-sm text-muted-foreground">
+                {isAnalysisDisabled 
+                  ? "Demo document is loaded and ready for analysis"
+                  : "Choose how you'd like to provide your legal document"
+                }
+              </p>
             </div>
           </div>
           
@@ -134,25 +154,68 @@ export default function DocumentInputSelector({
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                 <Check className="h-3 w-3 mr-1" />
-                {inputStatus.method === 'text' && 'Text Ready'}
-                {inputStatus.method === 'url' && 'URL Ready'}
-                {inputStatus.method === 'file' && 'File Ready'}
+                {isAnalysisDisabled ? 'Demo Ready' : (
+                  inputStatus.method === 'text' ? 'Text Ready' :
+                  inputStatus.method === 'url' ? 'URL Ready' :
+                  inputStatus.method === 'file' ? 'File Ready' : 'Ready'
+                )}
               </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearSelection}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              {!isAnalysisDisabled && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSelection}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           )}
         </div>
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {!selectedMethod ? (
+        {isAnalysisDisabled ? (
+          // Demo Mode Display
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-muted">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium text-muted-foreground">Demo Document Loaded</p>
+                  <p className="text-sm text-muted-foreground">Sample Terms of Service ready for analysis</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-muted text-muted-foreground border-muted">
+                  <Lock className="h-3 w-3 mr-1" />
+                  Demo Mode
+                </Badge>
+              </div>
+            </div>
+
+            <div className="p-4 bg-gradient-to-r from-primary/5 to-purple-600/5 rounded-lg border border-primary/20">
+              <div className="flex items-start gap-3">
+                <Crown className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-primary mb-1">Unlock Custom Analysis</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Upgrade to Pro to analyze your own documents with text input, URL fetching, and file uploads.
+                  </p>
+                  <Button 
+                    size="sm" 
+                    onClick={() => navigate('/upgrade')}
+                    className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white"
+                  >
+                    <Crown className="h-4 w-4 mr-1" />
+                    Upgrade to Pro
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : !selectedMethod ? (
           <div>
             <ActionSearchBar
               actions={inputActions}
@@ -209,6 +272,7 @@ export default function DocumentInputSelector({
                   className={`min-h-[200px] resize-none font-mono text-sm ${
                     validationErrors.text ? 'border-destructive' : ''
                   }`}
+                  disabled={isAnalysisDisabled}
                 />
                 {validationErrors.text && (
                   <p className="text-sm text-destructive">{validationErrors.text}</p>
@@ -232,6 +296,7 @@ export default function DocumentInputSelector({
                   onChange={onUrlChange}
                   placeholder="https://example.com/terms-of-service"
                   className={`h-12 ${validationErrors.url ? 'border-destructive' : ''}`}
+                  disabled={isAnalysisDisabled}
                 />
                 {validationErrors.url && (
                   <p className="text-sm text-destructive">{validationErrors.url}</p>
@@ -252,6 +317,7 @@ export default function DocumentInputSelector({
                   onChange={onFileChange}
                   accept=".txt,.doc,.docx,.pdf,.rtf"
                   className={`h-12 cursor-pointer ${validationErrors.file ? 'border-destructive' : ''}`}
+                  disabled={isAnalysisDisabled}
                 />
                 {validationErrors.file && (
                   <p className="text-sm text-destructive">{validationErrors.file}</p>
@@ -269,6 +335,7 @@ export default function DocumentInputSelector({
                 size="sm"
                 onClick={() => setSelectedMethod(null)}
                 className="flex items-center gap-2"
+                disabled={isAnalysisDisabled}
               >
                 <X className="h-4 w-4" />
                 Change Method

@@ -95,7 +95,7 @@ export default function HomePage() {
                 onClick={() => navigate('/summary')}
                 className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
               >
-                Start Analyzing Free
+                Try Demo Analysis
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
@@ -104,7 +104,7 @@ export default function HomePage() {
                 onClick={handleStartDemo}
                 className="px-8 py-6 text-lg font-semibold rounded-xl border-2 border-white/30 text-white hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
               >
-                Try Demo
+                Quick Demo
               </Button>
             </div>
 
@@ -112,11 +112,11 @@ export default function HomePage() {
             <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-white/80">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-400" />
-                <span>Free forever plan</span>
+                <span>Free demo available</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-400" />
-                <span>30-second analysis</span>
+                <span>Sign in for custom analysis</span>
               </div>
             </div>
           </motion.div>
@@ -255,9 +255,6 @@ You may not use our service for any illegal purpose or to violate any laws. You 
 We reserve the right to terminate or suspend your account at any time, without notice, for conduct that we believe violates these Terms or is harmful to other users, us, or third parties, or for any other reason.
 
 5. DATA COLLECTION
-We collect and use your personal information as described in our Privacy Policy. By using our service, you consent to our data practices.
-
-6. DATA COLLECTION
 We collect and use your personal information as described in our Privacy Policy. By using our service, you consent to our data practices.
 
 6. ARBITRATION AGREEMENT

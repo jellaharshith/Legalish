@@ -4,14 +4,15 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ActionSearchBar, Action } from '@/components/ui/action-search-bar';
-import { FileText, Home, Briefcase, X, Check } from 'lucide-react';
+import { FileText, Home, Briefcase, X, Check, Lock } from 'lucide-react';
 
 interface DocumentTypeSelectorProps {
   documentType: string;
   setDocumentType: (type: string) => void;
+  isAnalysisDisabled?: boolean;
 }
 
-export default function DocumentTypeSelector({ documentType, setDocumentType }: DocumentTypeSelectorProps) {
+export default function DocumentTypeSelector({ documentType, setDocumentType, isAnalysisDisabled = false }: DocumentTypeSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const documentTypeActions: Action[] = [
@@ -42,8 +43,10 @@ export default function DocumentTypeSelector({ documentType, setDocumentType }: 
   ];
 
   const handleTypeSelect = (action: Action) => {
-    setDocumentType(action.id);
-    setIsExpanded(false);
+    if (!isAnalysisDisabled) {
+      setDocumentType(action.id);
+      setIsExpanded(false);
+    }
   };
 
   const getSelectedAction = () => {
@@ -74,7 +77,12 @@ export default function DocumentTypeSelector({ documentType, setDocumentType }: 
           </div>
           <div>
             <h3 className="text-lg font-semibold">Document Type</h3>
-            <p className="text-sm text-muted-foreground">Choose the type of legal document for specialized analysis</p>
+            <p className="text-sm text-muted-foreground">
+              {isAnalysisDisabled 
+                ? "Document type is set to General for demo analysis"
+                : "Choose the type of legal document for specialized analysis"
+              }
+            </p>
           </div>
         </div>
       </CardHeader>
@@ -83,27 +91,48 @@ export default function DocumentTypeSelector({ documentType, setDocumentType }: 
         {!isExpanded ? (
           <div>
             {/* Current Selection Display */}
-            <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/20">
+            <div className={`flex items-center justify-between p-4 rounded-lg border ${
+              isAnalysisDisabled 
+                ? 'bg-muted/30 border-muted' 
+                : 'bg-primary/5 border-primary/20'
+            }`}>
               <div className="flex items-center gap-3">
                 {selectedAction.icon}
                 <div>
-                  <p className="font-medium">{selectedAction.label}</p>
+                  <p className={`font-medium ${isAnalysisDisabled ? 'text-muted-foreground' : ''}`}>
+                    {selectedAction.label}
+                  </p>
                   <p className="text-sm text-muted-foreground">{selectedAction.description}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                  <Check className="h-3 w-3 mr-1" />
-                  Selected
+                <Badge variant="outline" className={`${
+                  isAnalysisDisabled 
+                    ? 'bg-muted text-muted-foreground border-muted' 
+                    : 'bg-primary/10 text-primary border-primary/20'
+                }`}>
+                  {isAnalysisDisabled ? (
+                    <>
+                      <Lock className="h-3 w-3 mr-1" />
+                      Demo Mode
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-3 w-3 mr-1" />
+                      Selected
+                    </>
+                  )}
                 </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsExpanded(true)}
-                  className="h-8"
-                >
-                  Change
-                </Button>
+                {!isAnalysisDisabled && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsExpanded(true)}
+                    className="h-8"
+                  >
+                    Change
+                  </Button>
+                )}
               </div>
             </div>
 

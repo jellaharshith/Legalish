@@ -12,13 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import SpeedrunTimer from '@/components/shared/SpeedrunTimer';
-import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle } from 'lucide-react';
+import { Play, Pause, SkipForward, Volume2, MessageSquareWarning, Award, Loader2, Wand2, FileText, Home, Briefcase, Zap, AlertTriangle, Crown, Lock } from 'lucide-react';
 import RedFlagBadge from '@/components/summary/RedFlagBadge';
 import SummaryHighlights from '@/components/summary/SummaryHighlights';
 import FloatingChatbot from '@/components/summary/FloatingChatbot';
 import DocumentInputSelector from '@/components/summary/DocumentInputSelector';
 import DocumentTypeSelector from '@/components/summary/DocumentTypeSelector';
+import AuthModal from '@/components/auth/AuthModal';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -26,6 +26,39 @@ import { useAnalysis } from '@/hooks/useAnalysis';
 import { z } from 'zod';
 import { AnalysisService } from '@/services/analysisService';
 import { supabase } from '@/lib/supabase';
+
+// Demo legal text for free users
+const DEMO_TEXT = `
+TERMS OF SERVICE
+
+Last Updated: April 20, 2025
+
+By accessing our service, you agree to the following terms:
+
+1. ACCOUNT REGISTRATION
+You must be at least 13 years old to use our service. You agree to provide accurate information when you register and to update your information to keep it accurate.
+
+2. CONTENT OWNERSHIP
+By uploading content to our platform, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, adapt, publish, translate, create derivative works from, distribute, and display such content in any media.
+
+3. PROHIBITED ACTIVITIES
+You may not use our service for any illegal purpose or to violate any laws. You may not impersonate others or provide inaccurate information.
+
+4. TERMINATION
+We reserve the right to terminate or suspend your account at any time, without notice, for conduct that we believe violates these Terms or is harmful to other users, us, or third parties, or for any other reason.
+
+5. DATA COLLECTION
+We collect and use your personal information as described in our Privacy Policy. By using our service, you consent to our data practices.
+
+6. ARBITRATION AGREEMENT
+All disputes will be resolved through binding arbitration. YOU WAIVE YOUR RIGHT TO A JURY TRIAL.
+
+7. LIMITATION OF LIABILITY
+Our liability is limited to the maximum extent permitted by law. We will not be liable for any indirect, incidental, special, consequential, or punitive damages.
+
+8. CHANGES TO TERMS
+We may modify these terms at any time. Your continued use of our service means you accept the changes.
+`;
 
 // Validation schemas
 const urlSchema = z.string().url().max(2048);
@@ -58,8 +91,6 @@ export default function SummaryPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [time, setTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [tab, setTab] = useState('summary');
@@ -73,18 +104,6 @@ export default function SummaryPage() {
     url?: string;
     file?: string;
   }>({});
-
-  useEffect(() => {
-    let interval: number;
-    
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        setTime(prev => prev + 10);
-      }, 10) as unknown as number;
-    }
-    
-    return () => clearInterval(interval);
-  }, [isTimerRunning]);
 
   // Get user's subscription tier from profiles table
   const [userProfile, setUserProfile] = useState<{ subscription_tier: string } | null>(null);
@@ -122,6 +141,17 @@ export default function SummaryPage() {
       setSelectedVoiceId(ELEVENLABS_VOICES[FREE_VOICES[0]]);
     }
   }, [tone, userProfile?.subscription_tier, setTone, setSelectedVoiceId]);
+
+  // Check if user can analyze custom documents
+  const canAnalyzeCustom = user && userProfile?.subscription_tier === 'pro';
+  const isDemoMode = !canAnalyzeCustom;
+
+  // Set demo text for non-pro users
+  useEffect(() => {
+    if (isDemoMode && !legalText) {
+      setLegalText(DEMO_TEXT);
+    }
+  }, [isDemoMode, legalText, setLegalText]);
 
   const validateUrl = (url: string): boolean => {
     if (!url) return true;
@@ -241,6 +271,25 @@ export default function SummaryPage() {
   };
 
   const handleAnalyze = async () => {
+    // Check if user is trying to analyze custom content without proper access
+    if (isDemoMode && (legalText !== DEMO_TEXT || urlInput || fileInputRef.current?.files?.length)) {
+      if (!user) {
+        toast({
+          title: "Sign In Required",
+          description: "Please sign in to analyze custom documents. You can try our demo without signing in.",
+          variant: "destructive"
+        });
+        return;
+      } else {
+        toast({
+          title: "Upgrade Required",
+          description: "Upgrade to Pro to analyze custom documents. Free users can only analyze the demo document.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setValidationErrors({});
 
     const isTextValid = validateText(legalText);
@@ -259,9 +308,6 @@ export default function SummaryPage() {
       });
       return;
     }
-
-    setIsTimerRunning(true);
-    setTime(0);
 
     try {
       let analysisRequest;
@@ -290,7 +336,7 @@ export default function SummaryPage() {
         setTab('summary');
         toast({
           title: "Analysis Complete!",
-          description: `Found ${result.data?.red_flags.length || 0} red flags in ${((result.data?.processing_time_ms || 0) / 1000).toFixed(2)}s`,
+          description: `Found ${result.data?.red_flags.length || 0} red flags`,
         });
       }
     } catch (error) {
@@ -300,8 +346,6 @@ export default function SummaryPage() {
         description: "Failed to analyze the terms. Please check your connection and try again.",
         variant: "destructive"
       });
-    } finally {
-      setIsTimerRunning(false);
     }
   };
   
@@ -379,36 +423,10 @@ export default function SummaryPage() {
   const isProUser = userProfile?.subscription_tier === 'pro';
   const availableTones = isProUser ? Object.keys(ELEVENLABS_VOICES) : FREE_VOICES;
 
-  const getDocumentTypeIcon = (type: string) => {
-    switch (type) {
-      case 'general':
-        return FileText;
-      case 'lease':
-        return Home;
-      case 'employment':
-        return Briefcase;
-      default:
-        return FileText;
-    }
-  };
-
-  const getDocumentTypeDescription = (type: string) => {
-    switch (type) {
-      case 'general':
-        return 'Standard legal document analysis';
-      case 'lease':
-        return 'Specialized for rental agreements and lease contracts';
-      case 'employment':
-        return 'Optimized for job contracts and employment terms';
-      default:
-        return 'Standard legal document analysis';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container mx-auto px-4 pt-24 pb-8">
-        {/* Header - Made smaller */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -421,9 +439,60 @@ export default function SummaryPage() {
             </span>
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            Upload your legal document and get instant analysis with red flag detection
+            {isDemoMode 
+              ? "Try our demo analysis or sign in to analyze custom documents"
+              : "Upload your legal document and get instant analysis with red flag detection"
+            }
           </p>
         </motion.div>
+
+        {/* Demo Mode Banner */}
+        {isDemoMode && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto mb-6"
+          >
+            <Card className="border-2 border-amber-500/20 bg-gradient-to-r from-amber-50/50 to-orange-50/50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
+                      <Lock className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-amber-800">Demo Mode</p>
+                      <p className="text-sm text-amber-700">
+                        {!user 
+                          ? "Sign in to analyze custom documents. Currently showing demo analysis."
+                          : "Upgrade to Pro to analyze custom documents. Free users can only use the demo."
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {!user ? (
+                      <AuthModal>
+                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                          Sign In
+                        </Button>
+                      </AuthModal>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        onClick={() => navigate('/upgrade')}
+                        className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white"
+                      >
+                        <Crown className="h-4 w-4 mr-1" />
+                        Upgrade
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Input Section */}
@@ -436,6 +505,7 @@ export default function SummaryPage() {
             <DocumentTypeSelector
               documentType={documentType}
               setDocumentType={setDocumentType}
+              isAnalysisDisabled={isDemoMode}
             />
 
             {/* Enhanced Input Methods with Action Search Bar */}
@@ -449,9 +519,10 @@ export default function SummaryPage() {
               validationErrors={validationErrors}
               onTextChange={handleTextChange}
               onUrlChange={handleUrlChange}
+              isAnalysisDisabled={isDemoMode}
             />
 
-            {/* Analyze Button with Timer */}
+            {/* Analyze Button */}
             <Card className="border-2 border-primary/20 shadow-lg bg-gradient-to-r from-primary/5 to-purple-600/5">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -461,7 +532,6 @@ export default function SummaryPage() {
                     </div>
                     <h3 className="text-lg font-semibold">AI Analysis</h3>
                   </div>
-                  <SpeedrunTimer isRunning={isTimerRunning} time={time} />
                 </div>
 
                 <Button 
@@ -479,14 +549,17 @@ export default function SummaryPage() {
                   ) : (
                     <>
                       <Zap className="mr-2 h-5 w-5" />
-                      Analyze Document
+                      {isDemoMode ? 'Analyze Demo Document' : 'Analyze Document'}
                     </>
                   )}
                 </Button>
                 
                 {!hasValidInput() && !isAnalyzing && (
                   <p className="text-sm text-muted-foreground text-center mt-3">
-                    Please provide text, URL, or file to analyze
+                    {isDemoMode 
+                      ? "Demo document is ready to analyze"
+                      : "Please provide text, URL, or file to analyze"
+                    }
                   </p>
                 )}
               </CardContent>
@@ -532,8 +605,8 @@ export default function SummaryPage() {
                         </SelectContent>
                       </Select>
                       
-                      <Badge variant={isTimerRunning ? "destructive" : "secondary"} className="px-3 py-1">
-                        {isTimerRunning ? 'ANALYZING' : 'READY'}
+                      <Badge variant={isAnalyzing ? "destructive" : "secondary"} className="px-3 py-1">
+                        {isAnalyzing ? 'ANALYZING' : 'READY'}
                       </Badge>
                     </div>
                   </div>
