@@ -276,15 +276,23 @@ export default function UpgradePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Basic summaries & red flags</span>
+                    <span className="text-sm">Basic summaries & red flag highlights</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">2 voice options</span>
+                    <span className="text-sm">2 voice styles</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-500" />
                     <span className="text-sm">General document analysis</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Community support</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Access to interactive legal chatbot</span>
                   </div>
                 </div>
               </div>
@@ -294,23 +302,23 @@ export default function UpgradePage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="text-sm">Unlimited analyses</span>
+                    <span className="text-sm">Unlimited legal document analyses</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="text-sm">8 premium voice options</span>
+                    <span className="text-sm">Advanced summaries with detailed red flag detection</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="text-sm">Specialized contract analysis</span>
+                    <span className="text-sm">8 premium voice tones</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="text-sm">Interactive chatbot assistant</span>
+                    <span className="text-sm">Specialized contract analysis (e.g., Lease, Employment, IP)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="text-sm">Advanced red flag detection</span>
+                    <span className="text-sm">Interactive chatbot assistant with follow-up capabilities</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
