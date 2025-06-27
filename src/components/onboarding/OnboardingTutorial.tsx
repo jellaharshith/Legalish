@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -279,7 +279,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       showOverlay: true,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-lg font-semibold text-foreground">
             <Typewriter
               text="Premium AI voices! 🎵"
               speed={40}
@@ -292,26 +292,26 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 <Play className="h-4 w-4 text-green-600" />
               </div>
               <div>
-                <p className="font-medium">ElevenLabs Voice Synthesis</p>
-                <p className="text-sm text-muted-foreground">Premium AI voices</p>
+                <p className="font-medium text-green-800">ElevenLabs Voice Synthesis</p>
+                <p className="text-sm text-green-700">Premium AI voices</p>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">✨</span>
-                <p className="text-sm">Your chosen tone comes to life</p>
+                <p className="text-sm text-green-800">Your chosen tone comes to life</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🎭</span>
-                <p className="text-sm">Multiple voice personalities</p>
+                <p className="text-sm text-green-800">Multiple voice personalities</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">⚡</span>
-                <p className="text-sm">Instant audio generation</p>
+                <p className="text-sm text-green-800">Instant audio generation</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🎪</span>
-                <p className="text-sm">Celebrity voices (Pro only)</p>
+                <p className="text-sm text-green-800">Celebrity voices (Pro only)</p>
               </div>
             </div>
           </div>
@@ -330,7 +330,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       showOverlay: true,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-lg font-semibold text-foreground">
             <Typewriter
               text="Meet your legal buddy! 🤖"
               speed={40}
@@ -347,26 +347,26 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 />
               </div>
               <div>
-                <p className="font-medium">Legalish Assistant</p>
-                <p className="text-sm text-muted-foreground">Context-aware legal chatbot</p>
+                <p className="font-medium text-blue-800">Legalish Assistant</p>
+                <p className="text-sm text-blue-700">Context-aware legal chatbot</p>
               </div>
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-lg">💡</span>
-                <p>"What are my termination rights?"</p>
+                <p className="text-blue-800">"What are my termination rights?"</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg">💡</span>
-                <p>"Explain the red flags you found"</p>
+                <p className="text-blue-800">"Explain the red flags you found"</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg">💡</span>
-                <p>"Are there any hidden costs?"</p>
+                <p className="text-blue-800">"Are there any hidden costs?"</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg">💡</span>
-                <p>"Is this contract fair?"</p>
+                <p className="text-blue-800">"Is this contract fair?"</p>
               </div>
             </div>
           </div>
@@ -384,7 +384,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
       icon: Crown,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-lg font-semibold text-foreground">
             <Typewriter
               text="Ready to level up? 🚀"
               speed={40}
@@ -395,22 +395,22 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
               <Crown className="h-5 w-5 text-yellow-600" />
               <div>
-                <p className="font-medium text-yellow-700">Unlimited Analyses</p>
-                <p className="text-sm text-yellow-600">No monthly limits</p>
+                <p className="font-medium text-yellow-800">Unlimited Analyses</p>
+                <p className="text-sm text-yellow-700">No monthly limits</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
               <Play className="h-5 w-5 text-purple-600" />
               <div>
-                <p className="font-medium text-purple-700">Premium Voices</p>
-                <p className="text-sm text-purple-600">Celebrity & character voices</p>
+                <p className="font-medium text-purple-800">Premium Voices</p>
+                <p className="text-sm text-purple-700">Celebrity & character voices</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg">
               <Sparkles className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="font-medium text-blue-700">Advanced Analysis</p>
-                <p className="text-sm text-blue-600">Deeper insights & comparisons</p>
+                <p className="font-medium text-blue-800">Advanced Analysis</p>
+                <p className="text-sm text-blue-700">Deeper insights & comparisons</p>
               </div>
             </div>
           </div>
