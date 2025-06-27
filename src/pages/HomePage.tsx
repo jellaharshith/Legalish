@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Shield, Clock, Users, Star, CheckCircle, AlertTriangle, Brain, FileSearch } from 'lucide-react';
+import { ArrowRight, Shield, Clock, Users, CheckCircle, Brain, FileSearch } from 'lucide-react';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { SplineBackground } from '@/components/ui/spline-background';
 import { Typewriter } from '@/components/ui/typewriter';
@@ -25,7 +25,7 @@ export default function HomePage() {
       emoji: "⚡"
     },
     {
-      icon: AlertTriangle,
+      icon: FileSearch,
       title: "Catch the Red Flags",
       description: "AI that knows what to look for. Legalish identifies risky clauses like hidden fees or one-sided terms using red flag detection trained on real-world legal documents.",
       emoji: "🚩"
@@ -41,27 +41,6 @@ export default function HomePage() {
       title: "Save Hours of Reading",
       description: "Legal clarity without the scroll. No more decoding contracts line by line. Legalish turns dense documents into summaries and voice narration you'll actually understand.",
       emoji: "⏳"
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Sarah Chen",
-      role: "Startup Founder",
-      content: "Legalish saved me hours on contract reviews. The red flag detection is incredibly accurate.",
-      rating: 5
-    },
-    {
-      name: "Marcus Rodriguez",
-      role: "Freelancer",
-      content: "Finally understand what I'm signing. The different voice tones make it actually enjoyable.",
-      rating: 5
-    },
-    {
-      name: "Emily Watson",
-      role: "Small Business Owner",
-      content: "Game changer for my business. No more expensive lawyer consultations for simple reviews.",
-      rating: 5
     }
   ];
 
@@ -271,51 +250,6 @@ export default function HomePage() {
                 </Button>
               </Card>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Loved by thousands
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              See what our users are saying about Legalish
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="p-6 h-full border-0 shadow-lg bg-background/80 backdrop-blur-sm">
-                  <div className="flex items-center gap-1 mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground mb-4">"{testimonial.content}"</p>
-                  <div>
-                    <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
           </div>
         </div>
       </section>
