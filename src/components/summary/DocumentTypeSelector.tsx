@@ -145,20 +145,6 @@ export default function DocumentTypeSelector({ documentType, setDocumentType }: 
               className="max-w-none"
               defaultExpanded={true}
             />
-
-            {/* Benefits of Specialized Analysis */}
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" />
-                Why Document Type Matters
-              </h4>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <p>• <strong>Specialized Analysis:</strong> Each type uses domain-specific knowledge</p>
-                <p>• <strong>Relevant Red Flags:</strong> Identifies issues specific to that document type</p>
-                <p>• <strong>Better Context:</strong> AI understands the purpose and common clauses</p>
-                <p>• <strong>Accurate Summaries:</strong> Focuses on what matters most for that contract type</p>
-              </div>
-            </div>
           </motion.div>
         )}
       </CardContent>
