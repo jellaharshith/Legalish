@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useStripe } from '@/hooks/useStripe';
 import { stripeProducts } from '@/stripe-config';
-import { Pricing } from '@/components/ui/pricing';
 
 export default function UpgradePage() {
   const { toast } = useToast();
@@ -68,40 +67,35 @@ export default function UpgradePage() {
     {
       name: "FREE",
       price: "0",
-      yearlyPrice: "0",
       period: "forever",
-      features: [
-        "5 analyses per month",
-        "Basic summaries & red flags",
-        "2 voice options (Serious, Sarcastic)",
-        "General document analysis",
-        "Community support"
-      ],
       description: "Perfect for getting started with legal document analysis",
-      buttonText: isSubscribed ? "Current Plan" : "Get Started Free",
+      features: [
+        "Up to 10 analyses per month",
+        "Basic summaries & red flag highlights",
+        "2 voice styles",
+        "General document analysis",
+        "Community support",
+        "Access to interactive legal chatbot"
+      ],
+      buttonText: "Get Started Free",
       href: "/summary",
       isPopular: false,
       onClick: () => navigate('/summary')
     },
     {
       name: "PRO",
-      price: "9.99",
-      yearlyPrice: "7.99",
+      price: "10",
       period: "month",
-      features: [
-        "Unlimited analyses",
-        "Advanced summaries & red flags",
-        "8 premium voice options",
-        "Specialized contract analysis (Lease, Employment)",
-        "Priority support",
-        "Celebrity voices",
-        "Side-by-side comparison",
-        "Reddit meme sharing",
-        "Advanced red flag detection",
-        "Interactive chatbot assistant"
-      ],
       description: "Everything you need for professional legal document analysis",
-      buttonText: isSubscribed ? "Manage Subscription" : "Upgrade to Pro",
+      features: [
+        "Unlimited legal document analyses",
+        "Advanced summaries with detailed red flag detection",
+        "8 premium voice tones",
+        "Specialized contract analysis (e.g., Lease, Employment, IP)",
+        "Interactive chatbot assistant with follow-up capabilities",
+        "Deeper risk detection & clause breakdowns"
+      ],
+      buttonText: isSubscribed ? "Current Plan" : "Upgrade to Pro",
       href: "/upgrade",
       isPopular: true,
       onClick: isSubscribed ? () => navigate('/dashboard') : handlePurchase
@@ -174,17 +168,76 @@ export default function UpgradePage() {
             )}
           </div>
           
-          {/* Advanced Pricing Component */}
-          <Pricing
-            plans={pricingPlans}
-            title="Choose Your Legalish Experience"
-            description="From casual document reviews to professional legal analysis\nEvery plan includes our core AI-powered analysis engine"
-            onPlanSelect={(plan) => {
-              if (plan.onClick) {
-                plan.onClick();
-              }
-            }}
-          />
+          {/* Pricing Plans */}
+          <div className="flex justify-center mb-20">
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl w-full">
+              {pricingPlans.map((plan, index) => (
+                <motion.div
+                  key={plan.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  className="relative"
+                >
+                  <Card className={`h-full border-2 transition-all duration-300 hover:shadow-xl ${
+                    plan.isPopular 
+                      ? 'border-primary shadow-lg bg-gradient-to-br from-primary/5 to-purple-600/5' 
+                      : 'border-border hover:border-primary/50'
+                  }`}>
+                    {plan.isPopular && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-1">
+                          Most Popular
+                        </Badge>
+                      </div>
+                    )}
+                    
+                    <CardHeader className="text-center pb-8">
+                      <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                      <div className="mt-4">
+                        <span className="text-4xl font-bold">${plan.price}</span>
+                        <span className="text-muted-foreground ml-2">/ {plan.period}</span>
+                      </div>
+                      <CardDescription className="mt-4 text-base">
+                        {plan.description}
+                      </CardDescription>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-4">
+                      {plan.features.map((feature, featureIndex) => (
+                        <div key={featureIndex} className="flex items-start gap-3">
+                          <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{feature}</span>
+                        </div>
+                      ))}
+                    </CardContent>
+                    
+                    <CardFooter className="pt-8">
+                      <Button
+                        onClick={plan.onClick}
+                        disabled={loading && plan.name === 'PRO'}
+                        className={`w-full h-12 text-base font-semibold transition-all duration-300 ${
+                          plan.isPopular
+                            ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white'
+                            : 'bg-background border-2 border-primary text-primary hover:bg-primary hover:text-white'
+                        }`}
+                        variant={plan.isPopular ? "default" : "outline"}
+                      >
+                        {loading && plan.name === 'PRO' ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          plan.buttonText
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
           
           {/* Benefits Section */}
           <div className="mt-20 mb-16">
@@ -219,7 +272,7 @@ export default function UpgradePage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">5 analyses per month</span>
+                    <span className="text-sm">Up to 10 analyses per month</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-500" />
@@ -249,10 +302,6 @@ export default function UpgradePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="text-sm">Celebrity voices</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="text-sm">Specialized contract analysis</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -262,6 +311,10 @@ export default function UpgradePage() {
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="text-sm">Advanced red flag detection</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm">Deeper risk detection & clause breakdowns</span>
                   </div>
                 </div>
               </div>
