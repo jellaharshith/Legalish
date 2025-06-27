@@ -52,7 +52,7 @@ export default function Navbar() {
               className="w-10 h-10 object-contain"
             />
           </div>
-          <span className="font-bold text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
             Legalish
           </span>
         </Link>
@@ -120,7 +120,7 @@ export default function Navbar() {
               <Button
                 variant="default"
                 size="sm"
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-medium px-6"
+                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-medium px-6"
               >
                 Sign In
               </Button>
@@ -199,7 +199,7 @@ export default function Navbar() {
                   <AuthModal>
                     <Button
                       variant="default"
-                      className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
+                      className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Sign In

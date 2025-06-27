@@ -96,7 +96,7 @@ export default function HomePage() {
         <SplineBackground />
         
         {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-background/60 z-0"></div>
+        <div className="absolute inset-0 bg-black/30 z-0"></div>
         
         <div className="container mx-auto px-4 relative z-10 pt-32">
           <motion.div
@@ -105,15 +105,15 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-foreground">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
               Never read
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
                 {" "}legal terms{" "}
               </span>
               again
             </h1>
             
-            <div className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+            <div className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
               <p className="whitespace-pre-wrap">
                 <span>{"Legalish uses AI to translate complex legal documents into plain English, highlighting red flags and saving you "}</span>
                 <Typewriter
@@ -137,7 +137,7 @@ export default function HomePage() {
               <Button 
                 size="lg" 
                 onClick={() => navigate('/summary')}
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
+                className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
               >
                 Start Analyzing Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -146,20 +146,20 @@ export default function HomePage() {
                 size="lg" 
                 variant="outline"
                 onClick={handleStartDemo}
-                className="px-8 py-6 text-lg font-semibold rounded-xl border-2 border-muted-foreground/30 text-foreground hover:bg-muted/10 transition-all duration-300 backdrop-blur-sm"
+                className="px-8 py-6 text-lg font-semibold rounded-xl border-2 border-white/30 text-white hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
               >
                 Try Demo
               </Button>
             </div>
 
             {/* Trust indicators */}
-            <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-white/80">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 text-green-400" />
                 <span>Free forever plan</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 text-green-400" />
                 <span>30-second analysis</span>
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <Card className="p-8 h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-card/80 backdrop-blur-sm">
+                <Card className="p-8 h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-background/80 backdrop-blur-sm">
                   <div className="flex items-start gap-4 mb-4">
                     <div className="text-3xl">{feature.emoji}</div>
                   </div>
@@ -250,7 +250,7 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <Card className="p-8 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+              <Card className="p-8 bg-gradient-to-br from-primary/5 to-blue-500/5 border-primary/20">
                 <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-6">
                   <div className="text-center">
                     <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -302,10 +302,10 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <Card className="p-6 h-full border-0 shadow-lg bg-card/80 backdrop-blur-sm">
+                <Card className="p-6 h-full border-0 shadow-lg bg-background/80 backdrop-blur-sm">
                   <div className="flex items-center gap-1 mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-accent text-accent" />
+                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     ))}
                   </div>
                   <p className="text-muted-foreground mb-4">"{testimonial.content}"</p>
@@ -317,6 +317,45 @@ export default function HomePage() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Ready to simplify your legal reading?
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              Join thousands of users who've already saved hours with Legalish. 
+              Start analyzing your legal documents today.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/summary')}
+                className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white px-8 py-6 text-lg font-semibold rounded-xl"
+              >
+                Get Started Free
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => navigate('/upgrade')}
+                className="px-8 py-6 text-lg font-semibold rounded-xl border-2"
+              >
+                View Pricing
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>
