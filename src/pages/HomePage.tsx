@@ -253,6 +253,76 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Benefits Section */}
+      <section className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Why Document Type Matters
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Our AI provides specialized analysis tailored to your specific document type
+            </p>
+          </motion.div>
+
+          <div className="max-w-4xl mx-auto">
+            <Card className="p-8 bg-gradient-to-br from-primary/5 to-blue-500/5 border-primary/20 shadow-xl">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FileSearch className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-primary mb-2">Specialized Analysis:</h3>
+                      <p className="text-sm text-muted-foreground">Each type uses domain-specific knowledge</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Shield className="h-4 w-4 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-red-500 mb-2">Relevant Red Flags:</h3>
+                      <p className="text-sm text-muted-foreground">Identifies issues specific to that document type</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Brain className="h-4 w-4 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-blue-500 mb-2">Better Context:</h3>
+                      <p className="text-sm text-muted-foreground">AI understands the purpose and common clauses</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-green-500 mb-2">Accurate Summaries:</h3>
+                      <p className="text-sm text-muted-foreground">Focuses on what matters most for that contract type</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
@@ -278,6 +348,9 @@ You may not use our service for any illegal purpose or to violate any laws. You 
 We reserve the right to terminate or suspend your account at any time, without notice, for conduct that we believe violates these Terms or is harmful to other users, us, or third parties, or for any other reason.
 
 5. DATA COLLECTION
+We collect and use your personal information as described in our Privacy Policy. By using our service, you consent to our data practices.
+
+6. DATA COLLECTION
 We collect and use your personal information as described in our Privacy Policy. By using our service, you consent to our data practices.
 
 6. ARBITRATION AGREEMENT
