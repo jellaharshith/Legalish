@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase';
-import { captureException, addBreadcrumb, startTransaction } from '@/lib/sentry';
 
 export interface AnalysisRequest {
   legal_terms?: string;
@@ -27,24 +26,7 @@ export class AnalysisService {
   private static readonly SYNTHESIZE_SPEECH_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/synthesize-speech`;
 
   static async analyzeLegalTerms(request: AnalysisRequest): Promise<AnalysisResponse> {
-    const transaction = startTransaction({
-      name: 'Legal Terms Analysis',
-      op: 'analysis',
-    });
-
     try {
-      addBreadcrumb({
-        message: 'Starting legal terms analysis',
-        category: 'analysis',
-        level: 'info',
-        data: {
-          hasText: !!request.legal_terms,
-          hasUrl: !!request.input_url,
-          tone: request.tone,
-          documentType: request.document_type,
-        },
-      });
-
       const { data: { session } } = await supabase.auth.getSession();
       
       const headers: Record<string, string> = {
@@ -75,65 +57,19 @@ export class AnalysisService {
         throw new Error(result.error || 'Analysis failed');
       }
 
-      addBreadcrumb({
-        message: 'Legal terms analysis completed successfully',
-        category: 'analysis',
-        level: 'info',
-        data: {
-          processingTime: result.data?.processing_time_ms,
-          redFlagsCount: result.data?.red_flags.length,
-          summaryCount: result.data?.summary.length,
-        },
-      });
-
-      transaction.setStatus('ok');
       return result;
     } catch (error) {
       console.error('Error calling analysis service:', error);
-      
-      captureException(error, {
-        tags: { 
-          component: 'analysis-service',
-          action: 'analyzeLegalTerms'
-        },
-        extra: {
-          request: {
-            hasText: !!request.legal_terms,
-            hasUrl: !!request.input_url,
-            tone: request.tone,
-            documentType: request.document_type,
-          },
-        },
-      });
-
-      transaction.setStatus('internal_error');
       
       return {
         success: false,
         error: error instanceof Error ? error.message : 'An unexpected error occurred'
       };
-    } finally {
-      transaction.finish();
     }
   }
 
   static async synthesizeSpeech(text: string, voiceId: string): Promise<{ success: boolean; audio?: string; error?: string }> {
-    const transaction = startTransaction({
-      name: 'Speech Synthesis',
-      op: 'synthesis',
-    });
-
     try {
-      addBreadcrumb({
-        message: 'Starting speech synthesis',
-        category: 'synthesis',
-        level: 'info',
-        data: {
-          textLength: text.length,
-          voiceId,
-        },
-      });
-
       const { data: { session } } = await supabase.auth.getSession();
       
       const headers: Record<string, string> = {
@@ -163,36 +99,13 @@ export class AnalysisService {
         throw new Error(result.error || 'Speech synthesis failed');
       }
 
-      addBreadcrumb({
-        message: 'Speech synthesis completed successfully',
-        category: 'synthesis',
-        level: 'info',
-      });
-
-      transaction.setStatus('ok');
       return { success: true, audio: result.audio };
     } catch (error) {
       console.error('Error calling speech synthesis service:', error);
-      
-      captureException(error, {
-        tags: { 
-          component: 'analysis-service',
-          action: 'synthesizeSpeech'
-        },
-        extra: {
-          textLength: text.length,
-          voiceId,
-        },
-      });
-
-      transaction.setStatus('internal_error');
-      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'An unexpected error occurred'
       };
-    } finally {
-      transaction.finish();
     }
   }
 

@@ -7,15 +7,10 @@ import { ArrowRight, CheckCircle, Brain, FileSearch, Clock } from 'lucide-react'
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { SplineBackground } from '@/components/ui/spline-background';
 import { Typewriter } from '@/components/ui/typewriter';
-import SentryTestButton from '@/components/debug/SentryTestButton';
-import { useSentry } from '@/hooks/useSentry';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { setLegalText } = useLegalTerms();
-  
-  // Initialize Sentry context for this page
-  useSentry();
 
   const handleStartDemo = () => {
     setLegalText(DEMO_TEXT);
@@ -235,9 +230,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Sentry Test Button (Development Only) */}
-      <SentryTestButton />
     </div>
   );
 }
