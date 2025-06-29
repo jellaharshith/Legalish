@@ -7,6 +7,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const isPlaceholderUrl = !supabaseUrl || supabaseUrl === 'your_supabase_url' || supabaseUrl.includes('your_');
 const isPlaceholderKey = !supabaseAnonKey || supabaseAnonKey === 'your_supabase_anon_key' || supabaseAnonKey.includes('your_');
 
+let supabase: any;
+
 if (isPlaceholderUrl || isPlaceholderKey) {
   console.warn('⚠️ Supabase not configured - using placeholder values for development');
   console.warn('To connect to Supabase:');
@@ -14,7 +16,7 @@ if (isPlaceholderUrl || isPlaceholderKey) {
   console.warn('2. Or manually update your .env file with real Supabase credentials');
   
   // Create a mock client that won't crash the app
-  export const supabase = {
+  supabase = {
     auth: {
       signUp: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
       signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
@@ -28,7 +30,7 @@ if (isPlaceholderUrl || isPlaceholderKey) {
       update: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
       delete: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } })
     })
-  } as any;
+  };
 } else {
   // Validate URL format only if it's not a placeholder
   try {
@@ -38,7 +40,7 @@ if (isPlaceholderUrl || isPlaceholderKey) {
     throw new Error('Invalid Supabase URL format. Please check your VITE_SUPABASE_URL in .env file.');
   }
 
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
@@ -77,3 +79,5 @@ export const testSupabaseConnection = async () => {
 export const isSupabaseConfigured = () => {
   return !isPlaceholderUrl && !isPlaceholderKey;
 };
+
+export { supabase };
