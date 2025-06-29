@@ -10,68 +10,107 @@ class LegalishPopup {
     }
 
     async init() {
-        await this.getCurrentTab();
-        this.setupEventListeners();
-        this.checkPageForLegalContent();
-        this.loadUserState();
-        this.loadStoredAnalysis();
+        try {
+            await this.getCurrentTab();
+            this.setupEventListeners();
+            this.checkPageForLegalContent();
+            this.loadUserState();
+            this.loadStoredAnalysis();
+        } catch (error) {
+            console.error('Error initializing popup:', error);
+        }
     }
 
     async getCurrentTab() {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        this.currentTab = tab;
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            this.currentTab = tab;
+        } catch (error) {
+            console.error('Error getting current tab:', error);
+        }
     }
 
     setupEventListeners() {
-        // Input method selection
-        document.querySelectorAll('.input-method').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.selectInputMethod(e.currentTarget.dataset.method);
+        try {
+            // Input method selection
+            document.querySelectorAll('.input-method').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    this.selectInputMethod(e.currentTarget.dataset.method);
+                });
             });
-        });
 
-        // Analyze button
-        document.getElementById('analyze-btn').addEventListener('click', () => {
-            this.analyzeDocument();
-        });
+            // Analyze button
+            const analyzeBtn = document.getElementById('analyze-btn');
+            if (analyzeBtn) {
+                analyzeBtn.addEventListener('click', () => {
+                    this.analyzeDocument();
+                });
+            }
 
-        // Refresh button
-        document.getElementById('refresh-btn').addEventListener('click', () => {
-            this.checkPageForLegalContent();
-        });
+            // Refresh button
+            const refreshBtn = document.getElementById('refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => {
+                    this.checkPageForLegalContent();
+                });
+            }
 
-        // Audio playback
-        document.getElementById('play-audio-btn').addEventListener('click', () => {
-            this.playAudioSummary();
-        });
+            // Audio playback
+            const playAudioBtn = document.getElementById('play-audio-btn');
+            if (playAudioBtn) {
+                playAudioBtn.addEventListener('click', () => {
+                    this.playAudioSummary();
+                });
+            }
 
-        // Save analysis
-        document.getElementById('save-analysis-btn').addEventListener('click', () => {
-            this.saveAnalysis();
-        });
+            // Save analysis
+            const saveAnalysisBtn = document.getElementById('save-analysis-btn');
+            if (saveAnalysisBtn) {
+                saveAnalysisBtn.addEventListener('click', () => {
+                    this.saveAnalysis();
+                });
+            }
 
-        // Open full results
-        document.getElementById('open-full-btn').addEventListener('click', () => {
-            this.openFullResults();
-        });
+            // Open full results
+            const openFullBtn = document.getElementById('open-full-btn');
+            if (openFullBtn) {
+                openFullBtn.addEventListener('click', () => {
+                    this.openFullResults();
+                });
+            }
 
-        // Account actions
-        document.getElementById('sign-in-btn').addEventListener('click', () => {
-            this.signIn();
-        });
+            // Account actions
+            const signInBtn = document.getElementById('sign-in-btn');
+            if (signInBtn) {
+                signInBtn.addEventListener('click', () => {
+                    this.signIn();
+                });
+            }
 
-        document.getElementById('sign-out-btn').addEventListener('click', () => {
-            this.signOut();
-        });
+            const signOutBtn = document.getElementById('sign-out-btn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', () => {
+                    this.signOut();
+                });
+            }
 
-        // Footer actions
-        document.getElementById('upgrade-btn').addEventListener('click', () => {
-            this.openUpgradePage();
-        });
+            // Footer actions
+            const upgradeBtn = document.getElementById('upgrade-btn');
+            if (upgradeBtn) {
+                upgradeBtn.addEventListener('click', () => {
+                    this.openUpgradePage();
+                });
+            }
 
-        document.getElementById('help-btn').addEventListener('click', () => {
-            this.openHelpPage();
-        });
+            const helpBtn = document.getElementById('help-btn');
+            if (helpBtn) {
+                helpBtn.addEventListener('click', () => {
+                    this.openHelpPage();
+                });
+            }
+        } catch (error) {
+            console.error('Error setting up event listeners:', error);
+        }
     }
 
     selectInputMethod(method) {
@@ -81,14 +120,19 @@ class LegalishPopup {
         document.querySelectorAll('.input-method').forEach(btn => {
             btn.classList.remove('active');
         });
-        document.querySelector(`[data-method="${method}"]`).classList.add('active');
+        const activeBtn = document.querySelector(`[data-method="${method}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
 
         // Show/hide manual input
         const manualInput = document.getElementById('manual-input');
-        if (method === 'manual') {
-            manualInput.style.display = 'block';
-        } else {
-            manualInput.style.display = 'none';
+        if (manualInput) {
+            if (method === 'manual') {
+                manualInput.style.display = 'block';
+            } else {
+                manualInput.style.display = 'none';
+            }
         }
     }
 
@@ -96,13 +140,18 @@ class LegalishPopup {
         this.showLoading(true);
         
         try {
+            if (!this.currentTab || !this.currentTab.id) {
+                this.updateDetectionUI({ hasLegalContent: false });
+                return;
+            }
+
             // Inject content script to analyze page
             const [result] = await chrome.scripting.executeScript({
                 target: { tabId: this.currentTab.id },
                 function: this.detectLegalContent
             });
 
-            const detection = result.result;
+            const detection = result && result.result ? result.result : { hasLegalContent: false };
             this.updateDetectionUI(detection);
             
         } catch (error) {
@@ -115,99 +164,123 @@ class LegalishPopup {
 
     // This function runs in the page context
     detectLegalContent() {
-        const legalKeywords = [
-            'terms of service', 'terms and conditions', 'privacy policy',
-            'user agreement', 'license agreement', 'end user license',
-            'terms of use', 'service agreement', 'legal notice',
-            'cookie policy', 'data protection', 'gdpr', 'ccpa',
-            'acceptable use', 'community guidelines', 'code of conduct',
-            'credit card agreement', 'cardholder agreement', 'mastercard', 'visa'
-        ];
+        try {
+            const legalKeywords = [
+                'terms of service', 'terms and conditions', 'privacy policy',
+                'user agreement', 'license agreement', 'end user license',
+                'terms of use', 'service agreement', 'legal notice',
+                'cookie policy', 'data protection', 'gdpr', 'ccpa',
+                'acceptable use', 'community guidelines', 'code of conduct',
+                'credit card agreement', 'cardholder agreement', 'mastercard', 'visa'
+            ];
 
-        const pageText = document.body.innerText.toLowerCase();
-        const pageTitle = document.title.toLowerCase();
-        const pageUrl = window.location.href.toLowerCase();
+            const pageText = document.body ? document.body.innerText.toLowerCase() : '';
+            const pageTitle = document.title ? document.title.toLowerCase() : '';
+            const pageUrl = window.location ? window.location.href.toLowerCase() : '';
 
-        // Check for legal keywords in content
-        const hasLegalKeywords = legalKeywords.some(keyword => 
-            pageText.includes(keyword) || pageTitle.includes(keyword) || pageUrl.includes(keyword)
-        );
+            // Check for legal keywords in content
+            const hasLegalKeywords = legalKeywords.some(keyword => 
+                pageText.includes(keyword) || pageTitle.includes(keyword) || pageUrl.includes(keyword)
+            );
 
-        // Check for common legal document patterns
-        const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant)\b/gi.test(pageText);
-        
-        // Check for legal document structure
-        const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
+            // Check for common legal document patterns
+            const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant)\b/gi.test(pageText);
+            
+            // Check for legal document structure
+            const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
 
-        // Determine document type
-        let documentType = 'Unknown';
-        if (pageText.includes('terms of service') || pageText.includes('terms and conditions')) {
-            documentType = 'Terms of Service';
-        } else if (pageText.includes('privacy policy')) {
-            documentType = 'Privacy Policy';
-        } else if (pageText.includes('license agreement')) {
-            documentType = 'License Agreement';
-        } else if (pageText.includes('cookie policy')) {
-            documentType = 'Cookie Policy';
-        } else if (pageText.includes('credit card') || pageText.includes('cardholder')) {
-            documentType = 'Credit Card Agreement';
+            // Determine document type
+            let documentType = 'Unknown';
+            if (pageText.includes('terms of service') || pageText.includes('terms and conditions')) {
+                documentType = 'Terms of Service';
+            } else if (pageText.includes('privacy policy')) {
+                documentType = 'Privacy Policy';
+            } else if (pageText.includes('license agreement')) {
+                documentType = 'License Agreement';
+            } else if (pageText.includes('cookie policy')) {
+                documentType = 'Cookie Policy';
+            } else if (pageText.includes('credit card') || pageText.includes('cardholder')) {
+                documentType = 'Credit Card Agreement';
+            }
+
+            const confidence = (hasLegalKeywords ? 0.4 : 0) + 
+                              (hasLegalPatterns ? 0.3 : 0) + 
+                              (hasNumberedSections ? 0.3 : 0);
+
+            return {
+                hasLegalContent: confidence > 0.5,
+                documentType,
+                confidence,
+                textLength: pageText.length
+            };
+        } catch (error) {
+            console.error('Error in detectLegalContent:', error);
+            return {
+                hasLegalContent: false,
+                documentType: 'Unknown',
+                confidence: 0,
+                textLength: 0
+            };
         }
-
-        const confidence = (hasLegalKeywords ? 0.4 : 0) + 
-                          (hasLegalPatterns ? 0.3 : 0) + 
-                          (hasNumberedSections ? 0.3 : 0);
-
-        return {
-            hasLegalContent: confidence > 0.5,
-            documentType,
-            confidence,
-            textLength: pageText.length
-        };
     }
 
     updateDetectionUI(detection) {
-        const loadingEl = document.getElementById('loading');
-        const noContentEl = document.getElementById('no-legal-content');
-        const foundContentEl = document.getElementById('legal-content-found');
-        const documentTypeEl = document.getElementById('document-type');
+        try {
+            const loadingEl = document.getElementById('loading');
+            const noContentEl = document.getElementById('no-legal-content');
+            const foundContentEl = document.getElementById('legal-content-found');
+            const documentTypeEl = document.getElementById('document-type');
 
-        // Hide all states
-        loadingEl.style.display = 'none';
-        noContentEl.style.display = 'none';
-        foundContentEl.style.display = 'none';
+            // Hide all states
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (noContentEl) noContentEl.style.display = 'none';
+            if (foundContentEl) foundContentEl.style.display = 'none';
 
-        if (detection.hasLegalContent) {
-            foundContentEl.style.display = 'flex';
-            documentTypeEl.textContent = detection.documentType;
-            this.updateStatus('Legal document detected', 'success');
-        } else {
-            noContentEl.style.display = 'flex';
-            this.updateStatus('No legal content found', 'neutral');
+            if (detection.hasLegalContent) {
+                if (foundContentEl) foundContentEl.style.display = 'flex';
+                if (documentTypeEl) documentTypeEl.textContent = detection.documentType;
+                this.updateStatus('Legal document detected', 'success');
+            } else {
+                if (noContentEl) noContentEl.style.display = 'flex';
+                this.updateStatus('No legal content found', 'neutral');
+            }
+        } catch (error) {
+            console.error('Error updating detection UI:', error);
         }
     }
 
     showLoading(show) {
-        const loadingEl = document.getElementById('loading');
-        const noContentEl = document.getElementById('no-legal-content');
-        const foundContentEl = document.getElementById('legal-content-found');
+        try {
+            const loadingEl = document.getElementById('loading');
+            const noContentEl = document.getElementById('no-legal-content');
+            const foundContentEl = document.getElementById('legal-content-found');
 
-        if (show) {
-            loadingEl.style.display = 'flex';
-            noContentEl.style.display = 'none';
-            foundContentEl.style.display = 'none';
+            if (show) {
+                if (loadingEl) loadingEl.style.display = 'flex';
+                if (noContentEl) noContentEl.style.display = 'none';
+                if (foundContentEl) foundContentEl.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error showing loading:', error);
         }
     }
 
     updateStatus(text, type = 'neutral') {
-        const statusText = document.querySelector('.status-text');
-        const statusDot = document.querySelector('.status-dot');
-        
-        statusText.textContent = text;
-        
-        // Update dot color based on status type
-        statusDot.style.background = type === 'success' ? '#10b981' : 
-                                   type === 'error' ? '#ef4444' : 
-                                   type === 'warning' ? '#f59e0b' : '#6b7280';
+        try {
+            const statusText = document.querySelector('.status-text');
+            const statusDot = document.querySelector('.status-dot');
+            
+            if (statusText) statusText.textContent = text;
+            
+            // Update dot color based on status type
+            if (statusDot) {
+                statusDot.style.background = type === 'success' ? '#10b981' : 
+                                           type === 'error' ? '#ef4444' : 
+                                           type === 'warning' ? '#f59e0b' : '#6b7280';
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
     }
 
     async analyzeDocument() {
@@ -226,7 +299,8 @@ class LegalishPopup {
             } else if (this.selectedMethod === 'selection') {
                 textToAnalyze = await this.getSelectedText();
             } else if (this.selectedMethod === 'manual') {
-                textToAnalyze = document.getElementById('manual-text').value;
+                const manualTextEl = document.getElementById('manual-text');
+                textToAnalyze = manualTextEl ? manualTextEl.value : '';
             }
 
             if (!textToAnalyze || textToAnalyze.trim().length < 10) {
@@ -238,7 +312,8 @@ class LegalishPopup {
                 textToAnalyze = textToAnalyze.substring(0, 2800);
             }
 
-            const tone = document.getElementById('tone-select').value;
+            const toneSelect = document.getElementById('tone-select');
+            const tone = toneSelect ? toneSelect.value : 'serious';
             
             // Call analysis API with better error handling
             const result = await this.callAnalysisAPI(textToAnalyze, tone);
@@ -265,125 +340,168 @@ class LegalishPopup {
     }
 
     async getPageText() {
-        const [result] = await chrome.scripting.executeScript({
-            target: { tabId: this.currentTab.id },
-            function: () => {
-                // Extract meaningful text from the page
-                const content = document.body.innerText;
-                return content.substring(0, 2800); // Limit to API constraints
+        try {
+            if (!this.currentTab || !this.currentTab.id) {
+                throw new Error('No active tab found');
             }
-        });
-        return result.result;
+
+            const [result] = await chrome.scripting.executeScript({
+                target: { tabId: this.currentTab.id },
+                function: () => {
+                    // Extract meaningful text from the page
+                    const content = document.body ? document.body.innerText : '';
+                    return content.substring(0, 2800); // Limit to API constraints
+                }
+            });
+            return result && result.result ? result.result : '';
+        } catch (error) {
+            console.error('Error getting page text:', error);
+            throw new Error('Failed to extract page content');
+        }
     }
 
     async getSelectedText() {
-        const [result] = await chrome.scripting.executeScript({
-            target: { tabId: this.currentTab.id },
-            function: () => {
-                return window.getSelection().toString();
+        try {
+            if (!this.currentTab || !this.currentTab.id) {
+                throw new Error('No active tab found');
             }
-        });
-        return result.result;
+
+            const [result] = await chrome.scripting.executeScript({
+                target: { tabId: this.currentTab.id },
+                function: () => {
+                    return window.getSelection ? window.getSelection().toString() : '';
+                }
+            });
+            return result && result.result ? result.result : '';
+        } catch (error) {
+            console.error('Error getting selected text:', error);
+            throw new Error('Failed to get selected text');
+        }
     }
 
     async callAnalysisAPI(text, tone) {
-        // Get stored auth token if available
-        const { authToken } = await chrome.storage.local.get(['authToken']);
-        
-        const headers = {
-            'Content-Type': 'application/json',
-        };
+        try {
+            // Get stored auth token if available
+            const { authToken } = await chrome.storage.local.get(['authToken']);
+            
+            const headers = {
+                'Content-Type': 'application/json',
+            };
 
-        // Use anon key for unauthenticated requests
-        if (authToken) {
-            headers['Authorization'] = `Bearer ${authToken}`;
-        } else {
-            // Use a placeholder anon key - in production this should be the actual Supabase anon key
-            headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvdXItcHJvamVjdC1pZCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjQwOTk1MjAwLCJleHAiOjE5NTY1NzEyMDB9.placeholder`;
+            // Use anon key for unauthenticated requests
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            } else {
+                // Use a placeholder anon key - in production this should be the actual Supabase anon key
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvdXItcHJvamVjdC1pZCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjQwOTk1MjAwLCJleHAiOjE5NTY1NzEyMDB9.placeholder`;
+            }
+
+            // Use the correct Supabase URL - replace with your actual Supabase project URL
+            const supabaseUrl = 'https://your-project-id.supabase.co';
+            const apiUrl = `${supabaseUrl}/functions/v1/analyze-legal-terms-rag`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    legal_terms: text,
+                    tone: tone,
+                    max_tokens: 2000,
+                    temperature: 0.7,
+                    document_type: 'general'
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error calling analysis API:', error);
+            return {
+                success: false,
+                error: error.message || 'Failed to analyze document'
+            };
         }
-
-        // Use the correct Supabase URL - replace with your actual Supabase project URL
-        const supabaseUrl = 'https://your-project-id.supabase.co';
-        const apiUrl = `${supabaseUrl}/functions/v1/analyze-legal-terms-rag`;
-
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-                legal_terms: text,
-                tone: tone,
-                max_tokens: 2000,
-                temperature: 0.7,
-                document_type: 'general'
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
-        }
-
-        return await response.json();
     }
 
     displayResults(data) {
-        const resultsSection = document.getElementById('results-section');
-        const resultsContent = document.getElementById('results-content');
-        
-        resultsContent.innerHTML = '';
+        try {
+            const resultsSection = document.getElementById('results-section');
+            const resultsContent = document.getElementById('results-content');
+            
+            if (!resultsSection || !resultsContent) {
+                console.error('Results elements not found');
+                return;
+            }
 
-        // Display summary
-        if (data.summary && data.summary.length > 0) {
-            data.summary.forEach(item => {
-                const resultDiv = document.createElement('div');
-                resultDiv.className = 'result-item fade-in';
-                resultDiv.innerHTML = `
-                    <div class="result-title">${item.title}</div>
-                    <div class="result-description">${item.description}</div>
-                `;
-                resultsContent.appendChild(resultDiv);
-            });
+            resultsContent.innerHTML = '';
+
+            // Display summary
+            if (data.summary && data.summary.length > 0) {
+                data.summary.forEach(item => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result-item fade-in';
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${item.title}</div>
+                        <div class="result-description">${item.description}</div>
+                    `;
+                    resultsContent.appendChild(resultDiv);
+                });
+            }
+
+            // Display red flags
+            if (data.red_flags && data.red_flags.length > 0) {
+                const redFlagsTitle = document.createElement('div');
+                redFlagsTitle.className = 'result-title';
+                redFlagsTitle.style.marginTop = '16px';
+                redFlagsTitle.style.marginBottom = '8px';
+                redFlagsTitle.textContent = `Red Flags (${data.red_flags.length})`;
+                resultsContent.appendChild(redFlagsTitle);
+
+                data.red_flags.forEach(flag => {
+                    const flagDiv = document.createElement('div');
+                    flagDiv.className = 'red-flag fade-in';
+                    flagDiv.innerHTML = `
+                        <svg class="red-flag-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <div class="red-flag-text">${flag}</div>
+                    `;
+                    resultsContent.appendChild(flagDiv);
+                });
+            }
+
+            resultsSection.style.display = 'block';
+        } catch (error) {
+            console.error('Error displaying results:', error);
         }
-
-        // Display red flags
-        if (data.red_flags && data.red_flags.length > 0) {
-            const redFlagsTitle = document.createElement('div');
-            redFlagsTitle.className = 'result-title';
-            redFlagsTitle.style.marginTop = '16px';
-            redFlagsTitle.style.marginBottom = '8px';
-            redFlagsTitle.textContent = `Red Flags (${data.red_flags.length})`;
-            resultsContent.appendChild(redFlagsTitle);
-
-            data.red_flags.forEach(flag => {
-                const flagDiv = document.createElement('div');
-                flagDiv.className = 'red-flag fade-in';
-                flagDiv.innerHTML = `
-                    <svg class="red-flag-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                        <line x1="12" y1="9" x2="12" y2="13"/>
-                        <line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                    <div class="red-flag-text">${flag}</div>
-                `;
-                resultsContent.appendChild(flagDiv);
-            });
-        }
-
-        resultsSection.style.display = 'block';
     }
 
     updateAnalyzeButton(analyzing) {
-        const btn = document.getElementById('analyze-btn');
-        const span = btn.querySelector('span');
-        
-        if (analyzing) {
-            btn.disabled = true;
-            span.textContent = 'Analyzing...';
-            btn.querySelector('svg').style.animation = 'spin 1s linear infinite';
-        } else {
-            btn.disabled = false;
-            span.textContent = 'Analyze Document';
-            btn.querySelector('svg').style.animation = 'none';
+        try {
+            const btn = document.getElementById('analyze-btn');
+            const span = btn ? btn.querySelector('span') : null;
+            
+            if (btn && span) {
+                if (analyzing) {
+                    btn.disabled = true;
+                    span.textContent = 'Analyzing...';
+                    const svg = btn.querySelector('svg');
+                    if (svg) svg.style.animation = 'spin 1s linear infinite';
+                } else {
+                    btn.disabled = false;
+                    span.textContent = 'Analyze Document';
+                    const svg = btn.querySelector('svg');
+                    if (svg) svg.style.animation = 'none';
+                }
+            }
+        } catch (error) {
+            console.error('Error updating analyze button:', error);
         }
     }
 
@@ -486,77 +604,103 @@ class LegalishPopup {
     }
 
     async loadUserState() {
-        const { authToken, userInfo } = await chrome.storage.local.get(['authToken', 'userInfo']);
-        
-        const signedOut = document.getElementById('signed-out');
-        const signedIn = document.getElementById('signed-in');
-        
-        if (authToken && userInfo) {
-            signedOut.style.display = 'none';
-            signedIn.style.display = 'flex';
+        try {
+            const { authToken, userInfo } = await chrome.storage.local.get(['authToken', 'userInfo']);
             
-            document.getElementById('user-name').textContent = userInfo.name || 'User';
-            document.getElementById('user-plan').textContent = userInfo.plan || 'Free Plan';
-            document.getElementById('user-avatar').textContent = (userInfo.name || 'U')[0].toUpperCase();
-        } else {
-            signedOut.style.display = 'block';
-            signedIn.style.display = 'none';
+            const signedOut = document.getElementById('signed-out');
+            const signedIn = document.getElementById('signed-in');
+            
+            if (authToken && userInfo) {
+                if (signedOut) signedOut.style.display = 'none';
+                if (signedIn) signedIn.style.display = 'flex';
+                
+                const userNameEl = document.getElementById('user-name');
+                const userPlanEl = document.getElementById('user-plan');
+                const userAvatarEl = document.getElementById('user-avatar');
+                
+                if (userNameEl) userNameEl.textContent = userInfo.name || 'User';
+                if (userPlanEl) userPlanEl.textContent = userInfo.plan || 'Free Plan';
+                if (userAvatarEl) userAvatarEl.textContent = (userInfo.name || 'U')[0].toUpperCase();
+            } else {
+                if (signedOut) signedOut.style.display = 'block';
+                if (signedIn) signedIn.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error loading user state:', error);
         }
     }
 
     async storeAnalysis(data) {
-        const analysisKey = `analysis_${Date.now()}`;
-        await chrome.storage.local.set({
-            [analysisKey]: {
-                data,
-                timestamp: Date.now(),
-                url: this.currentTab.url,
-                title: this.currentTab.title
-            }
-        });
+        try {
+            const analysisKey = `analysis_${Date.now()}`;
+            await chrome.storage.local.set({
+                [analysisKey]: {
+                    data,
+                    timestamp: Date.now(),
+                    url: this.currentTab ? this.currentTab.url : '',
+                    title: this.currentTab ? this.currentTab.title : ''
+                }
+            });
+        } catch (error) {
+            console.error('Error storing analysis:', error);
+        }
     }
 
     async loadStoredAnalysis() {
-        // Load the most recent analysis for this tab if available
-        const storage = await chrome.storage.local.get();
-        const analyses = Object.entries(storage)
-            .filter(([key]) => key.startsWith('analysis_'))
-            .map(([key, value]) => ({ key, ...value }))
-            .filter(analysis => analysis.url === this.currentTab.url)
-            .sort((a, b) => b.timestamp - a.timestamp);
+        try {
+            // Load the most recent analysis for this tab if available
+            const storage = await chrome.storage.local.get();
+            const analyses = Object.entries(storage)
+                .filter(([key]) => key.startsWith('analysis_'))
+                .map(([key, value]) => ({ key, ...value }))
+                .filter(analysis => analysis.url === (this.currentTab ? this.currentTab.url : ''))
+                .sort((a, b) => b.timestamp - a.timestamp);
 
-        if (analyses.length > 0) {
-            const recentAnalysis = analyses[0];
-            this.analysisData = recentAnalysis.data;
-            this.displayResults(recentAnalysis.data);
+            if (analyses.length > 0) {
+                const recentAnalysis = analyses[0];
+                this.analysisData = recentAnalysis.data;
+                this.displayResults(recentAnalysis.data);
+            }
+        } catch (error) {
+            console.error('Error loading stored analysis:', error);
         }
     }
 
     showError(message) {
-        // Simple error display - could be enhanced with a proper notification system
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = `
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            background: #ef4444;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            z-index: 1000;
-        `;
-        errorDiv.textContent = message;
-        document.body.appendChild(errorDiv);
+        try {
+            // Simple error display - could be enhanced with a proper notification system
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                background: #ef4444;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                z-index: 1000;
+            `;
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
 
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 3000);
+            setTimeout(() => {
+                if (errorDiv && errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 3000);
+        } catch (error) {
+            console.error('Error showing error message:', error);
+        }
     }
 }
 
 // Initialize popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new LegalishPopup();
+    try {
+        new LegalishPopup();
+    } catch (error) {
+        console.error('Error initializing popup:', error);
+    }
 });

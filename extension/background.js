@@ -7,69 +7,90 @@ class LegalishBackground {
     }
 
     init() {
-        // Wait for extension to be ready before setting up context menus
+        this.setupMessageHandlers();
+        this.setupTabHandlers();
+        this.setupStorageCleanup();
+        
+        // Set up context menus when extension is installed or started
         chrome.runtime.onInstalled.addListener(() => {
             this.setupContextMenus();
         });
         
-        this.setupMessageHandlers();
-        this.setupTabHandlers();
-        this.setupStorageCleanup();
+        // Also try to set up context menus on startup
+        this.setupContextMenus();
     }
 
     setupContextMenus() {
         try {
-            // Remove any existing context menus first
+            // Check if contextMenus API is available
+            if (!chrome.contextMenus) {
+                console.log('Context menus API not available');
+                return;
+            }
+
+            // Clear existing menus safely
             chrome.contextMenus.removeAll(() => {
-                // Main analyze option
-                chrome.contextMenus.create({
-                    id: 'analyze-selection',
-                    title: 'Analyze with Legalish',
-                    contexts: ['selection'],
-                    documentUrlPatterns: ['http://*/*', 'https://*/*']
-                });
+                if (chrome.runtime.lastError) {
+                    console.log('No existing context menus to remove');
+                }
+                
+                try {
+                    // Main analyze option
+                    chrome.contextMenus.create({
+                        id: 'analyze-selection',
+                        title: 'Analyze with Legalish',
+                        contexts: ['selection'],
+                        documentUrlPatterns: ['http://*/*', 'https://*/*']
+                    });
 
-                // Analyze page option
-                chrome.contextMenus.create({
-                    id: 'analyze-page',
-                    title: 'Analyze page for legal content',
-                    contexts: ['page'],
-                    documentUrlPatterns: ['http://*/*', 'https://*/*']
-                });
+                    // Analyze page option
+                    chrome.contextMenus.create({
+                        id: 'analyze-page',
+                        title: 'Analyze page for legal content',
+                        contexts: ['page'],
+                        documentUrlPatterns: ['http://*/*', 'https://*/*']
+                    });
 
-                // Separator
-                chrome.contextMenus.create({
-                    id: 'separator1',
-                    type: 'separator',
-                    contexts: ['selection', 'page']
-                });
+                    // Separator
+                    chrome.contextMenus.create({
+                        id: 'separator1',
+                        type: 'separator',
+                        contexts: ['selection', 'page']
+                    });
 
-                // Quick actions submenu
-                chrome.contextMenus.create({
-                    id: 'quick-actions',
-                    title: 'Quick Actions',
-                    contexts: ['selection', 'page']
-                });
+                    // Quick actions submenu
+                    chrome.contextMenus.create({
+                        id: 'quick-actions',
+                        title: 'Quick Actions',
+                        contexts: ['selection', 'page']
+                    });
 
-                chrome.contextMenus.create({
-                    id: 'open-legalish',
-                    parentId: 'quick-actions',
-                    title: 'Open Legalish App',
-                    contexts: ['selection', 'page']
-                });
+                    chrome.contextMenus.create({
+                        id: 'open-legalish',
+                        parentId: 'quick-actions',
+                        title: 'Open Legalish App',
+                        contexts: ['selection', 'page']
+                    });
 
-                chrome.contextMenus.create({
-                    id: 'view-history',
-                    parentId: 'quick-actions',
-                    title: 'View Analysis History',
-                    contexts: ['selection', 'page']
-                });
+                    chrome.contextMenus.create({
+                        id: 'view-history',
+                        parentId: 'quick-actions',
+                        title: 'View Analysis History',
+                        contexts: ['selection', 'page']
+                    });
+
+                    console.log('Context menus created successfully');
+                } catch (error) {
+                    console.error('Error creating context menus:', error);
+                }
             });
 
             // Handle context menu clicks
-            chrome.contextMenus.onClicked.addListener((info, tab) => {
-                this.handleContextMenuClick(info, tab);
-            });
+            if (chrome.contextMenus.onClicked) {
+                chrome.contextMenus.onClicked.addListener((info, tab) => {
+                    this.handleContextMenuClick(info, tab);
+                });
+            }
         } catch (error) {
             console.error('Error setting up context menus:', error);
         }
@@ -77,6 +98,11 @@ class LegalishBackground {
 
     async handleContextMenuClick(info, tab) {
         try {
+            if (!tab || !tab.id) {
+                console.error('Invalid tab information');
+                return;
+            }
+
             switch (info.menuItemId) {
                 case 'analyze-selection':
                     await this.analyzeSelection(tab, info.selectionText);
@@ -139,7 +165,9 @@ class LegalishBackground {
         try {
             switch (request.action) {
                 case 'updateBadge':
-                    await this.updateBadge(sender.tab.id, request.text, request.color);
+                    if (sender.tab && sender.tab.id) {
+                        await this.updateBadge(sender.tab.id, request.text, request.color);
+                    }
                     break;
                 
                 case 'openPopup':
@@ -170,15 +198,17 @@ class LegalishBackground {
 
     async updateBadge(tabId, text, color = '#ef4444') {
         try {
-            await chrome.action.setBadgeText({
-                text: text,
-                tabId: tabId
-            });
-            
-            await chrome.action.setBadgeBackgroundColor({
-                color: color,
-                tabId: tabId
-            });
+            if (chrome.action && chrome.action.setBadgeText) {
+                await chrome.action.setBadgeText({
+                    text: text,
+                    tabId: tabId
+                });
+                
+                await chrome.action.setBadgeBackgroundColor({
+                    color: color,
+                    tabId: tabId
+                });
+            }
         } catch (error) {
             console.error('Error updating badge:', error);
         }
@@ -186,8 +216,9 @@ class LegalishBackground {
 
     async openPopup() {
         try {
-            // Open the popup programmatically
-            await chrome.action.openPopup();
+            if (chrome.action && chrome.action.openPopup) {
+                await chrome.action.openPopup();
+            }
         } catch (error) {
             console.error('Error opening popup:', error);
         }
@@ -195,42 +226,58 @@ class LegalishBackground {
 
     showNotification(message, type = 'basic') {
         try {
-            const notificationOptions = {
-                type: 'basic',
-                iconUrl: 'icons/icon48.png',
-                title: 'Legalish',
-                message: message
-            };
+            if (chrome.notifications && chrome.notifications.create) {
+                const notificationOptions = {
+                    type: 'basic',
+                    iconUrl: 'icons/icon48.png',
+                    title: 'Legalish',
+                    message: message
+                };
 
-            chrome.notifications.create('', notificationOptions);
+                chrome.notifications.create('', notificationOptions);
+            } else {
+                console.log('Notification:', message);
+            }
         } catch (error) {
             console.error('Error showing notification:', error);
         }
     }
 
     setupTabHandlers() {
-        // Clear badge when tab is updated
-        chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-            if (changeInfo.status === 'complete') {
-                chrome.action.setBadgeText({ text: '', tabId: tabId });
-            }
-        });
+        try {
+            // Clear badge when tab is updated
+            chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+                if (changeInfo.status === 'complete' && chrome.action) {
+                    chrome.action.setBadgeText({ text: '', tabId: tabId });
+                }
+            });
 
-        // Clear badge when tab is activated
-        chrome.tabs.onActivated.addListener((activeInfo) => {
-            chrome.action.setBadgeText({ text: '', tabId: activeInfo.tabId });
-        });
+            // Clear badge when tab is activated
+            chrome.tabs.onActivated.addListener((activeInfo) => {
+                if (chrome.action) {
+                    chrome.action.setBadgeText({ text: '', tabId: activeInfo.tabId });
+                }
+            });
+        } catch (error) {
+            console.error('Error setting up tab handlers:', error);
+        }
     }
 
     setupStorageCleanup() {
-        // Clean up old data periodically
-        chrome.alarms.create('cleanup', { periodInMinutes: 60 });
-        
-        chrome.alarms.onAlarm.addListener((alarm) => {
-            if (alarm.name === 'cleanup') {
-                this.clearOldData();
+        try {
+            if (chrome.alarms) {
+                // Clean up old data periodically
+                chrome.alarms.create('cleanup', { periodInMinutes: 60 });
+                
+                chrome.alarms.onAlarm.addListener((alarm) => {
+                    if (alarm.name === 'cleanup') {
+                        this.clearOldData();
+                    }
+                });
             }
-        });
+        } catch (error) {
+            console.error('Error setting up storage cleanup:', error);
+        }
     }
 
     async storeAnalysis(data) {
@@ -294,7 +341,7 @@ class LegalishBackground {
             const keysToDelete = [];
 
             for (const [key, value] of Object.entries(storage)) {
-                if (key.startsWith('analysis_') && value.timestamp) {
+                if (key.startsWith('analysis_') && value && value.timestamp) {
                     if (now - value.timestamp > maxAge) {
                         keysToDelete.push(key);
                     }
@@ -359,6 +406,10 @@ class LegalishBackground {
         try {
             const usage = await chrome.storage.local.get(['usage']) || { usage: {} };
             const today = new Date().toISOString().split('T')[0];
+            
+            if (!usage.usage) {
+                usage.usage = {};
+            }
             
             if (!usage.usage[today]) {
                 usage.usage[today] = {};

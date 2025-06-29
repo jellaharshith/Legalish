@@ -49,9 +49,9 @@ class LegalishContentScript {
                 'credit card agreement', 'cardholder agreement', 'mastercard', 'visa'
             ];
 
-            const pageText = document.body.innerText.toLowerCase();
-            const pageTitle = document.title.toLowerCase();
-            const pageUrl = window.location.href.toLowerCase();
+            const pageText = document.body ? document.body.innerText.toLowerCase() : '';
+            const pageTitle = document.title ? document.title.toLowerCase() : '';
+            const pageUrl = window.location ? window.location.href.toLowerCase() : '';
 
             // Check for legal keywords
             const hasLegalKeywords = legalKeywords.some(keyword => 
@@ -92,22 +92,24 @@ class LegalishContentScript {
                 </div>
             `;
             
-            document.body.appendChild(indicator);
+            if (document.body) {
+                document.body.appendChild(indicator);
 
-            // Add click handler
-            const analyzeBtn = indicator.querySelector('.legalish-analyze-btn');
-            if (analyzeBtn) {
-                analyzeBtn.addEventListener('click', () => {
-                    this.openAnalysisPopup();
-                });
-            }
-
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                if (indicator && indicator.parentNode) {
-                    indicator.style.transform = 'translateY(-100%)';
+                // Add click handler
+                const analyzeBtn = indicator.querySelector('.legalish-analyze-btn');
+                if (analyzeBtn) {
+                    analyzeBtn.addEventListener('click', () => {
+                        this.openAnalysisPopup();
+                    });
                 }
-            }, 5000);
+
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    if (indicator && indicator.parentNode) {
+                        indicator.style.transform = 'translateY(-100%)';
+                    }
+                }, 5000);
+            }
         } catch (error) {
             console.error('Error showing legal content indicator:', error);
         }
@@ -121,7 +123,7 @@ class LegalishContentScript {
             selectionTimeout = setTimeout(() => {
                 try {
                     const selection = window.getSelection();
-                    const selectedText = selection.toString().trim();
+                    const selectedText = selection ? selection.toString().trim() : '';
                     
                     if (selectedText.length > 50) {
                         this.selectedText = selectedText;
@@ -149,6 +151,8 @@ class LegalishContentScript {
             const legalScore = this.calculateLegalScore(this.selectedText);
             if (legalScore < 0.3) return; // Not legal enough
 
+            if (!selection || selection.rangeCount === 0) return;
+
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
 
@@ -166,20 +170,22 @@ class LegalishContentScript {
             widget.style.left = `${rect.left + window.scrollX}px`;
             widget.style.top = `${rect.bottom + window.scrollY + 10}px`;
 
-            document.body.appendChild(widget);
+            if (document.body) {
+                document.body.appendChild(widget);
 
-            // Add click handler
-            const analyzeBtn = widget.querySelector('.legalish-widget-btn');
-            if (analyzeBtn) {
-                analyzeBtn.addEventListener('click', () => {
-                    this.analyzeSelectedText();
-                });
+                // Add click handler
+                const analyzeBtn = widget.querySelector('.legalish-widget-btn');
+                if (analyzeBtn) {
+                    analyzeBtn.addEventListener('click', () => {
+                        this.analyzeSelectedText();
+                    });
+                }
+
+                // Auto-hide after 10 seconds
+                setTimeout(() => {
+                    this.hideSelectionWidget();
+                }, 10000);
             }
-
-            // Auto-hide after 10 seconds
-            setTimeout(() => {
-                this.hideSelectionWidget();
-            }, 10000);
         } catch (error) {
             console.error('Error showing selection widget:', error);
         }
@@ -220,13 +226,16 @@ class LegalishContentScript {
     setupContextMenu() {
         document.addEventListener('contextmenu', (e) => {
             try {
-                const selection = window.getSelection().toString().trim();
-                if (selection.length > 20) {
+                const selection = window.getSelection();
+                const selectedText = selection ? selection.toString().trim() : '';
+                if (selectedText.length > 20) {
                     // Store selection for context menu action
-                    chrome.storage.local.set({ 
-                        contextSelection: selection,
-                        contextUrl: window.location.href 
-                    });
+                    if (chrome.storage && chrome.storage.local) {
+                        chrome.storage.local.set({ 
+                            contextSelection: selectedText,
+                            contextUrl: window.location.href 
+                        });
+                    }
                 }
             } catch (error) {
                 console.error('Error setting up context menu:', error);
@@ -254,14 +263,16 @@ class LegalishContentScript {
                 </div>
             `;
 
-            document.body.appendChild(this.analysisWidget);
+            if (document.body) {
+                document.body.appendChild(this.analysisWidget);
 
-            // Add close handler
-            const closeBtn = this.analysisWidget.querySelector('.legalish-close-btn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                    this.hideAnalysisWidget();
-                });
+                // Add close handler
+                const closeBtn = this.analysisWidget.querySelector('.legalish-close-btn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        this.hideAnalysisWidget();
+                    });
+                }
             }
         } catch (error) {
             console.error('Error creating analysis widget:', error);
@@ -269,27 +280,31 @@ class LegalishContentScript {
     }
 
     setupMessageListener() {
-        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-            try {
-                if (request.action === 'analyzeSelection') {
-                    this.analyzeSelectedText();
-                } else if (request.action === 'analyzePage') {
-                    this.analyzePageContent();
-                } else if (request.action === 'getPageText') {
-                    sendResponse({ text: document.body.innerText });
-                } else if (request.action === 'getSelection') {
-                    sendResponse({ text: window.getSelection().toString() });
+        if (chrome.runtime && chrome.runtime.onMessage) {
+            chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+                try {
+                    if (request.action === 'analyzeSelection') {
+                        this.analyzeSelectedText();
+                    } else if (request.action === 'analyzePage') {
+                        this.analyzePageContent();
+                    } else if (request.action === 'getPageText') {
+                        sendResponse({ text: document.body ? document.body.innerText : '' });
+                    } else if (request.action === 'getSelection') {
+                        const selection = window.getSelection();
+                        sendResponse({ text: selection ? selection.toString() : '' });
+                    }
+                } catch (error) {
+                    console.error('Error handling message:', error);
                 }
-            } catch (error) {
-                console.error('Error handling message:', error);
-            }
-        });
+            });
+        }
     }
 
     async analyzeSelectedText() {
         try {
             if (!this.selectedText) {
-                this.selectedText = window.getSelection().toString().trim();
+                const selection = window.getSelection();
+                this.selectedText = selection ? selection.toString().trim() : '';
             }
 
             if (this.selectedText.length < 10) {
@@ -307,7 +322,7 @@ class LegalishContentScript {
 
     async analyzePageContent() {
         try {
-            const pageText = document.body.innerText;
+            const pageText = document.body ? document.body.innerText : '';
             if (pageText.length < 100) {
                 this.showError('Page content is too short to analyze');
                 return;
@@ -324,7 +339,11 @@ class LegalishContentScript {
     async performAnalysis(text) {
         try {
             // Get auth token from storage
-            const { authToken } = await chrome.storage.local.get(['authToken']);
+            let authToken = null;
+            if (chrome.storage && chrome.storage.local) {
+                const result = await chrome.storage.local.get(['authToken']);
+                authToken = result.authToken;
+            }
             
             const headers = {
                 'Content-Type': 'application/json',
@@ -459,7 +478,9 @@ class LegalishContentScript {
     openAnalysisPopup() {
         try {
             // Send message to background script to open popup
-            chrome.runtime.sendMessage({ action: 'openPopup' });
+            if (chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage({ action: 'openPopup' });
+            }
         } catch (error) {
             console.error('Error opening analysis popup:', error);
         }
@@ -467,11 +488,13 @@ class LegalishContentScript {
 
     updateExtensionBadge() {
         try {
-            chrome.runtime.sendMessage({ 
-                action: 'updateBadge', 
-                text: '!',
-                color: '#ef4444'
-            });
+            if (chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage({ 
+                    action: 'updateBadge', 
+                    text: '!',
+                    color: '#ef4444'
+                });
+            }
         } catch (error) {
             console.error('Error updating extension badge:', error);
         }
@@ -482,13 +505,15 @@ class LegalishContentScript {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'legalish-error';
             errorDiv.textContent = message;
-            document.body.appendChild(errorDiv);
+            if (document.body) {
+                document.body.appendChild(errorDiv);
 
-            setTimeout(() => {
-                if (errorDiv && errorDiv.parentNode) {
-                    errorDiv.remove();
-                }
-            }, 3000);
+                setTimeout(() => {
+                    if (errorDiv && errorDiv.parentNode) {
+                        errorDiv.remove();
+                    }
+                }, 3000);
+            }
         } catch (error) {
             console.error('Error showing error message:', error);
         }
