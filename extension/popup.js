@@ -1,0 +1,550 @@
+// Popup script for Legalish Chrome Extension
+class LegalishPopup {
+    constructor() {
+        this.currentTab = null;
+        this.analysisData = null;
+        this.selectedMethod = 'page';
+        this.isAnalyzing = false;
+        
+        this.init();
+    }
+
+    async init() {
+        await this.getCurrentTab();
+        this.setupEventListeners();
+        this.checkPageForLegalContent();
+        this.loadUserState();
+        this.loadStoredAnalysis();
+    }
+
+    async getCurrentTab() {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        this.currentTab = tab;
+    }
+
+    setupEventListeners() {
+        // Input method selection
+        document.querySelectorAll('.input-method').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.selectInputMethod(e.currentTarget.dataset.method);
+            });
+        });
+
+        // Analyze button
+        document.getElementById('analyze-btn').addEventListener('click', () => {
+            this.analyzeDocument();
+        });
+
+        // Refresh button
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            this.checkPageForLegalContent();
+        });
+
+        // Audio playback
+        document.getElementById('play-audio-btn').addEventListener('click', () => {
+            this.playAudioSummary();
+        });
+
+        // Save analysis
+        document.getElementById('save-analysis-btn').addEventListener('click', () => {
+            this.saveAnalysis();
+        });
+
+        // Open full results
+        document.getElementById('open-full-btn').addEventListener('click', () => {
+            this.openFullResults();
+        });
+
+        // Account actions
+        document.getElementById('sign-in-btn').addEventListener('click', () => {
+            this.signIn();
+        });
+
+        document.getElementById('sign-out-btn').addEventListener('click', () => {
+            this.signOut();
+        });
+
+        // Footer actions
+        document.getElementById('upgrade-btn').addEventListener('click', () => {
+            this.openUpgradePage();
+        });
+
+        document.getElementById('help-btn').addEventListener('click', () => {
+            this.openHelpPage();
+        });
+    }
+
+    selectInputMethod(method) {
+        this.selectedMethod = method;
+        
+        // Update UI
+        document.querySelectorAll('.input-method').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-method="${method}"]`).classList.add('active');
+
+        // Show/hide manual input
+        const manualInput = document.getElementById('manual-input');
+        if (method === 'manual') {
+            manualInput.style.display = 'block';
+        } else {
+            manualInput.style.display = 'none';
+        }
+    }
+
+    async checkPageForLegalContent() {
+        this.showLoading(true);
+        
+        try {
+            // Inject content script to analyze page
+            const [result] = await chrome.scripting.executeScript({
+                target: { tabId: this.currentTab.id },
+                function: this.detectLegalContent
+            });
+
+            const detection = result.result;
+            this.updateDetectionUI(detection);
+            
+        } catch (error) {
+            console.error('Error checking page content:', error);
+            this.updateDetectionUI({ hasLegalContent: false });
+        }
+        
+        this.showLoading(false);
+    }
+
+    // This function runs in the page context
+    detectLegalContent() {
+        const legalKeywords = [
+            'terms of service', 'terms and conditions', 'privacy policy',
+            'user agreement', 'license agreement', 'end user license',
+            'terms of use', 'service agreement', 'legal notice',
+            'cookie policy', 'data protection', 'gdpr', 'ccpa',
+            'acceptable use', 'community guidelines', 'code of conduct'
+        ];
+
+        const pageText = document.body.innerText.toLowerCase();
+        const pageTitle = document.title.toLowerCase();
+        const pageUrl = window.location.href.toLowerCase();
+
+        // Check for legal keywords in content
+        const hasLegalKeywords = legalKeywords.some(keyword => 
+            pageText.includes(keyword) || pageTitle.includes(keyword) || pageUrl.includes(keyword)
+        );
+
+        // Check for common legal document patterns
+        const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant)\b/gi.test(pageText);
+        
+        // Check for legal document structure
+        const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
+        
+        // Determine document type
+        let documentType = 'Unknown';
+        if (pageText.includes('terms of service') || pageText.includes('terms and conditions')) {
+            documentType = 'Terms of Service';
+        } else if (pageText.includes('privacy policy')) {
+            documentType = 'Privacy Policy';
+        } else if (pageText.includes('license agreement')) {
+            documentType = 'License Agreement';
+        } else if (pageText.includes('cookie policy')) {
+            documentType = 'Cookie Policy';
+        }
+
+        const confidence = (hasLegalKeywords ? 0.4 : 0) + 
+                          (hasLegalPatterns ? 0.3 : 0) + 
+                          (hasNumberedSections ? 0.3 : 0);
+
+        return {
+            hasLegalContent: confidence > 0.5,
+            documentType,
+            confidence,
+            textLength: pageText.length
+        };
+    }
+
+    updateDetectionUI(detection) {
+        const loadingEl = document.getElementById('loading');
+        const noContentEl = document.getElementById('no-legal-content');
+        const foundContentEl = document.getElementById('legal-content-found');
+        const documentTypeEl = document.getElementById('document-type');
+
+        // Hide all states
+        loadingEl.style.display = 'none';
+        noContentEl.style.display = 'none';
+        foundContentEl.style.display = 'none';
+
+        if (detection.hasLegalContent) {
+            foundContentEl.style.display = 'flex';
+            documentTypeEl.textContent = detection.documentType;
+            this.updateStatus('Legal document detected', 'success');
+        } else {
+            noContentEl.style.display = 'flex';
+            this.updateStatus('No legal content found', 'neutral');
+        }
+    }
+
+    showLoading(show) {
+        const loadingEl = document.getElementById('loading');
+        const noContentEl = document.getElementById('no-legal-content');
+        const foundContentEl = document.getElementById('legal-content-found');
+
+        if (show) {
+            loadingEl.style.display = 'flex';
+            noContentEl.style.display = 'none';
+            foundContentEl.style.display = 'none';
+        }
+    }
+
+    updateStatus(text, type = 'neutral') {
+        const statusText = document.querySelector('.status-text');
+        const statusDot = document.querySelector('.status-dot');
+        
+        statusText.textContent = text;
+        
+        // Update dot color based on status type
+        statusDot.style.background = type === 'success' ? '#10b981' : 
+                                   type === 'error' ? '#ef4444' : 
+                                   type === 'warning' ? '#f59e0b' : '#6b7280';
+    }
+
+    async analyzeDocument() {
+        if (this.isAnalyzing) return;
+        
+        this.isAnalyzing = true;
+        this.updateAnalyzeButton(true);
+        this.updateStatus('Analyzing document...', 'warning');
+
+        try {
+            let textToAnalyze = '';
+            
+            // Get text based on selected method
+            if (this.selectedMethod === 'page') {
+                textToAnalyze = await this.getPageText();
+            } else if (this.selectedMethod === 'selection') {
+                textToAnalyze = await this.getSelectedText();
+            } else if (this.selectedMethod === 'manual') {
+                textToAnalyze = document.getElementById('manual-text').value;
+            }
+
+            if (!textToAnalyze || textToAnalyze.trim().length < 10) {
+                throw new Error('Please provide text to analyze (minimum 10 characters)');
+            }
+
+            // Truncate if too long
+            if (textToAnalyze.length > 2800) {
+                textToAnalyze = textToAnalyze.substring(0, 2800);
+            }
+
+            const tone = document.getElementById('tone-select').value;
+            
+            // Call analysis API
+            const result = await this.callAnalysisAPI(textToAnalyze, tone);
+            
+            if (result.success) {
+                this.analysisData = result.data;
+                this.displayResults(result.data);
+                this.updateStatus('Analysis complete', 'success');
+                
+                // Store analysis for later
+                await this.storeAnalysis(result.data);
+            } else {
+                throw new Error(result.error || 'Analysis failed');
+            }
+            
+        } catch (error) {
+            console.error('Analysis error:', error);
+            this.updateStatus('Analysis failed', 'error');
+            this.showError(error.message);
+        } finally {
+            this.isAnalyzing = false;
+            this.updateAnalyzeButton(false);
+        }
+    }
+
+    async getPageText() {
+        const [result] = await chrome.scripting.executeScript({
+            target: { tabId: this.currentTab.id },
+            function: () => {
+                // Extract meaningful text from the page
+                const content = document.body.innerText;
+                return content.substring(0, 2800); // Limit to API constraints
+            }
+        });
+        return result.result;
+    }
+
+    async getSelectedText() {
+        const [result] = await chrome.scripting.executeScript({
+            target: { tabId: this.currentTab.id },
+            function: () => {
+                return window.getSelection().toString();
+            }
+        });
+        return result.result;
+    }
+
+    async callAnalysisAPI(text, tone) {
+        // Get stored auth token if available
+        const { authToken } = await chrome.storage.local.get(['authToken']);
+        
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        const response = await fetch('https://your-supabase-url.supabase.co/functions/v1/analyze-legal-terms-rag', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                legal_terms: text,
+                tone: tone,
+                max_tokens: 2000,
+                temperature: 0.7,
+                document_type: 'general'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+    }
+
+    displayResults(data) {
+        const resultsSection = document.getElementById('results-section');
+        const resultsContent = document.getElementById('results-content');
+        
+        resultsContent.innerHTML = '';
+
+        // Display summary
+        if (data.summary && data.summary.length > 0) {
+            data.summary.forEach(item => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'result-item fade-in';
+                resultDiv.innerHTML = `
+                    <div class="result-title">${item.title}</div>
+                    <div class="result-description">${item.description}</div>
+                `;
+                resultsContent.appendChild(resultDiv);
+            });
+        }
+
+        // Display red flags
+        if (data.red_flags && data.red_flags.length > 0) {
+            const redFlagsTitle = document.createElement('div');
+            redFlagsTitle.className = 'result-title';
+            redFlagsTitle.style.marginTop = '16px';
+            redFlagsTitle.style.marginBottom = '8px';
+            redFlagsTitle.textContent = `Red Flags (${data.red_flags.length})`;
+            resultsContent.appendChild(redFlagsTitle);
+
+            data.red_flags.forEach(flag => {
+                const flagDiv = document.createElement('div');
+                flagDiv.className = 'red-flag fade-in';
+                flagDiv.innerHTML = `
+                    <svg class="red-flag-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <div class="red-flag-text">${flag}</div>
+                `;
+                resultsContent.appendChild(flagDiv);
+            });
+        }
+
+        resultsSection.style.display = 'block';
+    }
+
+    updateAnalyzeButton(analyzing) {
+        const btn = document.getElementById('analyze-btn');
+        const span = btn.querySelector('span');
+        
+        if (analyzing) {
+            btn.disabled = true;
+            span.textContent = 'Analyzing...';
+            btn.querySelector('svg').style.animation = 'spin 1s linear infinite';
+        } else {
+            btn.disabled = false;
+            span.textContent = 'Analyze Document';
+            btn.querySelector('svg').style.animation = 'none';
+        }
+    }
+
+    async playAudioSummary() {
+        if (!this.analysisData || !this.analysisData.summary || this.analysisData.summary.length === 0) {
+            this.showError('No summary available for audio playback');
+            return;
+        }
+
+        try {
+            const textToSpeak = this.analysisData.summary[0].description;
+            const { authToken } = await chrome.storage.local.get(['authToken']);
+            
+            if (!authToken) {
+                this.showError('Please sign in to use audio features');
+                return;
+            }
+
+            // Call speech synthesis API
+            const response = await fetch('https://your-supabase-url.supabase.co/functions/v1/synthesize-speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({
+                    text: textToSpeak,
+                    voice_id: 'default-voice-id'
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    // Play audio
+                    const audio = new Audio(`data:audio/mpeg;base64,${result.audio}`);
+                    audio.play();
+                }
+            }
+        } catch (error) {
+            console.error('Audio playback error:', error);
+            this.showError('Audio playback failed');
+        }
+    }
+
+    async saveAnalysis() {
+        if (!this.analysisData) {
+            this.showError('No analysis to save');
+            return;
+        }
+
+        try {
+            const { authToken } = await chrome.storage.local.get(['authToken']);
+            
+            if (!authToken) {
+                this.showError('Please sign in to save analyses');
+                return;
+            }
+
+            // Save to user's account via API
+            // Implementation would depend on your backend API
+            this.updateStatus('Analysis saved', 'success');
+            
+        } catch (error) {
+            console.error('Save error:', error);
+            this.showError('Failed to save analysis');
+        }
+    }
+
+    openFullResults() {
+        // Open the main Legalish app with results
+        chrome.tabs.create({
+            url: 'https://your-legalish-app.com/summary'
+        });
+    }
+
+    signIn() {
+        // Open sign-in page
+        chrome.tabs.create({
+            url: 'https://your-legalish-app.com'
+        });
+    }
+
+    async signOut() {
+        await chrome.storage.local.remove(['authToken', 'userInfo']);
+        this.loadUserState();
+        this.updateStatus('Signed out', 'neutral');
+    }
+
+    openUpgradePage() {
+        chrome.tabs.create({
+            url: 'https://your-legalish-app.com/upgrade'
+        });
+    }
+
+    openHelpPage() {
+        chrome.tabs.create({
+            url: 'https://your-legalish-app.com/help'
+        });
+    }
+
+    async loadUserState() {
+        const { authToken, userInfo } = await chrome.storage.local.get(['authToken', 'userInfo']);
+        
+        const signedOut = document.getElementById('signed-out');
+        const signedIn = document.getElementById('signed-in');
+        
+        if (authToken && userInfo) {
+            signedOut.style.display = 'none';
+            signedIn.style.display = 'flex';
+            
+            document.getElementById('user-name').textContent = userInfo.name || 'User';
+            document.getElementById('user-plan').textContent = userInfo.plan || 'Free Plan';
+            document.getElementById('user-avatar').textContent = (userInfo.name || 'U')[0].toUpperCase();
+        } else {
+            signedOut.style.display = 'block';
+            signedIn.style.display = 'none';
+        }
+    }
+
+    async storeAnalysis(data) {
+        const analysisKey = `analysis_${Date.now()}`;
+        await chrome.storage.local.set({
+            [analysisKey]: {
+                data,
+                timestamp: Date.now(),
+                url: this.currentTab.url,
+                title: this.currentTab.title
+            }
+        });
+    }
+
+    async loadStoredAnalysis() {
+        // Load the most recent analysis for this tab if available
+        const storage = await chrome.storage.local.get();
+        const analyses = Object.entries(storage)
+            .filter(([key]) => key.startsWith('analysis_'))
+            .map(([key, value]) => ({ key, ...value }))
+            .filter(analysis => analysis.url === this.currentTab.url)
+            .sort((a, b) => b.timestamp - a.timestamp);
+
+        if (analyses.length > 0) {
+            const recentAnalysis = analyses[0];
+            this.analysisData = recentAnalysis.data;
+            this.displayResults(recentAnalysis.data);
+        }
+    }
+
+    showError(message) {
+        // Simple error display - could be enhanced with a proper notification system
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 1000;
+        `;
+        errorDiv.textContent = message;
+        document.body.appendChild(errorDiv);
+
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 3000);
+    }
+}
+
+// Initialize popup when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new LegalishPopup();
+});

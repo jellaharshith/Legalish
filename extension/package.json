@@ -1,0 +1,46 @@
+{
+  "name": "legalish-chrome-extension",
+  "version": "1.0.0",
+  "description": "AI-powered legal document analysis for Chrome. Detect and analyze terms of service, privacy policies, and contracts on any webpage.",
+  "main": "background.js",
+  "scripts": {
+    "build": "echo 'Extension files are ready for packaging'",
+    "package": "zip -r legalish-extension.zip . -x '*.git*' 'node_modules/*' 'package*.json' '*.md'",
+    "test": "echo 'Load extension in Chrome developer mode to test'"
+  },
+  "keywords": [
+    "legal",
+    "terms-of-service",
+    "privacy-policy",
+    "contract-analysis",
+    "ai",
+    "chrome-extension",
+    "legal-tech",
+    "document-analysis"
+  ],
+  "author": "Legalish Team",
+  "license": "Proprietary",
+  "homepage": "https://legalish.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/legalish/chrome-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/legalish/chrome-extension/issues",
+    "email": "support@legalish.com"
+  },
+  "chrome_extension": {
+    "manifest_version": 3,
+    "minimum_chrome_version": "88",
+    "permissions": [
+      "activeTab",
+      "storage",
+      "scripting"
+    ],
+    "host_permissions": [
+      "https://*.supabase.co/*"
+    ]
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
