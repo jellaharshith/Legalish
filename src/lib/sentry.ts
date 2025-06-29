@@ -41,9 +41,30 @@ export const clearSentryUser = () => {
 };
 
 // Add breadcrumb to Sentry
-export const addSentryBreadcrumb = (breadcrumb: { message: string; category?: string; level?: string; data?: any }) => {
+export const addSentryBreadcrumb = (message: string, category?: string, level?: 'info' | 'warning' | 'error', data?: any) => {
   if (sentryDsn && sentryDsn !== 'your_sentry_dsn' && sentryDsn.startsWith('https://')) {
-    Sentry.addBreadcrumb(breadcrumb);
+    Sentry.addBreadcrumb({
+      message,
+      category,
+      level,
+      data
+    });
+  }
+};
+
+// Capture exception in Sentry
+export const captureSentryException = (error: Error, context?: { [key: string]: any }) => {
+  if (sentryDsn && sentryDsn !== 'your_sentry_dsn' && sentryDsn.startsWith('https://')) {
+    if (context) {
+      Sentry.withScope((scope) => {
+        Object.keys(context).forEach(key => {
+          scope.setContext(key, context[key]);
+        });
+        Sentry.captureException(error);
+      });
+    } else {
+      Sentry.captureException(error);
+    }
   }
 };
 
