@@ -78,11 +78,11 @@ class LegalishBackground {
                 break;
             
             case 'open-legalish':
-                chrome.tabs.create({ url: 'https://your-legalish-app.com' });
+                chrome.tabs.create({ url: 'https://legalish.site' });
                 break;
             
             case 'view-history':
-                chrome.tabs.create({ url: 'https://your-legalish-app.com/dashboard' });
+                chrome.tabs.create({ url: 'https://legalish.site/dashboard' });
                 break;
         }
     }

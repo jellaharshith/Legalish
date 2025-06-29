@@ -260,7 +260,7 @@ class LegalishContentScript {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
 
-            const response = await fetch('https://your-supabase-url.supabase.co/functions/v1/analyze-legal-terms-rag', {
+            const response = await fetch('https://legalish.site/functions/v1/analyze-legal-terms-rag', {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
@@ -335,7 +335,7 @@ class LegalishContentScript {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'legalish-actions';
         actionsDiv.innerHTML = `
-            <button class="legalish-btn legalish-btn-primary" onclick="window.open('https://your-legalish-app.com/summary', '_blank')">
+            <button class="legalish-btn legalish-btn-primary" onclick="window.open('https://legalish.site/summary', '_blank')">
                 View Full Analysis
             </button>
             <button class="legalish-btn legalish-btn-secondary" onclick="this.closest('#legalish-analysis-widget').style.display='none'">

@@ -137,7 +137,7 @@ class LegalishPopup {
         
         // Check for legal document structure
         const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
-        
+
         // Determine document type
         let documentType = 'Unknown';
         if (pageText.includes('terms of service') || pageText.includes('terms and conditions')) {
@@ -295,7 +295,7 @@ class LegalishPopup {
             headers['Authorization'] = `Bearer ${authToken}`;
         }
 
-        const response = await fetch('https://your-supabase-url.supabase.co/functions/v1/analyze-legal-terms-rag', {
+        const response = await fetch('https://legalish.site/functions/v1/analyze-legal-terms-rag', {
             method: 'POST',
             headers,
             body: JSON.stringify({
@@ -391,7 +391,7 @@ class LegalishPopup {
             }
 
             // Call speech synthesis API
-            const response = await fetch('https://your-supabase-url.supabase.co/functions/v1/synthesize-speech', {
+            const response = await fetch('https://legalish.site/functions/v1/synthesize-speech', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -444,14 +444,14 @@ class LegalishPopup {
     openFullResults() {
         // Open the main Legalish app with results
         chrome.tabs.create({
-            url: 'https://your-legalish-app.com/summary'
+            url: 'https://legalish.site/summary'
         });
     }
 
     signIn() {
         // Open sign-in page
         chrome.tabs.create({
-            url: 'https://your-legalish-app.com'
+            url: 'https://legalish.site'
         });
     }
 
@@ -463,13 +463,13 @@ class LegalishPopup {
 
     openUpgradePage() {
         chrome.tabs.create({
-            url: 'https://your-legalish-app.com/upgrade'
+            url: 'https://legalish.site/upgrade'
         });
     }
 
     openHelpPage() {
         chrome.tabs.create({
-            url: 'https://your-legalish-app.com/help'
+            url: 'https://legalish.site/help'
         });
     }
 
