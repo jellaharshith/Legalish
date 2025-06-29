@@ -167,8 +167,8 @@ class LegalishContentScript {
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             } else {
-                // Use your actual Supabase anon key
-                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8`;
+                // Updated with your actual Supabase anon key
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ`;
             }
 
             // Use your actual Supabase project URL
@@ -466,8 +466,8 @@ class LegalishContentScript {
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             } else {
-                // Use your actual Supabase anon key
-                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8`;
+                // Updated with your actual Supabase anon key
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ`;
             }
 
             // Use your actual Supabase project URL
