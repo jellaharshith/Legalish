@@ -6,7 +6,7 @@ A powerful Chrome extension that brings AI-powered legal document analysis direc
 
 ### 1. Get Your Supabase Anon Key
 
-**IMPORTANT**: You need to replace the placeholder token with your actual Supabase anon key:
+**CRITICAL**: You need to replace the placeholder token with your actual Supabase anon key:
 
 1. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
 2. Select your project: `txwilhbitljeeihpvscr`
@@ -14,8 +14,18 @@ A powerful Chrome extension that brings AI-powered legal document analysis direc
 4. Copy your **anon/public** key
 5. Replace the placeholder token in both `popup.js` and `content.js`:
 
+**In `popup.js` around line 300:**
 ```javascript
-// Replace this placeholder:
+// Replace this line:
+headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.YOUR_ACTUAL_SIGNATURE_HERE`;
+
+// With your actual anon key:
+headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
+```
+
+**In `content.js` around line 200:**
+```javascript
+// Replace this line:
 headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8`;
 
 // With your actual anon key:
@@ -31,6 +41,12 @@ headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
 4. The extension will be loaded and ready to use
 
 ## ✨ Features
+
+### 🔐 **NEW: Automatic Authentication Sync**
+- **Smart Auth Detection**: Automatically detects when you're signed in to Legalish website
+- **Seamless Sync**: Extension syncs your authentication state from the website
+- **No Manual Setup**: Just sign in to the website and the extension will recognize you
+- **Secure Token Management**: Safely stores and manages authentication tokens
 
 ### 🔍 Smart Legal Content Detection
 - **PDF Support**: Automatically detects and analyzes PDF legal documents
@@ -61,12 +77,18 @@ headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
 - Risk assessment for each clause
 
 ### 🔐 Account Integration
-- Sign in with your Legalish account
-- Sync analysis history across devices
-- Access Pro features and unlimited analyses
-- Save and organize your legal document reviews
+- **Auto-Sync**: Automatically syncs with your Legalish website account
+- **Cross-Device**: Access your analysis history across all devices
+- **Pro Features**: Unlock premium features when signed in
+- **Secure**: Uses the same authentication as the main website
 
 ## 📖 How to Use
+
+### Authentication Setup
+1. **Sign in to Legalish**: Go to [legalish.site](https://legalish.site) and sign in
+2. **Open Extension**: Click the Legalish extension icon
+3. **Auto-Sync**: The extension will automatically detect your sign-in status
+4. **Start Analyzing**: You're now ready to analyze documents with your account
 
 ### Basic Usage
 1. **Browse any website** with legal content (including PDFs)
@@ -87,10 +109,17 @@ The extension automatically detects PDF documents and uses URL-based analysis:
 ### Advanced Features
 - **Right-click context menu**: Right-click on selected text for quick analysis
 - **Floating analysis widget**: Get results without leaving the page
-- **Save analyses**: Keep a history of your document reviews
+- **Save analyses**: Keep a history of your document reviews (when signed in)
 - **Full app integration**: Open complete results in the main Legalish application
 
 ## 🔧 Troubleshooting
+
+### Extension Shows "Sign In Required" Even When Signed In
+1. **Check Website Sign-In**: Make sure you're actually signed in to [legalish.site](https://legalish.site)
+2. **Refresh Extension**: Close and reopen the extension popup
+3. **Visit Legalish Site**: Go to the Legalish website in the same browser
+4. **Wait for Sync**: The extension should automatically detect your sign-in status
+5. **Manual Sync**: Click the "Sign In" button to open the website and sign in
 
 ### Extension Not Working
 1. **Check Supabase Key**: Ensure you've replaced the placeholder token with your actual anon key
@@ -128,6 +157,7 @@ The extension requests the following permissions:
 - **Minimum Chrome Version**: 88+
 - **API Integration**: Supabase + OpenAI RAG system
 - **PDF Support**: URL-based analysis with server-side text extraction
+- **Authentication**: Automatic sync with website authentication
 - **File Size**: ~2MB
 - **Languages**: English (more coming soon)
 

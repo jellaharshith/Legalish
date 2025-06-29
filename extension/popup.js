@@ -13,6 +13,7 @@ class LegalishPopup {
         try {
             await this.getCurrentTab();
             this.setupEventListeners();
+            await this.syncAuthenticationState();
             this.checkPageForLegalContent();
             this.loadUserState();
             this.loadStoredAnalysis();
@@ -27,6 +28,71 @@ class LegalishPopup {
             this.currentTab = tab;
         } catch (error) {
             console.error('Error getting current tab:', error);
+        }
+    }
+
+    async syncAuthenticationState() {
+        try {
+            // Check if user is on Legalish website and try to sync auth
+            if (this.currentTab && this.currentTab.url && 
+                (this.currentTab.url.includes('legalish.site') || 
+                 this.currentTab.url.includes('localhost:5173'))) {
+                
+                // Try to get auth token from the website
+                const [result] = await chrome.scripting.executeScript({
+                    target: { tabId: this.currentTab.id },
+                    function: () => {
+                        try {
+                            // Try to get Supabase session from localStorage
+                            const keys = Object.keys(localStorage);
+                            const supabaseKey = keys.find(key => 
+                                key.includes('supabase.auth.token') || 
+                                key.includes('sb-') && key.includes('-auth-token')
+                            );
+                            
+                            if (supabaseKey) {
+                                const authData = localStorage.getItem(supabaseKey);
+                                if (authData) {
+                                    const parsed = JSON.parse(authData);
+                                    return {
+                                        token: parsed.access_token,
+                                        user: parsed.user,
+                                        expires_at: parsed.expires_at
+                                    };
+                                }
+                            }
+                            return null;
+                        } catch (error) {
+                            console.error('Error getting auth from website:', error);
+                            return null;
+                        }
+                    }
+                });
+
+                if (result && result.result && result.result.token) {
+                    const authData = result.result;
+                    
+                    // Check if token is still valid
+                    const now = Math.floor(Date.now() / 1000);
+                    if (authData.expires_at && authData.expires_at > now) {
+                        // Store in extension storage
+                        await chrome.storage.local.set({
+                            authToken: authData.token,
+                            userInfo: {
+                                id: authData.user?.id,
+                                email: authData.user?.email,
+                                name: authData.user?.user_metadata?.full_name || authData.user?.email?.split('@')[0],
+                                plan: 'Free Plan' // Default, could be enhanced
+                            },
+                            authTimestamp: Date.now()
+                        });
+                        
+                        console.log('Successfully synced authentication from website');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error syncing authentication state:', error);
         }
     }
 
@@ -448,12 +514,12 @@ class LegalishPopup {
                 'Content-Type': 'application/json',
             };
 
-            // Use your actual Supabase anon key
+            // Use your actual Supabase anon key - REPLACE THIS WITH YOUR REAL KEY
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             } else {
-                // Use your actual Supabase anon key
-                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8`;
+                // IMPORTANT: Replace this with your actual Supabase anon key
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.YOUR_ACTUAL_SIGNATURE_HERE`;
             }
 
             // Use your actual Supabase project URL
@@ -633,14 +699,27 @@ class LegalishPopup {
     }
 
     signIn() {
-        // Open sign-in page
+        // Open sign-in page and then sync auth
         chrome.tabs.create({
             url: 'https://legalish.site'
+        }, (tab) => {
+            // Listen for tab updates to sync auth when user signs in
+            const listener = (tabId, changeInfo, updatedTab) => {
+                if (tabId === tab.id && changeInfo.status === 'complete') {
+                    // Wait a moment for auth to settle, then sync
+                    setTimeout(async () => {
+                        await this.syncAuthenticationState();
+                        this.loadUserState();
+                    }, 2000);
+                    chrome.tabs.onUpdated.removeListener(listener);
+                }
+            };
+            chrome.tabs.onUpdated.addListener(listener);
         });
     }
 
     async signOut() {
-        await chrome.storage.local.remove(['authToken', 'userInfo']);
+        await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp']);
         this.loadUserState();
         this.updateStatus('Signed out', 'neutral');
     }
