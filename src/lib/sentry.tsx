@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/react';
 // Initialize Sentry
 export const initSentry = () => {
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
+    dsn: "https://f3b05d4f6b032cf7c1815ac5db86b993@o4509583690891264.ingest.us.sentry.io/4509583814033408",
     environment: import.meta.env.MODE || 'development',
     
     // Performance monitoring
@@ -13,16 +13,14 @@ export const initSentry = () => {
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
     
+    // Send default PII data (as you specified)
+    sendDefaultPii: true,
+    
     // Additional configuration
     beforeSend(event, hint) {
       // Filter out development errors in production
       if (import.meta.env.MODE === 'development') {
         console.log('Sentry Event:', event);
-      }
-      
-      // Don't send events if no DSN is configured
-      if (!import.meta.env.VITE_SENTRY_DSN) {
-        return null;
       }
       
       return event;
