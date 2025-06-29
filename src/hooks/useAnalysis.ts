@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { addSentryBreadcrumb, captureSentryException } from '@/lib/sentry';
 
 export interface UseAnalysisReturn {
   isAnalyzing: boolean;
@@ -33,8 +34,10 @@ export function useAnalysis(): UseAnalysisReturn {
       });
 
       if (error) throw error;
+      addSentryBreadcrumb('Analysis saved to database', 'analysis');
     } catch (error) {
       console.error('Error saving analysis:', error);
+      captureSentryException(error as Error, { context: 'saveAnalysis' });
       // Don't show error to user as this is not critical
     }
   };
@@ -43,6 +46,7 @@ export function useAnalysis(): UseAnalysisReturn {
     // Validate request
     const validation = AnalysisService.validateRequest(request);
     if (!validation.isValid) {
+      addSentryBreadcrumb('Analysis validation failed', 'analysis', 'error');
       toast({
         title: 'Invalid Input',
         description: validation.error,
@@ -52,6 +56,7 @@ export function useAnalysis(): UseAnalysisReturn {
     }
 
     setIsAnalyzing(true);
+    addSentryBreadcrumb('Analysis started', 'analysis');
     
     try {
       const result = await AnalysisService.analyzeLegalTerms(request);
@@ -66,11 +71,13 @@ export function useAnalysis(): UseAnalysisReturn {
         // Save to database if user is logged in
         await saveAnalysis(request, result);
 
+        addSentryBreadcrumb('Analysis completed successfully', 'analysis');
         toast({
           title: 'Analysis Complete',
           description: `Found ${result.data.red_flags.length} red flags in ${(result.data.processing_time_ms / 1000).toFixed(2)}s`,
         });
       } else {
+        addSentryBreadcrumb('Analysis failed', 'analysis', 'error');
         toast({
           title: 'Analysis Failed',
           description: result.error || 'An error occurred during analysis',
@@ -81,6 +88,11 @@ export function useAnalysis(): UseAnalysisReturn {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      
+      captureSentryException(error as Error, { 
+        context: 'analysis',
+        request: request 
+      });
       
       toast({
         title: 'Analysis Error',

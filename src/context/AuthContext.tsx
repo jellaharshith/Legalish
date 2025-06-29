@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { setSentryUser, clearSentryUser, addSentryBreadcrumb } from '@/lib/sentry';
 
 interface AuthContextType {
   user: User | null;
@@ -24,8 +25,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // If there's an error or no session, clear the invalid state
         await supabase.auth.signOut();
         setUser(null);
+        clearSentryUser();
       } else {
         setUser(session.user);
+        setSentryUser({ id: session.user.id, email: session.user.email });
+        addSentryBreadcrumb('User session restored', 'auth');
       }
       setLoading(false);
     });
@@ -34,8 +38,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         setUser(session.user);
+        setSentryUser({ id: session.user.id, email: session.user.email });
+        addSentryBreadcrumb(`User ${event}`, 'auth');
       } else {
         setUser(null);
+        clearSentryUser();
+        if (event === 'SIGNED_OUT') {
+          addSentryBreadcrumb('User signed out', 'auth');
+        }
       }
       setLoading(false);
     });
@@ -44,34 +54,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    addSentryBreadcrumb('Sign in attempt', 'auth');
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) throw error;
+    if (error) {
+      addSentryBreadcrumb('Sign in failed', 'auth', 'error');
+      throw error;
+    }
+    addSentryBreadcrumb('Sign in successful', 'auth');
   };
 
   const signUp = async (email: string, password: string) => {
+    addSentryBreadcrumb('Sign up attempt', 'auth');
     const { error } = await supabase.auth.signUp({
       email,
       password,
     });
-    if (error) throw error;
+    if (error) {
+      addSentryBreadcrumb('Sign up failed', 'auth', 'error');
+      throw error;
+    }
+    addSentryBreadcrumb('Sign up successful', 'auth');
   };
 
   const signInWithGoogle = async () => {
+    addSentryBreadcrumb('Google sign in attempt', 'auth');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/summary`,
       },
     });
-    if (error) throw error;
+    if (error) {
+      addSentryBreadcrumb('Google sign in failed', 'auth', 'error');
+      throw error;
+    }
   };
 
   const signOut = async () => {
+    addSentryBreadcrumb('Sign out attempt', 'auth');
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) {
+      addSentryBreadcrumb('Sign out failed', 'auth', 'error');
+      throw error;
+    }
   };
 
   return (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import HomePage from '@/pages/HomePage';
 import SummaryPage from '@/pages/SummaryPage';
 import UpgradePage from '@/pages/UpgradePage';
@@ -12,13 +13,16 @@ import { LegalTermsProvider } from '@/context/LegalTermsContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { TutorialProvider } from '@/components/onboarding/TutorialProvider';
 
+// Create Sentry-wrapped Router for automatic route tracking
+const SentryRouter = Sentry.withSentryRouting(Router);
+
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="volt-ui-theme">
       <AuthProvider>
         <TutorialProvider>
           <LegalTermsProvider>
-            <Router>
+            <SentryRouter>
               <div className="min-h-screen bg-background font-sans">
                 <Navbar />
                 <main>
@@ -32,7 +36,7 @@ function App() {
                 </main>
                 <Toaster />
               </div>
-            </Router>
+            </SentryRouter>
           </LegalTermsProvider>
         </TutorialProvider>
       </AuthProvider>
@@ -40,4 +44,4 @@ function App() {
   );
 }
 
-export default App;
+export default Sentry.withProfiler(App);
