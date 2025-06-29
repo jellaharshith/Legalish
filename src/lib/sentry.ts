@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/react';
-import { reactRouterV6Instrumentation } from '@sentry/react';
+import { reactRouterV6Instrumentation } from '@sentry/react-router-v6';
 import React, { useEffect } from 'react';
 import { useLocation, useNavigationType, createRoutesFromChildren, matchRoutes } from 'react-router-dom';
 
