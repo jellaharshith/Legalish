@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react';
+import { reactRouterV6Instrumentation } from '@sentry/react';
 import React, { useEffect } from 'react';
 import { useLocation, useNavigationType, createRoutesFromChildren, matchRoutes } from 'react-router-dom';
 
@@ -9,7 +10,7 @@ export const initSentry = () => {
     integrations: [
       Sentry.browserTracingIntegration({
         // Set up automatic route change tracking for React Router
-        routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+        routingInstrumentation: reactRouterV6Instrumentation(
           React.useEffect,
           useLocation,
           useNavigationType,
