@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { User, Menu, X, HelpCircle } from 'lucide-react';
+import { User, Menu, X, HelpCircle, Download, Chrome, Firefox, Globe } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTutorial } from '@/components/onboarding/TutorialProvider';
 import AuthModal from '@/components/auth/AuthModal';
+import ExtensionModal from '@/components/extension/ExtensionModal';
 
 export default function Navbar() {
   const location = useLocation();
@@ -95,6 +96,18 @@ export default function Navbar() {
             Tutorial
           </Button>
 
+          {/* Extension Button */}
+          <ExtensionModal>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-sm flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Extension
+            </Button>
+          </ExtensionModal>
+
           {user ? (
             <div className="flex items-center gap-2">
               <Button
@@ -175,6 +188,18 @@ export default function Navbar() {
                   <HelpCircle className="mr-2 h-4 w-4" />
                   Tutorial
                 </Button>
+
+                {/* Extension Button */}
+                <ExtensionModal>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full justify-start"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Get Extension
+                  </Button>
+                </ExtensionModal>
 
                 {user ? (
                   <div className="space-y-2">
