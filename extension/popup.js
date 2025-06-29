@@ -171,12 +171,21 @@ class LegalishPopup {
                 'terms of use', 'service agreement', 'legal notice',
                 'cookie policy', 'data protection', 'gdpr', 'ccpa',
                 'acceptable use', 'community guidelines', 'code of conduct',
-                'credit card agreement', 'cardholder agreement', 'mastercard', 'visa'
+                'credit card agreement', 'cardholder agreement', 'mastercard', 'visa',
+                'lease agreement', 'rental agreement', 'residential lease',
+                'employment agreement', 'employment contract', 'work agreement'
             ];
 
             const pageText = document.body ? document.body.innerText.toLowerCase() : '';
             const pageTitle = document.title ? document.title.toLowerCase() : '';
             const pageUrl = window.location ? window.location.href.toLowerCase() : '';
+
+            // Special handling for PDF files
+            const isPDF = pageUrl.includes('.pdf') || 
+                         document.contentType === 'application/pdf' ||
+                         pageTitle.includes('.pdf') ||
+                         document.querySelector('embed[type="application/pdf"]') ||
+                         document.querySelector('object[type="application/pdf"]');
 
             // Check for legal keywords in content
             const hasLegalKeywords = legalKeywords.some(keyword => 
@@ -184,7 +193,7 @@ class LegalishPopup {
             );
 
             // Check for common legal document patterns
-            const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant)\b/gi.test(pageText);
+            const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant|landlord|tenant|lessee|lessor|agreement|contract)\b/gi.test(pageText);
             
             // Check for legal document structure
             const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
@@ -201,17 +210,28 @@ class LegalishPopup {
                 documentType = 'Cookie Policy';
             } else if (pageText.includes('credit card') || pageText.includes('cardholder')) {
                 documentType = 'Credit Card Agreement';
+            } else if (pageText.includes('lease') || pageText.includes('rental') || pageText.includes('landlord') || pageText.includes('tenant')) {
+                documentType = 'Lease Agreement';
+            } else if (pageText.includes('employment') || pageText.includes('work agreement')) {
+                documentType = 'Employment Contract';
+            } else if (isPDF) {
+                documentType = 'PDF Document';
             }
 
+            // PDF files are more likely to be legal documents
+            const pdfBonus = isPDF ? 0.3 : 0;
+            
             const confidence = (hasLegalKeywords ? 0.4 : 0) + 
                               (hasLegalPatterns ? 0.3 : 0) + 
-                              (hasNumberedSections ? 0.3 : 0);
+                              (hasNumberedSections ? 0.3 : 0) + 
+                              pdfBonus;
 
             return {
-                hasLegalContent: confidence > 0.5,
+                hasLegalContent: confidence > 0.4 || isPDF, // Lower threshold for PDFs
                 documentType,
                 confidence,
-                textLength: pageText.length
+                textLength: pageText.length,
+                isPDF: isPDF
             };
         } catch (error) {
             console.error('Error in detectLegalContent:', error);
@@ -219,7 +239,8 @@ class LegalishPopup {
                 hasLegalContent: false,
                 documentType: 'Unknown',
                 confidence: 0,
-                textLength: 0
+                textLength: 0,
+                isPDF: false
             };
         }
     }
@@ -236,7 +257,7 @@ class LegalishPopup {
             if (noContentEl) noContentEl.style.display = 'none';
             if (foundContentEl) foundContentEl.style.display = 'none';
 
-            if (detection.hasLegalContent) {
+            if (detection.hasLegalContent || detection.isPDF) {
                 if (foundContentEl) foundContentEl.style.display = 'flex';
                 if (documentTypeEl) documentTypeEl.textContent = detection.documentType;
                 this.updateStatus('Legal document detected', 'success');
@@ -291,32 +312,71 @@ class LegalishPopup {
         this.updateStatus('Analyzing document...', 'warning');
 
         try {
-            let textToAnalyze = '';
+            let analysisRequest = {};
             
             // Get text based on selected method
             if (this.selectedMethod === 'page') {
-                textToAnalyze = await this.getPageText();
+                // Check if current page is a PDF
+                const isPDF = this.currentTab && (
+                    this.currentTab.url.includes('.pdf') || 
+                    this.currentTab.title.includes('.pdf')
+                );
+                
+                if (isPDF) {
+                    // Use URL-based analysis for PDFs
+                    analysisRequest = {
+                        input_url: this.currentTab.url,
+                        tone: 'serious',
+                        max_tokens: 2000,
+                        temperature: 0.7,
+                        document_type: 'general'
+                    };
+                } else {
+                    // Use text-based analysis for regular pages
+                    const textToAnalyze = await this.getPageText();
+                    if (!textToAnalyze || textToAnalyze.trim().length < 10) {
+                        throw new Error('Please provide text to analyze (minimum 10 characters)');
+                    }
+                    
+                    analysisRequest = {
+                        legal_terms: textToAnalyze.substring(0, 2800),
+                        tone: 'serious',
+                        max_tokens: 2000,
+                        temperature: 0.7,
+                        document_type: 'general'
+                    };
+                }
             } else if (this.selectedMethod === 'selection') {
-                textToAnalyze = await this.getSelectedText();
+                const textToAnalyze = await this.getSelectedText();
+                if (!textToAnalyze || textToAnalyze.trim().length < 10) {
+                    throw new Error('Please select text to analyze (minimum 10 characters)');
+                }
+                
+                analysisRequest = {
+                    legal_terms: textToAnalyze.substring(0, 2800),
+                    tone: 'serious',
+                    max_tokens: 2000,
+                    temperature: 0.7,
+                    document_type: 'general'
+                };
             } else if (this.selectedMethod === 'manual') {
                 const manualTextEl = document.getElementById('manual-text');
-                textToAnalyze = manualTextEl ? manualTextEl.value : '';
+                const textToAnalyze = manualTextEl ? manualTextEl.value : '';
+                if (!textToAnalyze || textToAnalyze.trim().length < 10) {
+                    throw new Error('Please provide text to analyze (minimum 10 characters)');
+                }
+                
+                analysisRequest = {
+                    legal_terms: textToAnalyze.substring(0, 2800),
+                    tone: 'serious',
+                    max_tokens: 2000,
+                    temperature: 0.7,
+                    document_type: 'general'
+                };
             }
 
-            if (!textToAnalyze || textToAnalyze.trim().length < 10) {
-                throw new Error('Please provide text to analyze (minimum 10 characters)');
-            }
-
-            // Truncate if too long
-            if (textToAnalyze.length > 2800) {
-                textToAnalyze = textToAnalyze.substring(0, 2800);
-            }
-
-            const toneSelect = document.getElementById('tone-select');
-            const tone = toneSelect ? toneSelect.value : 'serious';
-            
             // Call analysis API with better error handling
-            const result = await this.callAnalysisAPI(textToAnalyze, tone);
+            const result = await this.callAnalysisAPI(analysisRequest);
             
             if (result.success) {
                 this.analysisData = result.data;
@@ -379,7 +439,7 @@ class LegalishPopup {
         }
     }
 
-    async callAnalysisAPI(text, tone) {
+    async callAnalysisAPI(analysisRequest) {
         try {
             // Get stored auth token if available
             const { authToken } = await chrome.storage.local.get(['authToken']);
@@ -403,13 +463,7 @@ class LegalishPopup {
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({
-                    legal_terms: text,
-                    tone: tone,
-                    max_tokens: 2000,
-                    temperature: 0.7,
-                    document_type: 'general'
-                })
+                body: JSON.stringify(analysisRequest)
             });
 
             if (!response.ok) {

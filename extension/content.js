@@ -46,12 +46,21 @@ class LegalishContentScript {
                 'terms of use', 'service agreement', 'legal notice',
                 'cookie policy', 'data protection', 'gdpr', 'ccpa',
                 'acceptable use', 'community guidelines', 'code of conduct',
-                'credit card agreement', 'cardholder agreement', 'mastercard', 'visa'
+                'credit card agreement', 'cardholder agreement', 'mastercard', 'visa',
+                'lease agreement', 'rental agreement', 'residential lease',
+                'employment agreement', 'employment contract', 'work agreement'
             ];
 
             const pageText = document.body ? document.body.innerText.toLowerCase() : '';
             const pageTitle = document.title ? document.title.toLowerCase() : '';
             const pageUrl = window.location ? window.location.href.toLowerCase() : '';
+
+            // Special handling for PDF files
+            const isPDF = pageUrl.includes('.pdf') || 
+                         document.contentType === 'application/pdf' ||
+                         pageTitle.includes('.pdf') ||
+                         document.querySelector('embed[type="application/pdf"]') ||
+                         document.querySelector('object[type="application/pdf"]');
 
             // Check for legal keywords
             const hasLegalKeywords = legalKeywords.some(keyword => 
@@ -59,19 +68,23 @@ class LegalishContentScript {
             );
 
             // Check for legal document patterns
-            const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant)\b/gi.test(pageText);
+            const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant|landlord|tenant|lessee|lessor|agreement|contract)\b/gi.test(pageText);
             
             // Check for numbered sections (common in legal docs)
             const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
             
+            // PDF files are more likely to be legal documents
+            const pdfBonus = isPDF ? 0.3 : 0;
+            
             const confidence = (hasLegalKeywords ? 0.4 : 0) + 
                               (hasLegalPatterns ? 0.3 : 0) + 
-                              (hasNumberedSections ? 0.3 : 0);
+                              (hasNumberedSections ? 0.3 : 0) + 
+                              pdfBonus;
 
-            this.legalContentDetected = confidence > 0.5;
+            this.legalContentDetected = confidence > 0.4; // Lower threshold for PDFs
 
-            if (this.legalContentDetected) {
-                this.showLegalContentIndicator();
+            if (this.legalContentDetected || isPDF) {
+                this.showLegalContentIndicator(isPDF);
                 this.updateExtensionBadge();
             }
         } catch (error) {
@@ -79,15 +92,18 @@ class LegalishContentScript {
         }
     }
 
-    showLegalContentIndicator() {
+    showLegalContentIndicator(isPDF = false) {
         try {
             // Create a subtle indicator that legal content was detected
             const indicator = document.createElement('div');
             indicator.id = 'legalish-indicator';
+            
+            const message = isPDF ? 'PDF document detected' : 'Legal document detected';
+            
             indicator.innerHTML = `
                 <div class="legalish-indicator-content">
                     <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
-                    <span>Legal document detected</span>
+                    <span>${message}</span>
                     <button class="legalish-analyze-btn">Analyze</button>
                 </div>
             `;
@@ -99,19 +115,103 @@ class LegalishContentScript {
                 const analyzeBtn = indicator.querySelector('.legalish-analyze-btn');
                 if (analyzeBtn) {
                     analyzeBtn.addEventListener('click', () => {
-                        this.openAnalysisPopup();
+                        if (isPDF) {
+                            this.analyzePDFByURL();
+                        } else {
+                            this.openAnalysisPopup();
+                        }
                     });
                 }
 
-                // Auto-hide after 5 seconds
+                // Auto-hide after 8 seconds for PDFs (give more time to notice)
                 setTimeout(() => {
                     if (indicator && indicator.parentNode) {
                         indicator.style.transform = 'translateY(-100%)';
                     }
-                }, 5000);
+                }, isPDF ? 8000 : 5000);
             }
         } catch (error) {
             console.error('Error showing legal content indicator:', error);
+        }
+    }
+
+    async analyzePDFByURL() {
+        try {
+            const currentUrl = window.location.href;
+            
+            // Show analysis widget
+            this.showAnalysisWidget();
+            
+            // Perform URL-based analysis
+            await this.performURLAnalysis(currentUrl);
+        } catch (error) {
+            console.error('Error analyzing PDF by URL:', error);
+            this.showError('Failed to analyze PDF. Please try again.');
+        }
+    }
+
+    async performURLAnalysis(url) {
+        try {
+            // Get auth token from storage
+            let authToken = null;
+            if (chrome.storage && chrome.storage.local) {
+                const result = await chrome.storage.local.get(['authToken']);
+                authToken = result.authToken;
+            }
+            
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+
+            // Use anon key for unauthenticated requests
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            } else {
+                // Use a placeholder anon key - in production this should be the actual Supabase anon key
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDA5OTUyMDAsImV4cCI6MTk1NjU3MTIwMH0.placeholder`;
+            }
+
+            // Use your actual Supabase project URL
+            const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
+            const apiUrl = `${supabaseUrl}/functions/v1/analyze-legal-terms-rag`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    input_url: url,
+                    tone: 'serious',
+                    max_tokens: 1500,
+                    temperature: 0.7,
+                    document_type: 'general'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Analysis failed: ${response.status} - ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.displayAnalysisResults(result.data);
+            } else {
+                throw new Error(result.error || 'Analysis failed');
+            }
+
+        } catch (error) {
+            console.error('URL Analysis error:', error);
+            
+            // Show a more helpful error message
+            if (error.message.includes('Failed to fetch')) {
+                this.showError('Network error. Please check your internet connection.');
+            } else if (error.message.includes('404')) {
+                this.showError('Analysis service not found. Please try again later.');
+            } else if (error.message.includes('401') || error.message.includes('403')) {
+                this.showError('Authentication required. Please sign in to the Legalish website first.');
+            } else {
+                this.showError('Analysis failed. Please try again.');
+            }
         }
     }
 
@@ -208,7 +308,8 @@ class LegalishContentScript {
                 'agreement', 'contract', 'terms', 'conditions', 'policy', 'license',
                 'shall', 'hereby', 'whereas', 'therefore', 'pursuant', 'notwithstanding',
                 'liability', 'damages', 'indemnify', 'warranty', 'disclaimer',
-                'intellectual property', 'confidential', 'proprietary', 'terminate'
+                'intellectual property', 'confidential', 'proprietary', 'terminate',
+                'landlord', 'tenant', 'lessee', 'lessor', 'rent', 'lease', 'deposit'
             ];
 
             const words = text.toLowerCase().split(/\s+/);
@@ -322,6 +423,18 @@ class LegalishContentScript {
 
     async analyzePageContent() {
         try {
+            // Check if this is a PDF
+            const isPDF = window.location.href.includes('.pdf') || 
+                         document.contentType === 'application/pdf' ||
+                         document.title.includes('.pdf');
+
+            if (isPDF) {
+                // For PDFs, use URL-based analysis
+                await this.analyzePDFByURL();
+                return;
+            }
+
+            // For regular pages, extract text content
             const pageText = document.body ? document.body.innerText : '';
             if (pageText.length < 100) {
                 this.showError('Page content is too short to analyze');
