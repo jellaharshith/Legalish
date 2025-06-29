@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { User, Menu, X, HelpCircle, Download, Chrome, Firefox, Globe } from 'lucide-react';
+import { User, Menu, X, HelpCircle, Download, Chrome, Siren as Firefox, Globe } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTutorial } from '@/components/onboarding/TutorialProvider';
 import AuthModal from '@/components/auth/AuthModal';
