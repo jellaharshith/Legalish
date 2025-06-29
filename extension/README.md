@@ -2,43 +2,47 @@
 
 A powerful Chrome extension that brings AI-powered legal document analysis directly to your browser. Detect and analyze terms of service, privacy policies, and contracts on any webpage.
 
-## Setup Instructions
+## 🚀 Quick Setup
 
-### 1. Configure API Endpoints
+### 1. Get Your Supabase Anon Key
 
-Before using the extension, you need to update the API endpoints in the code:
+**IMPORTANT**: You need to replace the placeholder token with your actual Supabase anon key:
 
-1. Open `extension/content.js` and `extension/popup.js`
-2. Replace `https://your-project-id.supabase.co` with your actual Supabase project URL
-3. Replace the placeholder authorization token with your actual Supabase anon key
+1. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
+2. Select your project: `txwilhbitljeeihpvscr`
+3. Go to **Settings** → **API**
+4. Copy your **anon/public** key
+5. Replace the placeholder token in both `popup.js` and `content.js`:
+
+```javascript
+// Replace this placeholder:
+headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8`;
+
+// With your actual anon key:
+headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
+```
 
 ### 2. Install the Extension
 
-#### From Chrome Web Store (Recommended)
-1. Visit the [Legalish Extension page](https://chrome.google.com/webstore) on Chrome Web Store
-2. Click "Add to Chrome"
-3. Confirm the installation
-4. The extension icon will appear in your browser toolbar
-
 #### Developer Mode (For Testing)
-1. Download or clone this repository
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the `extension` folder
-5. The extension will be loaded and ready to use
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable "Developer mode" in the top right
+3. Click "Load unpacked" and select the `extension` folder
+4. The extension will be loaded and ready to use
 
-## Features
+## ✨ Features
 
 ### 🔍 Smart Legal Content Detection
-- Automatically detects legal documents on webpages
-- Identifies terms of service, privacy policies, and contracts
-- Visual indicators when legal content is found
-- Context-aware analysis suggestions
+- **PDF Support**: Automatically detects and analyzes PDF legal documents
+- **Webpage Analysis**: Identifies terms of service, privacy policies, and contracts
+- **Visual Indicators**: Shows notifications when legal content is found
+- **Context-aware**: Suggests analysis for relevant content
 
 ### ⚡ Multiple Analysis Methods
-- **Full Page Analysis**: Analyze entire legal documents
+- **Full Page Analysis**: Analyze entire legal documents (including PDFs)
 - **Text Selection**: Analyze specific clauses or sections
 - **Manual Input**: Paste text directly into the extension
+- **URL Analysis**: Automatically handles PDF documents via URL
 
 ### 🎭 Multiple Analysis Tones
 - **Serious**: Professional, neutral analysis
@@ -62,18 +66,23 @@ Before using the extension, you need to update the API endpoints in the code:
 - Access Pro features and unlimited analyses
 - Save and organize your legal document reviews
 
-## How to Use
+## 📖 How to Use
 
 ### Basic Usage
-1. **Browse any website** with legal content
+1. **Browse any website** with legal content (including PDFs)
 2. **Look for the Legalish indicator** when legal documents are detected
 3. **Click the extension icon** in your toolbar to open the popup
 4. **Choose your analysis method**:
-   - Current Page: Analyze the entire webpage
+   - Current Page: Analyze the entire webpage or PDF
    - Selected Text: Highlight text first, then analyze
    - Manual Input: Paste text directly
-5. **Select your preferred tone** for the analysis
-6. **Click "Analyze Document"** to get instant results
+5. **Click "Analyze Document"** to get instant results
+
+### PDF Analysis
+The extension automatically detects PDF documents and uses URL-based analysis:
+- **Automatic Detection**: PDFs are identified by URL, content type, or embedded objects
+- **URL Analysis**: Sends the PDF URL to the backend for text extraction and analysis
+- **Same Results**: Get the same quality analysis as regular web pages
 
 ### Advanced Features
 - **Right-click context menu**: Right-click on selected text for quick analysis
@@ -81,7 +90,28 @@ Before using the extension, you need to update the API endpoints in the code:
 - **Save analyses**: Keep a history of your document reviews
 - **Full app integration**: Open complete results in the main Legalish application
 
-## Permissions Explained
+## 🔧 Troubleshooting
+
+### Extension Not Working
+1. **Check Supabase Key**: Ensure you've replaced the placeholder token with your actual anon key
+2. **Reload Extension**: Go to `chrome://extensions/` and click reload on the Legalish extension
+3. **Refresh Page**: Refresh the webpage and try again
+4. **Check Console**: Open Developer Tools (F12) and check for errors
+
+### Analysis Fails with 401 Error
+This means the authentication token is invalid:
+1. **Get Real Anon Key**: Copy your actual Supabase anon key from the dashboard
+2. **Replace in Both Files**: Update both `popup.js` and `content.js`
+3. **Reload Extension**: Reload the extension in Chrome
+4. **Try Again**: The analysis should now work
+
+### PDF Analysis Not Working
+1. **Check URL**: Ensure the PDF URL is accessible
+2. **Network Connection**: Verify you have internet access
+3. **Backend Status**: Check if the Supabase Edge Functions are deployed
+4. **Try Text Method**: As a fallback, copy text from the PDF and use manual input
+
+## 🔒 Permissions Explained
 
 The extension requests the following permissions:
 
@@ -92,47 +122,21 @@ The extension requests the following permissions:
 - **alarms**: Clean up old data periodically
 - **host_permissions**: Communicate with Legalish servers for AI analysis
 
-## Privacy & Security
+## 🛠️ Technical Details
 
-- **Local Processing**: Text selection and page scanning happen locally
-- **Secure Communication**: All API calls use HTTPS encryption
-- **No Tracking**: We don't collect personal browsing data
-- **Optional Account**: Sign in only if you want to save analysis history
-- **Data Control**: You can clear stored data anytime from the extension
+- **Manifest Version**: 3 (latest Chrome extension standard)
+- **Minimum Chrome Version**: 88+
+- **API Integration**: Supabase + OpenAI RAG system
+- **PDF Support**: URL-based analysis with server-side text extraction
+- **File Size**: ~2MB
+- **Languages**: English (more coming soon)
 
-## Troubleshooting
-
-### Extension Not Working
-1. Refresh the webpage and try again
-2. Check if the extension is enabled in `chrome://extensions/`
-3. Ensure you have an internet connection for AI analysis
-4. Try disabling other extensions that might conflict
-
-### Analysis Fails
-1. Make sure the selected text is at least 10 characters long
-2. Check your internet connection
-3. Verify the API endpoints are correctly configured
-4. Try a different analysis tone or method
-
-### Configuration Issues
-1. Ensure you've updated the Supabase URL in both `content.js` and `popup.js`
-2. Verify your Supabase anon key is correctly set
-3. Check that your Supabase project has the required Edge Functions deployed
-
-## Support
+## 📞 Support
 
 - **Help Center**: Visit [help.legalish.com](https://help.legalish.com)
 - **Contact Support**: Email support@legalish.com
 - **Feature Requests**: Submit ideas through the main app
 - **Bug Reports**: Use the feedback option in the extension
-
-## Technical Details
-
-- **Manifest Version**: 3 (latest Chrome extension standard)
-- **Minimum Chrome Version**: 88+
-- **File Size**: ~2MB
-- **Languages**: English (more coming soon)
-- **API Integration**: Supabase + OpenAI
 
 ---
 

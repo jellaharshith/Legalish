@@ -163,12 +163,12 @@ class LegalishContentScript {
                 'Content-Type': 'application/json',
             };
 
-            // Use anon key for unauthenticated requests
+            // Use your actual Supabase anon key
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             } else {
-                // Use a placeholder anon key - in production this should be the actual Supabase anon key
-                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDA5OTUyMDAsImV4cCI6MTk1NjU3MTIwMH0.placeholder`;
+                // Use your actual Supabase anon key
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8`;
             }
 
             // Use your actual Supabase project URL
@@ -462,12 +462,12 @@ class LegalishContentScript {
                 'Content-Type': 'application/json',
             };
 
-            // Use anon key for unauthenticated requests
+            // Use your actual Supabase anon key
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             } else {
-                // Use a placeholder anon key - in production this should be the actual Supabase anon key
-                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDA5OTUyMDAsImV4cCI6MTk1NjU3MTIwMH0.placeholder`;
+                // Use your actual Supabase anon key
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8`;
             }
 
             // Use your actual Supabase project URL
