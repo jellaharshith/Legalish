@@ -393,11 +393,11 @@ class LegalishPopup {
                 headers['Authorization'] = `Bearer ${authToken}`;
             } else {
                 // Use a placeholder anon key - in production this should be the actual Supabase anon key
-                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvdXItcHJvamVjdC1pZCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjQwOTk1MjAwLCJleHAiOjE5NTY1NzEyMDB9.placeholder`;
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDA5OTUyMDAsImV4cCI6MTk1NjU3MTIwMH0.placeholder`;
             }
 
-            // Use the correct Supabase URL - replace with your actual Supabase project URL
-            const supabaseUrl = 'https://your-project-id.supabase.co';
+            // Use your actual Supabase project URL
+            const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
             const apiUrl = `${supabaseUrl}/functions/v1/analyze-legal-terms-rag`;
 
             const response = await fetch(apiUrl, {
@@ -521,7 +521,7 @@ class LegalishPopup {
             }
 
             // Call speech synthesis API
-            const supabaseUrl = 'https://your-project-id.supabase.co';
+            const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
             const response = await fetch(`${supabaseUrl}/functions/v1/synthesize-speech`, {
                 method: 'POST',
                 headers: {
