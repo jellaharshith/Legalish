@@ -21,9 +21,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (error || !session) {
-        // If there's an error or no session, clear the invalid state
+      if (error) {
+        // Check for specific refresh token errors
+        if (error.message?.includes('Invalid Refresh Token') || error.message?.includes('Refresh Token Not Found')) {
+          // Clear all Supabase auth tokens from localStorage
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb:') && key.includes('-auth-token')) {
+              localStorage.removeItem(key);
+            }
+          });
+          
+          // Sign out to ensure server-side invalidation
+          await supabase.auth.signOut();
+          
+          // Force reload to re-initialize with clean state
+          window.location.reload();
+          return;
+        }
+        
+        // For other errors, just sign out normally
         await supabase.auth.signOut();
+        setUser(null);
+        clearSentryUser();
+      } else if (!session) {
+        // No session, clear state
         setUser(null);
         clearSentryUser();
       } else {
