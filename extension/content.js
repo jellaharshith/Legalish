@@ -16,72 +16,100 @@ class LegalishContentScript {
         if (window.legalishInjected) return;
         window.legalishInjected = true;
 
-        this.detectLegalContent();
-        this.setupTextSelection();
-        this.setupContextMenu();
-        this.createAnalysisWidget();
-        this.setupMessageListener();
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.setupContentScript();
+            });
+        } else {
+            this.setupContentScript();
+        }
+    }
+
+    setupContentScript() {
+        try {
+            this.detectLegalContent();
+            this.setupTextSelection();
+            this.setupContextMenu();
+            this.createAnalysisWidget();
+            this.setupMessageListener();
+        } catch (error) {
+            console.error('Error setting up content script:', error);
+        }
     }
 
     detectLegalContent() {
-        const legalKeywords = [
-            'terms of service', 'terms and conditions', 'privacy policy',
-            'user agreement', 'license agreement', 'end user license',
-            'terms of use', 'service agreement', 'legal notice',
-            'cookie policy', 'data protection', 'gdpr', 'ccpa',
-            'acceptable use', 'community guidelines', 'code of conduct'
-        ];
+        try {
+            const legalKeywords = [
+                'terms of service', 'terms and conditions', 'privacy policy',
+                'user agreement', 'license agreement', 'end user license',
+                'terms of use', 'service agreement', 'legal notice',
+                'cookie policy', 'data protection', 'gdpr', 'ccpa',
+                'acceptable use', 'community guidelines', 'code of conduct'
+            ];
 
-        const pageText = document.body.innerText.toLowerCase();
-        const pageTitle = document.title.toLowerCase();
-        const pageUrl = window.location.href.toLowerCase();
+            const pageText = document.body.innerText.toLowerCase();
+            const pageTitle = document.title.toLowerCase();
+            const pageUrl = window.location.href.toLowerCase();
 
-        // Check for legal keywords
-        const hasLegalKeywords = legalKeywords.some(keyword => 
-            pageText.includes(keyword) || pageTitle.includes(keyword) || pageUrl.includes(keyword)
-        );
+            // Check for legal keywords
+            const hasLegalKeywords = legalKeywords.some(keyword => 
+                pageText.includes(keyword) || pageTitle.includes(keyword) || pageUrl.includes(keyword)
+            );
 
-        // Check for legal document patterns
-        const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant)\b/gi.test(pageText);
-        
-        // Check for numbered sections (common in legal docs)
-        const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
-        
-        const confidence = (hasLegalKeywords ? 0.4 : 0) + 
-                          (hasLegalPatterns ? 0.3 : 0) + 
-                          (hasNumberedSections ? 0.3 : 0);
+            // Check for legal document patterns
+            const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant)\b/gi.test(pageText);
+            
+            // Check for numbered sections (common in legal docs)
+            const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
+            
+            const confidence = (hasLegalKeywords ? 0.4 : 0) + 
+                              (hasLegalPatterns ? 0.3 : 0) + 
+                              (hasNumberedSections ? 0.3 : 0);
 
-        this.legalContentDetected = confidence > 0.5;
+            this.legalContentDetected = confidence > 0.5;
 
-        if (this.legalContentDetected) {
-            this.showLegalContentIndicator();
-            this.updateExtensionBadge();
+            if (this.legalContentDetected) {
+                this.showLegalContentIndicator();
+                this.updateExtensionBadge();
+            }
+        } catch (error) {
+            console.error('Error detecting legal content:', error);
         }
     }
 
     showLegalContentIndicator() {
-        // Create a subtle indicator that legal content was detected
-        const indicator = document.createElement('div');
-        indicator.id = 'legalish-indicator';
-        indicator.innerHTML = `
-            <div class="legalish-indicator-content">
-                <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
-                <span>Legal document detected</span>
-                <button class="legalish-analyze-btn">Analyze</button>
-            </div>
-        `;
-        
-        document.body.appendChild(indicator);
+        try {
+            // Create a subtle indicator that legal content was detected
+            const indicator = document.createElement('div');
+            indicator.id = 'legalish-indicator';
+            indicator.innerHTML = `
+                <div class="legalish-indicator-content">
+                    <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
+                    <span>Legal document detected</span>
+                    <button class="legalish-analyze-btn">Analyze</button>
+                </div>
+            `;
+            
+            document.body.appendChild(indicator);
 
-        // Add click handler
-        indicator.querySelector('.legalish-analyze-btn').addEventListener('click', () => {
-            this.openAnalysisPopup();
-        });
+            // Add click handler
+            const analyzeBtn = indicator.querySelector('.legalish-analyze-btn');
+            if (analyzeBtn) {
+                analyzeBtn.addEventListener('click', () => {
+                    this.openAnalysisPopup();
+                });
+            }
 
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            indicator.style.transform = 'translateY(-100%)';
-        }, 5000);
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (indicator && indicator.parentNode) {
+                    indicator.style.transform = 'translateY(-100%)';
+                }
+            }, 5000);
+        } catch (error) {
+            console.error('Error showing legal content indicator:', error);
+        }
     }
 
     setupTextSelection() {
@@ -90,14 +118,18 @@ class LegalishContentScript {
         document.addEventListener('mouseup', () => {
             clearTimeout(selectionTimeout);
             selectionTimeout = setTimeout(() => {
-                const selection = window.getSelection();
-                const selectedText = selection.toString().trim();
-                
-                if (selectedText.length > 50) {
-                    this.selectedText = selectedText;
-                    this.showSelectionWidget(selection);
-                } else {
-                    this.hideSelectionWidget();
+                try {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+                    
+                    if (selectedText.length > 50) {
+                        this.selectedText = selectedText;
+                        this.showSelectionWidget(selection);
+                    } else {
+                        this.hideSelectionWidget();
+                    }
+                } catch (error) {
+                    console.error('Error handling text selection:', error);
                 }
             }, 100);
         });
@@ -108,143 +140,184 @@ class LegalishContentScript {
     }
 
     showSelectionWidget(selection) {
-        // Remove existing widget
-        this.hideSelectionWidget();
-
-        // Check if selected text looks legal
-        const legalScore = this.calculateLegalScore(this.selectedText);
-        if (legalScore < 0.3) return; // Not legal enough
-
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-
-        const widget = document.createElement('div');
-        widget.id = 'legalish-selection-widget';
-        widget.innerHTML = `
-            <div class="legalish-widget-content">
-                <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
-                <span>Analyze with Legalish</span>
-                <button class="legalish-widget-btn">Analyze</button>
-            </div>
-        `;
-
-        // Position widget near selection
-        widget.style.left = `${rect.left + window.scrollX}px`;
-        widget.style.top = `${rect.bottom + window.scrollY + 10}px`;
-
-        document.body.appendChild(widget);
-
-        // Add click handler
-        widget.querySelector('.legalish-widget-btn').addEventListener('click', () => {
-            this.analyzeSelectedText();
-        });
-
-        // Auto-hide after 10 seconds
-        setTimeout(() => {
+        try {
+            // Remove existing widget
             this.hideSelectionWidget();
-        }, 10000);
+
+            // Check if selected text looks legal
+            const legalScore = this.calculateLegalScore(this.selectedText);
+            if (legalScore < 0.3) return; // Not legal enough
+
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+
+            const widget = document.createElement('div');
+            widget.id = 'legalish-selection-widget';
+            widget.innerHTML = `
+                <div class="legalish-widget-content">
+                    <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
+                    <span>Analyze with Legalish</span>
+                    <button class="legalish-widget-btn">Analyze</button>
+                </div>
+            `;
+
+            // Position widget near selection
+            widget.style.left = `${rect.left + window.scrollX}px`;
+            widget.style.top = `${rect.bottom + window.scrollY + 10}px`;
+
+            document.body.appendChild(widget);
+
+            // Add click handler
+            const analyzeBtn = widget.querySelector('.legalish-widget-btn');
+            if (analyzeBtn) {
+                analyzeBtn.addEventListener('click', () => {
+                    this.analyzeSelectedText();
+                });
+            }
+
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                this.hideSelectionWidget();
+            }, 10000);
+        } catch (error) {
+            console.error('Error showing selection widget:', error);
+        }
     }
 
     hideSelectionWidget() {
-        const widget = document.getElementById('legalish-selection-widget');
-        if (widget) {
-            widget.remove();
+        try {
+            const widget = document.getElementById('legalish-selection-widget');
+            if (widget) {
+                widget.remove();
+            }
+        } catch (error) {
+            console.error('Error hiding selection widget:', error);
         }
     }
 
     calculateLegalScore(text) {
-        const legalTerms = [
-            'agreement', 'contract', 'terms', 'conditions', 'policy', 'license',
-            'shall', 'hereby', 'whereas', 'therefore', 'pursuant', 'notwithstanding',
-            'liability', 'damages', 'indemnify', 'warranty', 'disclaimer',
-            'intellectual property', 'confidential', 'proprietary', 'terminate'
-        ];
+        try {
+            const legalTerms = [
+                'agreement', 'contract', 'terms', 'conditions', 'policy', 'license',
+                'shall', 'hereby', 'whereas', 'therefore', 'pursuant', 'notwithstanding',
+                'liability', 'damages', 'indemnify', 'warranty', 'disclaimer',
+                'intellectual property', 'confidential', 'proprietary', 'terminate'
+            ];
 
-        const words = text.toLowerCase().split(/\s+/);
-        const legalWordCount = words.filter(word => 
-            legalTerms.some(term => word.includes(term))
-        ).length;
+            const words = text.toLowerCase().split(/\s+/);
+            const legalWordCount = words.filter(word => 
+                legalTerms.some(term => word.includes(term))
+            ).length;
 
-        return legalWordCount / words.length;
+            return legalWordCount / words.length;
+        } catch (error) {
+            console.error('Error calculating legal score:', error);
+            return 0;
+        }
     }
 
     setupContextMenu() {
         document.addEventListener('contextmenu', (e) => {
-            const selection = window.getSelection().toString().trim();
-            if (selection.length > 20) {
-                // Store selection for context menu action
-                chrome.storage.local.set({ 
-                    contextSelection: selection,
-                    contextUrl: window.location.href 
-                });
+            try {
+                const selection = window.getSelection().toString().trim();
+                if (selection.length > 20) {
+                    // Store selection for context menu action
+                    chrome.storage.local.set({ 
+                        contextSelection: selection,
+                        contextUrl: window.location.href 
+                    });
+                }
+            } catch (error) {
+                console.error('Error setting up context menu:', error);
             }
         });
     }
 
     createAnalysisWidget() {
-        // Create floating analysis widget (initially hidden)
-        this.analysisWidget = document.createElement('div');
-        this.analysisWidget.id = 'legalish-analysis-widget';
-        this.analysisWidget.innerHTML = `
-            <div class="legalish-widget-header">
-                <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
-                <span>Legalish Analysis</span>
-                <button class="legalish-close-btn">&times;</button>
-            </div>
-            <div class="legalish-widget-body">
-                <div class="legalish-loading">
-                    <div class="legalish-spinner"></div>
-                    <span>Analyzing document...</span>
+        try {
+            // Create floating analysis widget (initially hidden)
+            this.analysisWidget = document.createElement('div');
+            this.analysisWidget.id = 'legalish-analysis-widget';
+            this.analysisWidget.innerHTML = `
+                <div class="legalish-widget-header">
+                    <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
+                    <span>Legalish Analysis</span>
+                    <button class="legalish-close-btn">&times;</button>
                 </div>
-                <div class="legalish-results" style="display: none;"></div>
-            </div>
-        `;
+                <div class="legalish-widget-body">
+                    <div class="legalish-loading">
+                        <div class="legalish-spinner"></div>
+                        <span>Analyzing document...</span>
+                    </div>
+                    <div class="legalish-results" style="display: none;"></div>
+                </div>
+            `;
 
-        document.body.appendChild(this.analysisWidget);
+            document.body.appendChild(this.analysisWidget);
 
-        // Add close handler
-        this.analysisWidget.querySelector('.legalish-close-btn').addEventListener('click', () => {
-            this.hideAnalysisWidget();
-        });
+            // Add close handler
+            const closeBtn = this.analysisWidget.querySelector('.legalish-close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    this.hideAnalysisWidget();
+                });
+            }
+        } catch (error) {
+            console.error('Error creating analysis widget:', error);
+        }
     }
 
     setupMessageListener() {
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-            if (request.action === 'analyzeSelection') {
-                this.analyzeSelectedText();
-            } else if (request.action === 'analyzePage') {
-                this.analyzePageContent();
-            } else if (request.action === 'getPageText') {
-                sendResponse({ text: document.body.innerText });
-            } else if (request.action === 'getSelection') {
-                sendResponse({ text: window.getSelection().toString() });
+            try {
+                if (request.action === 'analyzeSelection') {
+                    this.analyzeSelectedText();
+                } else if (request.action === 'analyzePage') {
+                    this.analyzePageContent();
+                } else if (request.action === 'getPageText') {
+                    sendResponse({ text: document.body.innerText });
+                } else if (request.action === 'getSelection') {
+                    sendResponse({ text: window.getSelection().toString() });
+                }
+            } catch (error) {
+                console.error('Error handling message:', error);
             }
         });
     }
 
     async analyzeSelectedText() {
-        if (!this.selectedText) {
-            this.selectedText = window.getSelection().toString().trim();
-        }
+        try {
+            if (!this.selectedText) {
+                this.selectedText = window.getSelection().toString().trim();
+            }
 
-        if (this.selectedText.length < 10) {
-            this.showError('Please select more text to analyze (minimum 10 characters)');
-            return;
-        }
+            if (this.selectedText.length < 10) {
+                this.showError('Please select more text to analyze (minimum 10 characters)');
+                return;
+            }
 
-        this.showAnalysisWidget();
-        await this.performAnalysis(this.selectedText);
+            this.showAnalysisWidget();
+            await this.performAnalysis(this.selectedText);
+        } catch (error) {
+            console.error('Error analyzing selected text:', error);
+            this.showError('Analysis failed. Please try again.');
+        }
     }
 
     async analyzePageContent() {
-        const pageText = document.body.innerText;
-        if (pageText.length < 100) {
-            this.showError('Page content is too short to analyze');
-            return;
-        }
+        try {
+            const pageText = document.body.innerText;
+            if (pageText.length < 100) {
+                this.showError('Page content is too short to analyze');
+                return;
+            }
 
-        this.showAnalysisWidget();
-        await this.performAnalysis(pageText.substring(0, 2800));
+            this.showAnalysisWidget();
+            await this.performAnalysis(pageText.substring(0, 2800));
+        } catch (error) {
+            console.error('Error analyzing page content:', error);
+            this.showError('Analysis failed. Please try again.');
+        }
     }
 
     async performAnalysis(text) {
@@ -291,94 +364,121 @@ class LegalishContentScript {
     }
 
     showAnalysisWidget() {
-        this.analysisWidget.style.display = 'block';
-        this.analysisWidget.querySelector('.legalish-loading').style.display = 'flex';
-        this.analysisWidget.querySelector('.legalish-results').style.display = 'none';
+        if (this.analysisWidget) {
+            this.analysisWidget.style.display = 'block';
+            const loading = this.analysisWidget.querySelector('.legalish-loading');
+            const results = this.analysisWidget.querySelector('.legalish-results');
+            if (loading) loading.style.display = 'flex';
+            if (results) results.style.display = 'none';
+        }
     }
 
     hideAnalysisWidget() {
-        this.analysisWidget.style.display = 'none';
+        if (this.analysisWidget) {
+            this.analysisWidget.style.display = 'none';
+        }
     }
 
     displayAnalysisResults(data) {
-        const resultsDiv = this.analysisWidget.querySelector('.legalish-results');
-        resultsDiv.innerHTML = '';
+        try {
+            if (!this.analysisWidget) return;
 
-        // Display summary
-        if (data.summary && data.summary.length > 0) {
-            const summaryDiv = document.createElement('div');
-            summaryDiv.className = 'legalish-summary';
-            summaryDiv.innerHTML = `
-                <h4>Summary</h4>
-                <p>${data.summary[0].description}</p>
+            const resultsDiv = this.analysisWidget.querySelector('.legalish-results');
+            if (!resultsDiv) return;
+
+            resultsDiv.innerHTML = '';
+
+            // Display summary
+            if (data.summary && data.summary.length > 0) {
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'legalish-summary';
+                summaryDiv.innerHTML = `
+                    <h4>Summary</h4>
+                    <p>${data.summary[0].description}</p>
+                `;
+                resultsDiv.appendChild(summaryDiv);
+            }
+
+            // Display red flags
+            if (data.red_flags && data.red_flags.length > 0) {
+                const redFlagsDiv = document.createElement('div');
+                redFlagsDiv.className = 'legalish-red-flags';
+                redFlagsDiv.innerHTML = `
+                    <h4>Red Flags (${data.red_flags.length})</h4>
+                    ${data.red_flags.map(flag => `
+                        <div class="legalish-red-flag">
+                            <span class="legalish-flag-icon">⚠️</span>
+                            <span>${flag}</span>
+                        </div>
+                    `).join('')}
+                `;
+                resultsDiv.appendChild(redFlagsDiv);
+            }
+
+            // Add action buttons
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'legalish-actions';
+            actionsDiv.innerHTML = `
+                <button class="legalish-btn legalish-btn-primary" onclick="window.open('https://legalish.site/summary', '_blank')">
+                    View Full Analysis
+                </button>
+                <button class="legalish-btn legalish-btn-secondary" onclick="this.closest('#legalish-analysis-widget').style.display='none'">
+                    Close
+                </button>
             `;
-            resultsDiv.appendChild(summaryDiv);
+            resultsDiv.appendChild(actionsDiv);
+
+            // Show results
+            const loading = this.analysisWidget.querySelector('.legalish-loading');
+            if (loading) loading.style.display = 'none';
+            resultsDiv.style.display = 'block';
+        } catch (error) {
+            console.error('Error displaying analysis results:', error);
         }
-
-        // Display red flags
-        if (data.red_flags && data.red_flags.length > 0) {
-            const redFlagsDiv = document.createElement('div');
-            redFlagsDiv.className = 'legalish-red-flags';
-            redFlagsDiv.innerHTML = `
-                <h4>Red Flags (${data.red_flags.length})</h4>
-                ${data.red_flags.map(flag => `
-                    <div class="legalish-red-flag">
-                        <span class="legalish-flag-icon">⚠️</span>
-                        <span>${flag}</span>
-                    </div>
-                `).join('')}
-            `;
-            resultsDiv.appendChild(redFlagsDiv);
-        }
-
-        // Add action buttons
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'legalish-actions';
-        actionsDiv.innerHTML = `
-            <button class="legalish-btn legalish-btn-primary" onclick="window.open('https://legalish.site/summary', '_blank')">
-                View Full Analysis
-            </button>
-            <button class="legalish-btn legalish-btn-secondary" onclick="this.closest('#legalish-analysis-widget').style.display='none'">
-                Close
-            </button>
-        `;
-        resultsDiv.appendChild(actionsDiv);
-
-        // Show results
-        this.analysisWidget.querySelector('.legalish-loading').style.display = 'none';
-        resultsDiv.style.display = 'block';
     }
 
     openAnalysisPopup() {
-        // Send message to background script to open popup
-        chrome.runtime.sendMessage({ action: 'openPopup' });
+        try {
+            // Send message to background script to open popup
+            chrome.runtime.sendMessage({ action: 'openPopup' });
+        } catch (error) {
+            console.error('Error opening analysis popup:', error);
+        }
     }
 
     updateExtensionBadge() {
-        chrome.runtime.sendMessage({ 
-            action: 'updateBadge', 
-            text: '!',
-            color: '#ef4444'
-        });
+        try {
+            chrome.runtime.sendMessage({ 
+                action: 'updateBadge', 
+                text: '!',
+                color: '#ef4444'
+            });
+        } catch (error) {
+            console.error('Error updating extension badge:', error);
+        }
     }
 
     showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'legalish-error';
-        errorDiv.textContent = message;
-        document.body.appendChild(errorDiv);
+        try {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'legalish-error';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
 
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 3000);
+            setTimeout(() => {
+                if (errorDiv && errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 3000);
+        } catch (error) {
+            console.error('Error showing error message:', error);
+        }
     }
 }
 
 // Initialize content script
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        new LegalishContentScript();
-    });
-} else {
+try {
     new LegalishContentScript();
+} catch (error) {
+    console.error('Error initializing content script:', error);
 }

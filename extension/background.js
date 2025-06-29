@@ -7,83 +7,95 @@ class LegalishBackground {
     }
 
     init() {
-        this.setupContextMenus();
+        // Wait for extension to be ready before setting up context menus
+        chrome.runtime.onInstalled.addListener(() => {
+            this.setupContextMenus();
+        });
+        
         this.setupMessageHandlers();
         this.setupTabHandlers();
         this.setupStorageCleanup();
     }
 
     setupContextMenus() {
-        // Create context menu items
-        chrome.runtime.onInstalled.addListener(() => {
-            // Main analyze option
-            chrome.contextMenus.create({
-                id: 'analyze-selection',
-                title: 'Analyze with Legalish',
-                contexts: ['selection'],
-                documentUrlPatterns: ['http://*/*', 'https://*/*']
+        try {
+            // Remove any existing context menus first
+            chrome.contextMenus.removeAll(() => {
+                // Main analyze option
+                chrome.contextMenus.create({
+                    id: 'analyze-selection',
+                    title: 'Analyze with Legalish',
+                    contexts: ['selection'],
+                    documentUrlPatterns: ['http://*/*', 'https://*/*']
+                });
+
+                // Analyze page option
+                chrome.contextMenus.create({
+                    id: 'analyze-page',
+                    title: 'Analyze page for legal content',
+                    contexts: ['page'],
+                    documentUrlPatterns: ['http://*/*', 'https://*/*']
+                });
+
+                // Separator
+                chrome.contextMenus.create({
+                    id: 'separator1',
+                    type: 'separator',
+                    contexts: ['selection', 'page']
+                });
+
+                // Quick actions submenu
+                chrome.contextMenus.create({
+                    id: 'quick-actions',
+                    title: 'Quick Actions',
+                    contexts: ['selection', 'page']
+                });
+
+                chrome.contextMenus.create({
+                    id: 'open-legalish',
+                    parentId: 'quick-actions',
+                    title: 'Open Legalish App',
+                    contexts: ['selection', 'page']
+                });
+
+                chrome.contextMenus.create({
+                    id: 'view-history',
+                    parentId: 'quick-actions',
+                    title: 'View Analysis History',
+                    contexts: ['selection', 'page']
+                });
             });
 
-            // Analyze page option
-            chrome.contextMenus.create({
-                id: 'analyze-page',
-                title: 'Analyze page for legal content',
-                contexts: ['page'],
-                documentUrlPatterns: ['http://*/*', 'https://*/*']
+            // Handle context menu clicks
+            chrome.contextMenus.onClicked.addListener((info, tab) => {
+                this.handleContextMenuClick(info, tab);
             });
-
-            // Separator
-            chrome.contextMenus.create({
-                id: 'separator1',
-                type: 'separator',
-                contexts: ['selection', 'page']
-            });
-
-            // Quick actions submenu
-            chrome.contextMenus.create({
-                id: 'quick-actions',
-                title: 'Quick Actions',
-                contexts: ['selection', 'page']
-            });
-
-            chrome.contextMenus.create({
-                id: 'open-legalish',
-                parentId: 'quick-actions',
-                title: 'Open Legalish App',
-                contexts: ['selection', 'page']
-            });
-
-            chrome.contextMenus.create({
-                id: 'view-history',
-                parentId: 'quick-actions',
-                title: 'View Analysis History',
-                contexts: ['selection', 'page']
-            });
-        });
-
-        // Handle context menu clicks
-        chrome.contextMenus.onClicked.addListener((info, tab) => {
-            this.handleContextMenuClick(info, tab);
-        });
+        } catch (error) {
+            console.error('Error setting up context menus:', error);
+        }
     }
 
     async handleContextMenuClick(info, tab) {
-        switch (info.menuItemId) {
-            case 'analyze-selection':
-                await this.analyzeSelection(tab, info.selectionText);
-                break;
-            
-            case 'analyze-page':
-                await this.analyzePage(tab);
-                break;
-            
-            case 'open-legalish':
-                chrome.tabs.create({ url: 'https://legalish.site' });
-                break;
-            
-            case 'view-history':
-                chrome.tabs.create({ url: 'https://legalish.site/dashboard' });
-                break;
+        try {
+            switch (info.menuItemId) {
+                case 'analyze-selection':
+                    await this.analyzeSelection(tab, info.selectionText);
+                    break;
+                
+                case 'analyze-page':
+                    await this.analyzePage(tab);
+                    break;
+                
+                case 'open-legalish':
+                    chrome.tabs.create({ url: 'https://legalish.site' });
+                    break;
+                
+                case 'view-history':
+                    chrome.tabs.create({ url: 'https://legalish.site/dashboard' });
+                    break;
+            }
+        } catch (error) {
+            console.error('Error handling context menu click:', error);
         }
     }
 
@@ -124,31 +136,35 @@ class LegalishBackground {
     }
 
     async handleMessage(request, sender, sendResponse) {
-        switch (request.action) {
-            case 'updateBadge':
-                await this.updateBadge(sender.tab.id, request.text, request.color);
-                break;
-            
-            case 'openPopup':
-                await this.openPopup();
-                break;
-            
-            case 'showNotification':
-                this.showNotification(request.message, request.type);
-                break;
-            
-            case 'storeAnalysis':
-                await this.storeAnalysis(request.data);
-                break;
-            
-            case 'getStoredAnalyses':
-                const analyses = await this.getStoredAnalyses();
-                sendResponse({ analyses });
-                break;
-            
-            case 'clearOldData':
-                await this.clearOldData();
-                break;
+        try {
+            switch (request.action) {
+                case 'updateBadge':
+                    await this.updateBadge(sender.tab.id, request.text, request.color);
+                    break;
+                
+                case 'openPopup':
+                    await this.openPopup();
+                    break;
+                
+                case 'showNotification':
+                    this.showNotification(request.message, request.type);
+                    break;
+                
+                case 'storeAnalysis':
+                    await this.storeAnalysis(request.data);
+                    break;
+                
+                case 'getStoredAnalyses':
+                    const analyses = await this.getStoredAnalyses();
+                    sendResponse({ analyses });
+                    break;
+                
+                case 'clearOldData':
+                    await this.clearOldData();
+                    break;
+            }
+        } catch (error) {
+            console.error('Error handling message:', error);
         }
     }
 
@@ -178,14 +194,18 @@ class LegalishBackground {
     }
 
     showNotification(message, type = 'basic') {
-        const notificationOptions = {
-            type: 'basic',
-            iconUrl: 'icons/icon48.png',
-            title: 'Legalish',
-            message: message
-        };
+        try {
+            const notificationOptions = {
+                type: 'basic',
+                iconUrl: 'icons/icon48.png',
+                title: 'Legalish',
+                message: message
+            };
 
-        chrome.notifications.create('', notificationOptions);
+            chrome.notifications.create('', notificationOptions);
+        } catch (error) {
+            console.error('Error showing notification:', error);
+        }
     }
 
     setupTabHandlers() {
@@ -214,127 +234,165 @@ class LegalishBackground {
     }
 
     async storeAnalysis(data) {
-        const analysisKey = `analysis_${Date.now()}`;
-        const analysisData = {
-            ...data,
-            timestamp: Date.now(),
-            id: analysisKey
-        };
+        try {
+            const analysisKey = `analysis_${Date.now()}`;
+            const analysisData = {
+                ...data,
+                timestamp: Date.now(),
+                id: analysisKey
+            };
 
-        await chrome.storage.local.set({
-            [analysisKey]: analysisData
-        });
+            await chrome.storage.local.set({
+                [analysisKey]: analysisData
+            });
 
-        // Keep only the last 50 analyses
-        await this.limitStoredAnalyses(50);
+            // Keep only the last 50 analyses
+            await this.limitStoredAnalyses(50);
+        } catch (error) {
+            console.error('Error storing analysis:', error);
+        }
     }
 
     async getStoredAnalyses() {
-        const storage = await chrome.storage.local.get();
-        const analyses = Object.entries(storage)
-            .filter(([key]) => key.startsWith('analysis_'))
-            .map(([key, value]) => ({ key, ...value }))
-            .sort((a, b) => b.timestamp - a.timestamp);
+        try {
+            const storage = await chrome.storage.local.get();
+            const analyses = Object.entries(storage)
+                .filter(([key]) => key.startsWith('analysis_'))
+                .map(([key, value]) => ({ key, ...value }))
+                .sort((a, b) => b.timestamp - a.timestamp);
 
-        return analyses;
+            return analyses;
+        } catch (error) {
+            console.error('Error getting stored analyses:', error);
+            return [];
+        }
     }
 
     async limitStoredAnalyses(maxCount) {
-        const analyses = await this.getStoredAnalyses();
-        
-        if (analyses.length > maxCount) {
-            const toDelete = analyses.slice(maxCount);
-            const keysToDelete = toDelete.map(analysis => analysis.key);
+        try {
+            const analyses = await this.getStoredAnalyses();
             
-            for (const key of keysToDelete) {
-                await chrome.storage.local.remove(key);
+            if (analyses.length > maxCount) {
+                const toDelete = analyses.slice(maxCount);
+                const keysToDelete = toDelete.map(analysis => analysis.key);
+                
+                for (const key of keysToDelete) {
+                    await chrome.storage.local.remove(key);
+                }
             }
+        } catch (error) {
+            console.error('Error limiting stored analyses:', error);
         }
     }
 
     async clearOldData() {
-        const storage = await chrome.storage.local.get();
-        const now = Date.now();
-        const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+        try {
+            const storage = await chrome.storage.local.get();
+            const now = Date.now();
+            const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-        const keysToDelete = [];
+            const keysToDelete = [];
 
-        for (const [key, value] of Object.entries(storage)) {
-            if (key.startsWith('analysis_') && value.timestamp) {
-                if (now - value.timestamp > maxAge) {
-                    keysToDelete.push(key);
+            for (const [key, value] of Object.entries(storage)) {
+                if (key.startsWith('analysis_') && value.timestamp) {
+                    if (now - value.timestamp > maxAge) {
+                        keysToDelete.push(key);
+                    }
                 }
             }
-        }
 
-        if (keysToDelete.length > 0) {
-            await chrome.storage.local.remove(keysToDelete);
-            console.log(`Cleaned up ${keysToDelete.length} old analysis records`);
+            if (keysToDelete.length > 0) {
+                await chrome.storage.local.remove(keysToDelete);
+                console.log(`Cleaned up ${keysToDelete.length} old analysis records`);
+            }
+        } catch (error) {
+            console.error('Error clearing old data:', error);
         }
     }
 
     // Authentication helpers
     async setAuthToken(token, userInfo) {
-        await chrome.storage.local.set({
-            authToken: token,
-            userInfo: userInfo,
-            authTimestamp: Date.now()
-        });
+        try {
+            await chrome.storage.local.set({
+                authToken: token,
+                userInfo: userInfo,
+                authTimestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Error setting auth token:', error);
+        }
     }
 
     async getAuthToken() {
-        const { authToken, authTimestamp } = await chrome.storage.local.get(['authToken', 'authTimestamp']);
-        
-        // Check if token is expired (24 hours)
-        if (authToken && authTimestamp) {
-            const now = Date.now();
-            const tokenAge = now - authTimestamp;
-            const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        try {
+            const { authToken, authTimestamp } = await chrome.storage.local.get(['authToken', 'authTimestamp']);
             
-            if (tokenAge > maxAge) {
-                await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp']);
-                return null;
+            // Check if token is expired (24 hours)
+            if (authToken && authTimestamp) {
+                const now = Date.now();
+                const tokenAge = now - authTimestamp;
+                const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+                
+                if (tokenAge > maxAge) {
+                    await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp']);
+                    return null;
+                }
             }
+            
+            return authToken;
+        } catch (error) {
+            console.error('Error getting auth token:', error);
+            return null;
         }
-        
-        return authToken;
     }
 
     async clearAuth() {
-        await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp']);
+        try {
+            await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp']);
+        } catch (error) {
+            console.error('Error clearing auth:', error);
+        }
     }
 
     // Analytics helpers (privacy-friendly)
     async trackUsage(event, data = {}) {
-        const usage = await chrome.storage.local.get(['usage']) || { usage: {} };
-        const today = new Date().toISOString().split('T')[0];
-        
-        if (!usage.usage[today]) {
-            usage.usage[today] = {};
-        }
-        
-        if (!usage.usage[today][event]) {
-            usage.usage[today][event] = 0;
-        }
-        
-        usage.usage[today][event]++;
-        
-        await chrome.storage.local.set({ usage: usage.usage });
-        
-        // Keep only last 30 days of usage data
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - 30);
-        const cutoffString = cutoffDate.toISOString().split('T')[0];
-        
-        for (const date in usage.usage) {
-            if (date < cutoffString) {
-                delete usage.usage[date];
+        try {
+            const usage = await chrome.storage.local.get(['usage']) || { usage: {} };
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (!usage.usage[today]) {
+                usage.usage[today] = {};
             }
+            
+            if (!usage.usage[today][event]) {
+                usage.usage[today][event] = 0;
+            }
+            
+            usage.usage[today][event]++;
+            
+            await chrome.storage.local.set({ usage: usage.usage });
+            
+            // Keep only last 30 days of usage data
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 30);
+            const cutoffString = cutoffDate.toISOString().split('T')[0];
+            
+            for (const date in usage.usage) {
+                if (date < cutoffString) {
+                    delete usage.usage[date];
+                }
+            }
+            
+            await chrome.storage.local.set({ usage: usage.usage });
+        } catch (error) {
+            console.error('Error tracking usage:', error);
         }
-        
-        await chrome.storage.local.set({ usage: usage.usage });
     }
 }
 
 // Initialize background script
-new LegalishBackground();
+try {
+    new LegalishBackground();
+} catch (error) {
+    console.error('Error initializing background script:', error);
+}
