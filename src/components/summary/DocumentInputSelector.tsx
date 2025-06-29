@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ActionSearchBar, Action } from '@/components/ui/action-search-bar';
-import { FileText, Link as LinkIcon, Upload, Zap, X, Check, Lock, Crown } from 'lucide-react';
+import { FileText, Link as LinkIcon, Upload, Zap, X, Check, Lock, Crown, Eye, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -130,6 +130,49 @@ export default function DocumentInputSelector({
   };
 
   const inputStatus = getInputStatus();
+
+  // Helper function to validate URL format
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Get preview content based on current input
+  const getPreviewContent = () => {
+    if (selectedMethod === 'text' && legalText.trim().length > 0) {
+      return {
+        type: 'text',
+        content: legalText,
+        title: 'Text Content Preview'
+      };
+    }
+    
+    if (selectedMethod === 'url' && urlInput.trim().length > 0) {
+      return {
+        type: 'url',
+        content: urlInput,
+        title: 'URL Preview',
+        isValid: isValidUrl(urlInput)
+      };
+    }
+    
+    if (selectedMethod === 'file' && fileInputRef.current?.files?.length && legalText.trim().length > 0) {
+      return {
+        type: 'file',
+        content: legalText,
+        title: 'File Content Preview',
+        fileName: fileInputRef.current.files[0].name
+      };
+    }
+    
+    return null;
+  };
+
+  const previewContent = getPreviewContent();
 
   return (
     <Card className="border-2 border-muted shadow-lg" data-tutorial="upload-section">
@@ -346,6 +389,96 @@ export default function DocumentInputSelector({
                   <Check className="h-3 w-3 mr-1" />
                   Ready to analyze
                 </Badge>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Document Preview Section */}
+        {previewContent && !isAnalysisDisabled && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <div className="border-t border-border pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-blue-500/10 rounded-md flex items-center justify-center">
+                  <Eye className="h-4 w-4 text-blue-600" />
+                </div>
+                <h4 className="font-medium text-foreground">{previewContent.title}</h4>
+                {previewContent.fileName && (
+                  <Badge variant="outline" className="text-xs">
+                    {previewContent.fileName}
+                  </Badge>
+                )}
+              </div>
+
+              {previewContent.type === 'url' ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-muted/30 rounded-lg border border-muted">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Target URL:</span>
+                      {previewContent.isValid ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                          Valid URL
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+                          Invalid URL
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm font-mono break-all text-blue-600">
+                      {previewContent.content}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-200">
+                    <div className="flex items-start gap-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
+                        <span className="text-white text-xs">i</span>
+                      </div>
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-1">Content Preview Not Available</p>
+                        <p>
+                          The actual webpage content will be fetched and analyzed by our server during the analysis process. 
+                          Client-side preview is not available due to CORS (Cross-Origin Resource Sharing) security restrictions.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Textarea
+                      value={previewContent.content}
+                      readOnly
+                      className="min-h-[150px] max-h-[300px] resize-none font-mono text-sm bg-muted/30 border-muted"
+                      placeholder="Document content will appear here..."
+                    />
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="outline" className="text-xs bg-background">
+                        {previewContent.content.length} characters
+                      </Badge>
+                    </div>
+                  </div>
+                  {previewContent.content.length > 2800 && (
+                    <div className="p-2 bg-amber-50 rounded-lg border border-amber-200">
+                      <p className="text-sm text-amber-800">
+                        ⚠️ Content exceeds 2,800 character limit. It will be truncated during analysis.
+                      </p>
+                    </div>
+                  )}
+                  {previewContent.content.length < 10 && (
+                    <div className="p-2 bg-red-50 rounded-lg border border-red-200">
+                      <p className="text-sm text-red-800">
+                        ⚠️ Content is too short. Please provide at least 10 characters for analysis.
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </motion.div>
