@@ -11,32 +11,35 @@ import { Toaster } from '@/components/ui/toaster';
 import { LegalTermsProvider } from '@/context/LegalTermsContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { TutorialProvider } from '@/components/onboarding/TutorialProvider';
+import { SentryErrorBoundary, ErrorFallback } from '@/lib/sentry';
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="volt-ui-theme">
-      <AuthProvider>
-        <TutorialProvider>
-          <LegalTermsProvider>
-            <Router>
-              <div className="min-h-screen bg-background font-sans">
-                <Navbar />
-                <main>
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/summary" element={<SummaryPage />} />
-                    <Route path="/upgrade" element={<UpgradePage />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/success" element={<SuccessPage />} />
-                  </Routes>
-                </main>
-                <Toaster />
-              </div>
-            </Router>
-          </LegalTermsProvider>
-        </TutorialProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <SentryErrorBoundary fallback={ErrorFallback} showDialog>
+      <ThemeProvider defaultTheme="dark" storageKey="volt-ui-theme">
+        <AuthProvider>
+          <TutorialProvider>
+            <LegalTermsProvider>
+              <Router>
+                <div className="min-h-screen bg-background font-sans">
+                  <Navbar />
+                  <main>
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/summary" element={<SummaryPage />} />
+                      <Route path="/upgrade" element={<UpgradePage />} />
+                      <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/success" element={<SuccessPage />} />
+                    </Routes>
+                  </main>
+                  <Toaster />
+                </div>
+              </Router>
+            </LegalTermsProvider>
+          </TutorialProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </SentryErrorBoundary>
   );
 }
 

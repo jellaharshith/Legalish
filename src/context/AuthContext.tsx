@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { captureException, addBreadcrumb } from '@/lib/sentry';
 
 interface AuthContextType {
   user: User | null;
@@ -20,18 +21,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (error || !session) {
-        // If there's an error or no session, clear the invalid state
+      if (error) {
+        captureException(error, {
+          tags: { component: 'auth', action: 'getSession' },
+        });
+        await supabase.auth.signOut();
+        setUser(null);
+      } else if (!session) {
+        // If there's no session, clear the invalid state
         await supabase.auth.signOut();
         setUser(null);
       } else {
         setUser(session.user);
+        addBreadcrumb({
+          message: 'Session restored',
+          category: 'auth',
+          level: 'info',
+          data: { userId: session.user.id },
+        });
       }
       setLoading(false);
     });
 
     // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      addBreadcrumb({
+        message: `Auth state changed: ${event}`,
+        category: 'auth',
+        level: 'info',
+        data: { event, hasSession: !!session },
+      });
+
       if (session) {
         setUser(session.user);
       } else {
@@ -44,34 +64,88 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      
+      addBreadcrumb({
+        message: 'User signed in with email',
+        category: 'auth',
+        level: 'info',
+      });
+    } catch (error) {
+      captureException(error, {
+        tags: { component: 'auth', action: 'signIn' },
+        extra: { email },
+      });
+      throw error;
+    }
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) throw error;
+      
+      addBreadcrumb({
+        message: 'User signed up with email',
+        category: 'auth',
+        level: 'info',
+      });
+    } catch (error) {
+      captureException(error, {
+        tags: { component: 'auth', action: 'signUp' },
+        extra: { email },
+      });
+      throw error;
+    }
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/summary`,
-      },
-    });
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/summary`,
+        },
+      });
+      if (error) throw error;
+      
+      addBreadcrumb({
+        message: 'User signed in with Google',
+        category: 'auth',
+        level: 'info',
+      });
+    } catch (error) {
+      captureException(error, {
+        tags: { component: 'auth', action: 'signInWithGoogle' },
+      });
+      throw error;
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      addBreadcrumb({
+        message: 'User signed out',
+        category: 'auth',
+        level: 'info',
+      });
+    } catch (error) {
+      captureException(error, {
+        tags: { component: 'auth', action: 'signOut' },
+      });
+      throw error;
+    }
   };
 
   return (
