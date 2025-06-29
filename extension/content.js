@@ -45,7 +45,8 @@ class LegalishContentScript {
                 'user agreement', 'license agreement', 'end user license',
                 'terms of use', 'service agreement', 'legal notice',
                 'cookie policy', 'data protection', 'gdpr', 'ccpa',
-                'acceptable use', 'community guidelines', 'code of conduct'
+                'acceptable use', 'community guidelines', 'code of conduct',
+                'credit card agreement', 'cardholder agreement', 'mastercard', 'visa'
             ];
 
             const pageText = document.body.innerText.toLowerCase();
@@ -329,11 +330,19 @@ class LegalishContentScript {
                 'Content-Type': 'application/json',
             };
 
+            // Use anon key for unauthenticated requests
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
+            } else {
+                // Use a placeholder anon key - in production this should be the actual Supabase anon key
+                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvdXItcHJvamVjdC1pZCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjQwOTk1MjAwLCJleHAiOjE5NTY1NzEyMDB9.placeholder`;
             }
 
-            const response = await fetch('https://legalish.site/functions/v1/analyze-legal-terms-rag', {
+            // Use the correct Supabase URL - replace with your actual Supabase project URL
+            const supabaseUrl = 'https://your-project-id.supabase.co';
+            const apiUrl = `${supabaseUrl}/functions/v1/analyze-legal-terms-rag`;
+
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
@@ -346,7 +355,7 @@ class LegalishContentScript {
             });
 
             if (!response.ok) {
-                throw new Error(`Analysis failed: ${response.status}`);
+                throw new Error(`Analysis failed: ${response.status} - ${response.statusText}`);
             }
 
             const result = await response.json();
@@ -359,7 +368,17 @@ class LegalishContentScript {
 
         } catch (error) {
             console.error('Analysis error:', error);
-            this.showError('Analysis failed. Please try again.');
+            
+            // Show a more helpful error message
+            if (error.message.includes('Failed to fetch')) {
+                this.showError('Network error. Please check your internet connection.');
+            } else if (error.message.includes('404')) {
+                this.showError('Analysis service not found. Please try again later.');
+            } else if (error.message.includes('401') || error.message.includes('403')) {
+                this.showError('Authentication required. Please sign in to the Legalish website first.');
+            } else {
+                this.showError('Analysis failed. Please try again.');
+            }
         }
     }
 

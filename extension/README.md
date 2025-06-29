@@ -2,6 +2,31 @@
 
 A powerful Chrome extension that brings AI-powered legal document analysis directly to your browser. Detect and analyze terms of service, privacy policies, and contracts on any webpage.
 
+## Setup Instructions
+
+### 1. Configure API Endpoints
+
+Before using the extension, you need to update the API endpoints in the code:
+
+1. Open `extension/content.js` and `extension/popup.js`
+2. Replace `https://your-project-id.supabase.co` with your actual Supabase project URL
+3. Replace the placeholder authorization token with your actual Supabase anon key
+
+### 2. Install the Extension
+
+#### From Chrome Web Store (Recommended)
+1. Visit the [Legalish Extension page](https://chrome.google.com/webstore) on Chrome Web Store
+2. Click "Add to Chrome"
+3. Confirm the installation
+4. The extension icon will appear in your browser toolbar
+
+#### Developer Mode (For Testing)
+1. Download or clone this repository
+2. Open Chrome and go to `chrome://extensions/`
+3. Enable "Developer mode" in the top right
+4. Click "Load unpacked" and select the `extension` folder
+5. The extension will be loaded and ready to use
+
 ## Features
 
 ### 🔍 Smart Legal Content Detection
@@ -14,7 +39,6 @@ A powerful Chrome extension that brings AI-powered legal document analysis direc
 - **Full Page Analysis**: Analyze entire legal documents
 - **Text Selection**: Analyze specific clauses or sections
 - **Manual Input**: Paste text directly into the extension
-- **URL Analysis**: Extract and analyze content from legal document URLs
 
 ### 🎭 Multiple Analysis Tones
 - **Serious**: Professional, neutral analysis
@@ -32,32 +56,11 @@ A powerful Chrome extension that brings AI-powered legal document analysis direc
 - Clear explanations of potential issues
 - Risk assessment for each clause
 
-### 🔊 Audio Features (Pro)
-- Text-to-speech synthesis of analysis results
-- Premium AI voices with different personalities
-- ElevenLabs integration for high-quality audio
-- Playback controls within the extension
-
 ### 🔐 Account Integration
 - Sign in with your Legalish account
 - Sync analysis history across devices
 - Access Pro features and unlimited analyses
 - Save and organize your legal document reviews
-
-## Installation
-
-### From Chrome Web Store (Recommended)
-1. Visit the [Legalish Extension page](https://chrome.google.com/webstore) on Chrome Web Store
-2. Click "Add to Chrome"
-3. Confirm the installation
-4. The extension icon will appear in your browser toolbar
-
-### Developer Mode (For Testing)
-1. Download or clone this repository
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the `extension` folder
-5. The extension will be loaded and ready to use
 
 ## How to Use
 
@@ -75,7 +78,6 @@ A powerful Chrome extension that brings AI-powered legal document analysis direc
 ### Advanced Features
 - **Right-click context menu**: Right-click on selected text for quick analysis
 - **Floating analysis widget**: Get results without leaving the page
-- **Audio playback**: Listen to analysis results (Pro feature)
 - **Save analyses**: Keep a history of your document reviews
 - **Full app integration**: Open complete results in the main Legalish application
 
@@ -86,6 +88,8 @@ The extension requests the following permissions:
 - **activeTab**: Read content from the current tab for analysis
 - **storage**: Save your preferences and analysis history locally
 - **scripting**: Inject content scripts to detect legal content and show analysis widgets
+- **notifications**: Show notifications for analysis results
+- **alarms**: Clean up old data periodically
 - **host_permissions**: Communicate with Legalish servers for AI analysis
 
 ## Privacy & Security
@@ -107,14 +111,13 @@ The extension requests the following permissions:
 ### Analysis Fails
 1. Make sure the selected text is at least 10 characters long
 2. Check your internet connection
-3. Sign in to your account if using Pro features
+3. Verify the API endpoints are correctly configured
 4. Try a different analysis tone or method
 
-### Audio Not Playing
-1. Ensure you're signed in to a Pro account
-2. Check your browser's audio permissions
-3. Try refreshing the page and analyzing again
-4. Verify your internet connection is stable
+### Configuration Issues
+1. Ensure you've updated the Supabase URL in both `content.js` and `popup.js`
+2. Verify your Supabase anon key is correctly set
+3. Check that your Supabase project has the required Edge Functions deployed
 
 ## Support
 
@@ -123,52 +126,13 @@ The extension requests the following permissions:
 - **Feature Requests**: Submit ideas through the main app
 - **Bug Reports**: Use the feedback option in the extension
 
-## Pro Features
-
-Upgrade to Legalish Pro to unlock:
-- **Unlimited Analyses**: No monthly limits
-- **Premium AI Voices**: Celebrity and character voices
-- **Advanced Analysis**: Deeper insights and comparisons
-- **Priority Support**: Faster response times
-- **Early Access**: New features before general release
-
-[Upgrade to Pro →](https://legalish.com/upgrade)
-
-## Version History
-
-### v1.0.0 (Current)
-- Initial release
-- Smart legal content detection
-- Multiple analysis methods and tones
-- Red flag identification
-- Account integration
-- Audio features for Pro users
-- Context menu integration
-- Floating analysis widgets
-
 ## Technical Details
 
 - **Manifest Version**: 3 (latest Chrome extension standard)
 - **Minimum Chrome Version**: 88+
 - **File Size**: ~2MB
 - **Languages**: English (more coming soon)
-- **API Integration**: Supabase + OpenAI + ElevenLabs
-
-## Contributing
-
-This extension is part of the larger Legalish project. For development contributions:
-
-1. Fork the main repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-Copyright © 2024 Legalish. All rights reserved.
-
-This extension is proprietary software. Unauthorized copying, distribution, or modification is prohibited.
+- **API Integration**: Supabase + OpenAI
 
 ---
 

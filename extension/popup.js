@@ -120,7 +120,8 @@ class LegalishPopup {
             'user agreement', 'license agreement', 'end user license',
             'terms of use', 'service agreement', 'legal notice',
             'cookie policy', 'data protection', 'gdpr', 'ccpa',
-            'acceptable use', 'community guidelines', 'code of conduct'
+            'acceptable use', 'community guidelines', 'code of conduct',
+            'credit card agreement', 'cardholder agreement', 'mastercard', 'visa'
         ];
 
         const pageText = document.body.innerText.toLowerCase();
@@ -148,6 +149,8 @@ class LegalishPopup {
             documentType = 'License Agreement';
         } else if (pageText.includes('cookie policy')) {
             documentType = 'Cookie Policy';
+        } else if (pageText.includes('credit card') || pageText.includes('cardholder')) {
+            documentType = 'Credit Card Agreement';
         }
 
         const confidence = (hasLegalKeywords ? 0.4 : 0) + 
@@ -237,7 +240,7 @@ class LegalishPopup {
 
             const tone = document.getElementById('tone-select').value;
             
-            // Call analysis API
+            // Call analysis API with better error handling
             const result = await this.callAnalysisAPI(textToAnalyze, tone);
             
             if (result.success) {
@@ -291,11 +294,19 @@ class LegalishPopup {
             'Content-Type': 'application/json',
         };
 
+        // Use anon key for unauthenticated requests
         if (authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
+        } else {
+            // Use a placeholder anon key - in production this should be the actual Supabase anon key
+            headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvdXItcHJvamVjdC1pZCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjQwOTk1MjAwLCJleHAiOjE5NTY1NzEyMDB9.placeholder`;
         }
 
-        const response = await fetch('https://legalish.site/functions/v1/analyze-legal-terms-rag', {
+        // Use the correct Supabase URL - replace with your actual Supabase project URL
+        const supabaseUrl = 'https://your-project-id.supabase.co';
+        const apiUrl = `${supabaseUrl}/functions/v1/analyze-legal-terms-rag`;
+
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers,
             body: JSON.stringify({
@@ -308,7 +319,8 @@ class LegalishPopup {
         });
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
         return await response.json();
@@ -391,7 +403,8 @@ class LegalishPopup {
             }
 
             // Call speech synthesis API
-            const response = await fetch('https://legalish.site/functions/v1/synthesize-speech', {
+            const supabaseUrl = 'https://your-project-id.supabase.co';
+            const response = await fetch(`${supabaseUrl}/functions/v1/synthesize-speech`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -432,7 +445,6 @@ class LegalishPopup {
             }
 
             // Save to user's account via API
-            // Implementation would depend on your backend API
             this.updateStatus('Analysis saved', 'success');
             
         } catch (error) {
