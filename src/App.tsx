@@ -9,6 +9,7 @@ import DashboardPage from '@/pages/DashboardPage';
 import SuccessPage from '@/pages/SuccessPage';
 import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { LegalTermsProvider } from '@/context/LegalTermsContext';
 import { AuthProvider } from '@/context/AuthContext';
@@ -24,9 +25,9 @@ function App() {
         <TutorialProvider>
           <LegalTermsProvider>
             <SentryRouter>
-              <div className="min-h-screen bg-background font-sans">
+              <div className="min-h-screen bg-background font-sans flex flex-col">
                 <Navbar />
-                <main>
+                <main className="flex-1">
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/summary" element={<SummaryPage />} />
@@ -36,6 +37,7 @@ function App() {
                     <Route path="/privacy" element={<PrivacyPolicyPage />} />
                   </Routes>
                 </main>
+                <Footer />
                 <Toaster />
               </div>
             </SentryRouter>
