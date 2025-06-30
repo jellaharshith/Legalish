@@ -162,45 +162,26 @@ Legalish combines professional legal analysis with an approachable, modern inter
 
 ## 🔮 Future Roadmap
 
-### **Short Term (Q1 2025)**
+### **Short Term **
 - **Multi-language support** for international legal documents
 - **Advanced comparison tools** for contract negotiations
 - **Mobile app** for on-the-go legal analysis
 - **Firefox and Edge extension** support
 
-### **Medium Term (Q2-Q3 2025)**
+### **Medium Term **
 - **Legal template library** for common document types
 - **API access** for developer integrations
 - **Team collaboration** features
 - **Advanced analytics** dashboard
 
-### **Long Term (Q4 2025+)**
+### **Long Term **
 - **AI legal advisor** for contract negotiation
 - **Integration marketplace** with legal software
 - **White-label solutions** for law firms
 - **International expansion** with localized legal expertise
 
-## 🛠️ Getting Started
 
-### **Prerequisites**
-- Node.js 18+ and npm
-- Supabase account and project
-- Stripe account (for payments)
-- ElevenLabs account (for voice synthesis)
-- Sentry account (for monitoring)
 
-### **Environment Setup**
-1. Clone the repository
-2. Copy `.env.example` to `.env` and fill in your credentials
-3. Install dependencies: `npm install`
-4. Run database migrations: `supabase db push`
-5. Start development server: `npm run dev`
-
-### **Chrome Extension Setup**
-1. Navigate to `extension/` directory
-2. Replace placeholder Supabase keys with real ones
-3. Load unpacked extension in Chrome developer mode
-4. Extension is ready to use - completely free!
 
 ## 📊 Project Statistics
 
@@ -213,27 +194,13 @@ Legalish combines professional legal analysis with an approachable, modern inter
 - **Security**: Row Level Security, JWT authentication
 - **Monitoring**: Sentry integration, error tracking
 
-## 🤝 Contributing
 
-We welcome contributions! Please see our contributing guidelines for:
-- Code style and standards
-- Pull request process
-- Issue reporting
-- Feature requests
 
-## 📄 License
-
-This project is proprietary software owned by Legalish. All rights reserved.
 
 ## 📞 Support & Contact
 
 - **Website**: [legalish.site](https://legalish.site)
-- **Email**: support@legalish.com
-- **Documentation**: [docs.legalish.site](https://docs.legalish.site)
-- **Status Page**: [status.legalish.site](https://status.legalish.site)
+- **Email**: jellaharshith8521@gmail.com
+
 
 ---
-
-**Built with ❤️ for anyone who's ever been overwhelmed by legal documents.**
-
-*Making legal jargon accessible to everyone, one analysis at a time.*
