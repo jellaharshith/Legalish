@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
           <Card className="border-2 border-muted shadow-lg">
             <CardContent className="p-8">
               <h1 className="text-3xl font-bold mb-6 text-center">Privacy Policy</h1>
-              <p className="text-sm text-muted-foreground mb-6 text-center">Effective Date: June 1, 2025</p>
+              <p className="text-sm text-muted-foreground mb-6 text-center">Effective Date: June 7, 2025</p>
 
               <div className="prose prose-invert max-w-none">
                 <p className="mb-6">
