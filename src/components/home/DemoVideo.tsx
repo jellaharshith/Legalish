@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Card } from '@/components/ui/card';
-import { Play, Pause, Volume2, VolumeX, Loader2, Maximize, ExternalLink } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Loader2, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function DemoVideo() {
@@ -41,7 +41,8 @@ export default function DemoVideo() {
           },
           events: {
             onReady: onPlayerReady,
-            onStateChange: onPlayerStateChange
+            onStateChange: onPlayerStateChange,
+            onError: onPlayerError
           }
         });
       }
@@ -68,6 +69,16 @@ export default function DemoVideo() {
     } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
       setIsPlaying(false);
     }
+  };
+  
+  const onPlayerError = (event: YT.OnErrorEvent) => {
+    console.error('YouTube player error:', event.data);
+    setIsLoading(false);
+    toast({
+      title: "Video Error",
+      description: "There was an issue loading the demo video. Please try again later.",
+      variant: "destructive"
+    });
   };
 
   const handlePlayPause = () => {
