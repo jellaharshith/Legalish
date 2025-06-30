@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Card } from '@/components/ui/card';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Loader2, Maximize, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function DemoVideo() {
@@ -9,38 +9,106 @@ export default function DemoVideo() {
   const [isHovered, setIsHovered] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const playerRef = useRef<HTMLDivElement>(null);
+  const youtubePlayerRef = useRef<YT.Player | null>(null);
   
-  const handlePlayPause = () => {
-    const video = document.getElementById('demo-video') as HTMLVideoElement;
-    if (video) {
-      if (isPlaying) {
-        video.pause();
-      } else {
-        video.play().catch(error => {
-          console.error('Error playing video:', error);
-          toast({
-            title: "Playback Error",
-            description: "The video couldn't be played automatically. Please try again.",
-            variant: "destructive"
-          });
+  // YouTube video ID from the provided URL
+  const videoId = 'pzKv1baC9m0';
+
+  useEffect(() => {
+    // Load YouTube API
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+    // Initialize player when API is ready
+    window.onYouTubeIframeAPIReady = () => {
+      if (playerRef.current) {
+        youtubePlayerRef.current = new YT.Player(playerRef.current, {
+          videoId: videoId,
+          playerVars: {
+            autoplay: 0,
+            controls: 0,
+            disablekb: 1,
+            enablejsapi: 1,
+            fs: 0,
+            iv_load_policy: 3,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0
+          },
+          events: {
+            onReady: onPlayerReady,
+            onStateChange: onPlayerStateChange
+          }
         });
       }
-      setIsPlaying(!isPlaying);
+    };
+
+    return () => {
+      // Clean up
+      if (youtubePlayerRef.current) {
+        youtubePlayerRef.current.destroy();
+      }
+      window.onYouTubeIframeAPIReady = null;
+    };
+  }, []);
+
+  const onPlayerReady = (event: YT.PlayerEvent) => {
+    setIsLoading(false);
+    event.target.mute();
+    setIsMuted(true);
+  };
+
+  const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
+    if (event.data === YT.PlayerState.PLAYING) {
+      setIsPlaying(true);
+    } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+      setIsPlaying(false);
+    }
+  };
+
+  const handlePlayPause = () => {
+    if (!youtubePlayerRef.current) return;
+    
+    try {
+      if (isPlaying) {
+        youtubePlayerRef.current.pauseVideo();
+      } else {
+        youtubePlayerRef.current.playVideo();
+      }
+    } catch (error) {
+      console.error('Error controlling YouTube player:', error);
+      toast({
+        title: "Playback Error",
+        description: "There was an issue controlling the video. Please try again.",
+        variant: "destructive"
+      });
     }
   };
   
   const handleMuteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const video = document.getElementById('demo-video') as HTMLVideoElement;
-    if (video) {
-      video.muted = !video.muted;
-      setIsMuted(!isMuted);
+    if (!youtubePlayerRef.current) return;
+    
+    try {
+      if (isMuted) {
+        youtubePlayerRef.current.unMute();
+        setIsMuted(false);
+      } else {
+        youtubePlayerRef.current.mute();
+        setIsMuted(true);
+      }
+    } catch (error) {
+      console.error('Error toggling mute:', error);
     }
   };
   
-  const handleVideoLoad = () => {
-    setVideoLoaded(true);
+  const openYouTube = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(`https://youtu.be/${videoId}`, '_blank');
   };
 
   return (
@@ -51,29 +119,21 @@ export default function DemoVideo() {
     >
       <AspectRatio ratio={16/9}>
         <div className="relative w-full h-full bg-black">
-          {/* Video Element */}
-          <video 
-            id="demo-video"
-            className={`w-full h-full object-cover ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
-            src="/demo-video.mp4"
-            poster="/demo-poster.jpg"
-            muted={isMuted}
-            playsInline
-            onLoadedData={handleVideoLoad}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => setIsPlaying(false)}
+          {/* YouTube Player Container */}
+          <div 
+            ref={playerRef}
+            className="w-full h-full"
           />
           
           {/* Loading state */}
-          {!videoLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black">
-              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
             </div>
           )}
           
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
@@ -108,17 +168,25 @@ export default function DemoVideo() {
             </div>
           </button>
           
-          {/* Mute button */}
-          <button
-            className="absolute bottom-4 right-4 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
-            onClick={handleMuteToggle}
-          >
-            {isMuted ? (
-              <VolumeX size={16} />
-            ) : (
-              <Volume2 size={16} />
-            )}
-          </button>
+          {/* Control buttons */}
+          <div className="absolute bottom-4 right-4 flex items-center space-x-2">
+            <button
+              className="w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              onClick={handleMuteToggle}
+            >
+              {isMuted ? (
+                <VolumeX size={16} />
+              ) : (
+                <Volume2 size={16} />
+              )}
+            </button>
+            <button
+              className="w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              onClick={openYouTube}
+            >
+              <ExternalLink size={16} />
+            </button>
+          </div>
           
           {/* Video title */}
           <div className="absolute top-4 left-0 px-3 py-1 bg-black/80 text-white font-mono text-sm">
@@ -128,4 +196,12 @@ export default function DemoVideo() {
       </AspectRatio>
     </Card>
   );
+}
+
+// Add TypeScript declaration for YouTube IFrame API
+declare global {
+  interface Window {
+    onYouTubeIframeAPIReady: () => void;
+    YT: typeof YT;
+  }
 }
