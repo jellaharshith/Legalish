@@ -7,6 +7,7 @@ import SummaryPage from '@/pages/SummaryPage';
 import UpgradePage from '@/pages/UpgradePage';
 import DashboardPage from '@/pages/DashboardPage';
 import SuccessPage from '@/pages/SuccessPage';
+import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
 import Navbar from '@/components/layout/Navbar';
 import { Toaster } from '@/components/ui/toaster';
 import { LegalTermsProvider } from '@/context/LegalTermsContext';
@@ -32,6 +33,7 @@ function App() {
                     <Route path="/upgrade" element={<UpgradePage />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/success" element={<SuccessPage />} />
+                    <Route path="/privacy" element={<PrivacyPolicyPage />} />
                   </Routes>
                 </main>
                 <Toaster />

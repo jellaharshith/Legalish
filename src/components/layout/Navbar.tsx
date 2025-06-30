@@ -81,6 +81,24 @@ export default function Navbar() {
               )}
             </Link>
           ))}
+          <Link
+            to="/privacy"
+            className={`text-sm font-medium transition-all duration-200 hover:text-primary relative ${
+              location.pathname === '/privacy' 
+                ? 'text-primary' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Privacy
+            {location.pathname === '/privacy' && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
+                initial={false}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
+          </Link>
         </nav>
         
         {/* Desktop Actions */}
@@ -174,6 +192,18 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              
+              <Link
+                to="/privacy"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`block text-lg font-medium transition-colors ${
+                  location.pathname === '/privacy' 
+                    ? 'text-primary' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Privacy
+              </Link>
               
               <div className="pt-4 border-t border-border space-y-3">
                 {/* Tutorial Button */}
