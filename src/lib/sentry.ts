@@ -58,7 +58,4 @@ export const captureSentryException = (error: Error, context?: { [key: string]: 
   }
 };
 
-// Initialize Sentry on module load
-initSentry();
-
 export { Sentry };

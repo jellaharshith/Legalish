@@ -4,10 +4,12 @@ import App from './App.tsx';
 import './index.css';
 import { initSentry } from './lib/sentry';
 
-// Initialize Sentry before rendering the app
+// Initialize Sentry as early as possible in the application lifecycle
 initSentry();
 
-createRoot(document.getElementById('root')!).render(
+const container = document.getElementById('root')!;
+const root = createRoot(container);
+root.render(
   <StrictMode>
     <App />
   </StrictMode>
