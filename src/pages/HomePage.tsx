@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle, Brain, FileSearch, Clock } from 'lucide-react'
 import { useLegalTerms } from '@/context/LegalTermsContext';
 import { SplineBackground } from '@/components/ui/spline-background';
 import { Typewriter } from '@/components/ui/typewriter';
+import DemoVideo from '@/components/home/DemoVideo';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -206,26 +207,7 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <Card className="p-8 bg-gradient-to-br from-primary/5 to-blue-500/5 border-primary/20">
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-6">
-                  <div className="text-center">
-                    <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                      <img 
-                        src="/Logo-version-1.png" 
-                        alt="Legalish Logo" 
-                        className="w-16 h-16 object-contain"
-                      />
-                    </div>
-                    <p className="text-muted-foreground">Interactive Demo</p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={handleStartDemo}
-                  className="w-full bg-primary hover:bg-primary/90"
-                >
-                  Try Demo Now
-                </Button>
-              </Card>
+              <DemoVideo />
             </motion.div>
           </div>
         </div>
