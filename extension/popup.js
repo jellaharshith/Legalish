@@ -59,18 +59,42 @@ class LegalishPopup {
                                     // Try to get subscription tier from localStorage if available
                                     let subscriptionTier = 'free';
                                     try {
-                                        const profileKey = keys.find(key => 
-                                            key.includes('profile') || 
+                                        // First check if we can get it from profiles table data
+                                        const profilesKey = keys.find(key => 
+                                            key.includes('profiles') || 
                                             key.includes('user_metadata')
                                         );
                                         
-                                        if (profileKey) {
-                                            const profileData = localStorage.getItem(profileKey);
+                                        if (profilesKey) {
+                                            const profileData = localStorage.getItem(profilesKey);
                                             if (profileData) {
                                                 const parsedProfile = JSON.parse(profileData);
                                                 if (parsedProfile.subscription_tier) {
                                                     subscriptionTier = parsedProfile.subscription_tier;
                                                 }
+                                            }
+                                        }
+                                        
+                                        // If not found, check if we can extract it from the DOM
+                                        if (subscriptionTier === 'free') {
+                                            // Look for Pro badge in the navbar
+                                            const proBadge = document.querySelector('.pro-badge, .pro-plan-badge');
+                                            if (proBadge) {
+                                                subscriptionTier = 'pro';
+                                            }
+                                            
+                                            // Look for Pro-only features that are enabled
+                                            const proFeatures = document.querySelectorAll('[data-pro-feature="true"]:not([disabled])');
+                                            if (proFeatures.length > 0) {
+                                                subscriptionTier = 'pro';
+                                            }
+                                            
+                                            // Check if there's any text indicating Pro status
+                                            const bodyText = document.body.innerText;
+                                            if (bodyText.includes('Pro Plan') || 
+                                                bodyText.includes('Pro Subscription') || 
+                                                bodyText.includes('Current Plan: Pro')) {
+                                                subscriptionTier = 'pro';
                                             }
                                         }
                                     } catch (e) {
@@ -113,16 +137,57 @@ class LegalishPopup {
                         });
                         
                         this.userSubscriptionTier = authData.subscription_tier || 'free';
-                        console.log('Successfully synced authentication from website');
+                        console.log('Successfully synced authentication from website, tier:', this.userSubscriptionTier);
                     }
                 }
             }
             
             // If we couldn't sync from the website, try to get from storage
             if (!this.userSubscriptionTier || this.userSubscriptionTier === 'free') {
-                const { subscription_tier } = await chrome.storage.local.get(['subscription_tier']);
-                if (subscription_tier) {
+                const { subscription_tier, authToken, userInfo } = await chrome.storage.local.get(['subscription_tier', 'authToken', 'userInfo']);
+                
+                // If user is authenticated, make a direct API call to check subscription status
+                if (authToken && userInfo && userInfo.id) {
+                    try {
+                        // Use your actual Supabase URL and anon key
+                        const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
+                        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ';
+                        
+                        // Make a direct API call to check the user's profile
+                        const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userInfo.id}&select=subscription_tier`, {
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`,
+                                'apikey': supabaseAnonKey,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const profiles = await response.json();
+                            if (profiles && profiles.length > 0 && profiles[0].subscription_tier) {
+                                const apiSubscriptionTier = profiles[0].subscription_tier;
+                                console.log('Got subscription tier from API:', apiSubscriptionTier);
+                                
+                                // Update the subscription tier in storage and memory
+                                this.userSubscriptionTier = apiSubscriptionTier;
+                                await chrome.storage.local.set({ subscription_tier: apiSubscriptionTier });
+                                
+                                // Update user info with correct plan
+                                userInfo.plan = apiSubscriptionTier === 'pro' ? 'Pro Plan' : 'Free Plan';
+                                await chrome.storage.local.set({ userInfo });
+                                
+                                console.log('Updated subscription tier from API:', this.userSubscriptionTier);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error fetching subscription status from API:', error);
+                    }
+                }
+                
+                // If we still don't have a tier from API, use the stored value
+                if (this.userSubscriptionTier === 'free' && subscription_tier) {
                     this.userSubscriptionTier = subscription_tier;
+                    console.log('Using stored subscription tier:', this.userSubscriptionTier);
                 }
             }
         } catch (error) {
@@ -796,6 +861,7 @@ class LegalishPopup {
             // Update subscription tier if available
             if (subscription_tier) {
                 this.userSubscriptionTier = subscription_tier;
+                console.log('Loaded subscription tier from storage:', this.userSubscriptionTier);
             }
             
             const signedOut = document.getElementById('signed-out');
@@ -831,6 +897,7 @@ class LegalishPopup {
     updateUIForSubscriptionTier() {
         try {
             const isPro = this.userSubscriptionTier === 'pro';
+            console.log('Updating UI for subscription tier:', this.userSubscriptionTier, 'isPro:', isPro);
             
             // Update analyze button
             const analyzeBtn = document.getElementById('analyze-btn');
@@ -984,6 +1051,11 @@ class LegalishPopup {
                 }
             } else if (proUpgradeBanner) {
                 proUpgradeBanner.remove();
+            }
+            
+            // Update status text to show Pro status
+            if (isPro) {
+                this.updateStatus('Pro features enabled', 'success');
             }
         } catch (error) {
             console.error('Error updating UI for subscription tier:', error);

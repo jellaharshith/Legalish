@@ -45,9 +45,50 @@ class LegalishContentScript {
     async checkUserSubscription() {
         try {
             if (chrome.storage && chrome.storage.local) {
-                const { subscription_tier } = await chrome.storage.local.get(['subscription_tier']);
-                if (subscription_tier) {
+                const { subscription_tier, authToken, userInfo } = await chrome.storage.local.get(['subscription_tier', 'authToken', 'userInfo']);
+                
+                // If user is authenticated, make a direct API call to check subscription status
+                if (authToken && userInfo && userInfo.id) {
+                    try {
+                        // Use your actual Supabase URL and anon key
+                        const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
+                        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ';
+                        
+                        // Make a direct API call to check the user's profile
+                        const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userInfo.id}&select=subscription_tier`, {
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`,
+                                'apikey': supabaseAnonKey,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const profiles = await response.json();
+                            if (profiles && profiles.length > 0 && profiles[0].subscription_tier) {
+                                const apiSubscriptionTier = profiles[0].subscription_tier;
+                                console.log('Got subscription tier from API:', apiSubscriptionTier);
+                                
+                                // Update the subscription tier in storage and memory
+                                this.userSubscriptionTier = apiSubscriptionTier;
+                                await chrome.storage.local.set({ subscription_tier: apiSubscriptionTier });
+                                
+                                // Update user info with correct plan
+                                userInfo.plan = apiSubscriptionTier === 'pro' ? 'Pro Plan' : 'Free Plan';
+                                await chrome.storage.local.set({ userInfo });
+                                
+                                console.log('Updated subscription tier from API:', this.userSubscriptionTier);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error fetching subscription status from API:', error);
+                    }
+                }
+                
+                // If we still don't have a tier from API, use the stored value
+                if (this.userSubscriptionTier === 'free' && subscription_tier) {
                     this.userSubscriptionTier = subscription_tier;
+                    console.log('Using stored subscription tier:', this.userSubscriptionTier);
                 }
             }
         } catch (error) {
