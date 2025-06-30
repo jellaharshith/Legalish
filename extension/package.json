@@ -20,7 +20,7 @@
   ],
   "author": "Legalish Team",
   "license": "Proprietary",
-  "homepage": "https://legalish.com",
+  "homepage": "https://legalish.site",
   "repository": {
     "type": "git",
     "url": "https://github.com/legalish/chrome-extension"
@@ -35,12 +35,17 @@
     "permissions": [
       "activeTab",
       "storage",
-      "scripting"
+      "scripting",
+      "notifications",
+      "alarms"
     ],
     "host_permissions": [
-      "https://*.supabase.co/*"
+      "https://*.supabase.co/*",
+      "https://legalish.site/*"
     ]
   },
   "devDependencies": {},
-  "dependencies": {}
+  "dependencies": {},
+  "private": true,
+  "updateDate": "2025-06-07"
 }
