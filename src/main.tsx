@@ -5,9 +5,7 @@ import './index.css';
 import { initSentry } from './lib/sentry';
 
 // Initialize Sentry before rendering the app
-if (import.meta.env.VITE_SENTRY_DSN) {
-  initSentry();
-}
+initSentry();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
