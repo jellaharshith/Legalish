@@ -411,7 +411,7 @@ class LegalishPopup {
             if (signedIn) signedIn.style.display = 'none';
         }
 
-        // Update Pro upgrade banner visibility
+        // Update Pro upgrade banner visibility - HIDE ALL PRO BANNERS FOR FREE VERSION
         this.updateProBanner();
         
         // Update analyze button state
@@ -424,28 +424,17 @@ class LegalishPopup {
     updateStatusIndicator() {
         const statusText = document.querySelector('.status-text');
         if (statusText) {
-            if (this.subscriptionTier === 'pro') {
-                statusText.textContent = 'Pro Active';
-                statusText.style.color = '#10b981';
-            } else if (this.authToken) {
-                statusText.textContent = 'Free Plan';
-                statusText.style.color = '#f59e0b';
-            } else {
-                statusText.textContent = 'Not Signed In';
-                statusText.style.color = '#6b7280';
-            }
+            // Always show "Ready" for free extension
+            statusText.textContent = 'Ready';
+            statusText.style.color = '#10b981';
         }
     }
 
     updateProBanner() {
-        // Show/hide Pro upgrade banners based on subscription status
+        // HIDE ALL Pro upgrade banners for free version
         const proUpgradeBanners = document.querySelectorAll('.pro-upgrade-banner');
         proUpgradeBanners.forEach(banner => {
-            if (this.subscriptionTier === 'pro') {
-                banner.style.display = 'none';
-            } else {
-                banner.style.display = 'block';
-            }
+            banner.style.display = 'none';
         });
     }
 
@@ -462,23 +451,14 @@ class LegalishPopup {
         } else {
             analyzeBtn.disabled = false;
             
-            if (this.subscriptionTier === 'pro') {
-                analyzeBtn.innerHTML = `
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                    </svg>
-                    <span>Analyze Document</span>
-                `;
-                analyzeBtn.style.background = 'linear-gradient(135deg, #a855f7, #3b82f6)';
-            } else {
-                analyzeBtn.innerHTML = `
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    <span>Upgrade to Pro</span>
-                `;
-                analyzeBtn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-            }
+            // Always show analyze button for free version
+            analyzeBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+                <span>Analyze Document</span>
+            `;
+            analyzeBtn.style.background = 'linear-gradient(135deg, #a855f7, #3b82f6)';
         }
     }
 
@@ -532,16 +512,7 @@ class LegalishPopup {
     async handleAnalyze() {
         if (this.isAnalyzing) return;
 
-        console.log(`🔍 Analyze button clicked - User subscription: ${this.subscriptionTier}`);
-
-        // Check if user has Pro access for analysis
-        if (this.subscriptionTier !== 'pro') {
-            console.log('❌ User does not have Pro access, redirecting to upgrade');
-            this.handleUpgrade();
-            return;
-        }
-
-        console.log('✅ User has Pro access, proceeding with analysis');
+        console.log(`🔍 Analyze button clicked - FREE VERSION - No restrictions`);
 
         this.isAnalyzing = true;
         this.updateAnalyzeButton();
@@ -605,7 +576,7 @@ class LegalishPopup {
         if (this.authToken) {
             headers['Authorization'] = `Bearer ${this.authToken}`;
         } else {
-            headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ`;
+            headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE7NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ`;
         }
 
         const response = await fetch('https://txwilhbitljeeihpvscr.supabase.co/functions/v1/analyze-legal-terms-rag', {

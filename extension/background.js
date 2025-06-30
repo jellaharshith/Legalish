@@ -35,18 +35,18 @@ class LegalishBackground {
                 }
                 
                 try {
-                    // Main analyze option
+                    // Main analyze option - FREE VERSION
                     chrome.contextMenus.create({
                         id: 'analyze-selection',
-                        title: 'Analyze with Legalish (Pro)',
+                        title: 'Analyze with Legalish',
                         contexts: ['selection'],
                         documentUrlPatterns: ['http://*/*', 'https://*/*']
                     });
 
-                    // Analyze page option
+                    // Analyze page option - FREE VERSION
                     chrome.contextMenus.create({
                         id: 'analyze-page',
-                        title: 'Analyze page for legal content (Pro)',
+                        title: 'Analyze page for legal content',
                         contexts: ['page'],
                         documentUrlPatterns: ['http://*/*', 'https://*/*']
                     });
@@ -110,24 +110,15 @@ class LegalishBackground {
                 return;
             }
 
-            // Check if user is a Pro subscriber for Pro-only features
-            const isPro = await this.isProUser();
-
             switch (info.menuItemId) {
                 case 'analyze-selection':
-                    if (isPro) {
-                        await this.analyzeSelection(tab, info.selectionText);
-                    } else {
-                        this.showProFeatureNotification(tab);
-                    }
+                    // FREE VERSION - No restrictions
+                    await this.analyzeSelection(tab, info.selectionText);
                     break;
                 
                 case 'analyze-page':
-                    if (isPro) {
-                        await this.analyzePage(tab);
-                    } else {
-                        this.showProFeatureNotification(tab);
-                    }
+                    // FREE VERSION - No restrictions
+                    await this.analyzePage(tab);
                     break;
                 
                 case 'open-legalish':
@@ -144,80 +135,6 @@ class LegalishBackground {
             }
         } catch (error) {
             console.error('Error handling context menu click:', error);
-        }
-    }
-    
-    async isProUser() {
-        try {
-            const { subscription_tier, authToken, userInfo } = await chrome.storage.local.get(['subscription_tier', 'authToken', 'userInfo']);
-            
-            console.log('Background - Checking Pro status:', {
-                subscription_tier,
-                hasAuthToken: !!authToken,
-                hasUserInfo: !!userInfo
-            });
-            
-            // If user is authenticated, make a direct API call to check subscription status
-            if (authToken && userInfo && userInfo.id) {
-                try {
-                    // Use your actual Supabase URL and anon key
-                    const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
-                    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ';
-                    
-                    // Make a direct API call to check the user's profile
-                    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userInfo.id}&select=subscription_tier`, {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`,
-                            'apikey': supabaseAnonKey,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const profiles = await response.json();
-                        if (profiles && profiles.length > 0 && profiles[0].subscription_tier) {
-                            const apiSubscriptionTier = profiles[0].subscription_tier;
-                            console.log('Background - Got subscription tier from API:', apiSubscriptionTier);
-                            
-                            // Update the subscription tier in storage
-                            await chrome.storage.local.set({ subscription_tier: apiSubscriptionTier });
-                            
-                            // Update user info with correct plan
-                            userInfo.plan = apiSubscriptionTier === 'pro' ? 'Pro Plan' : 'Free Plan';
-                            await chrome.storage.local.set({ userInfo });
-                            
-                            // Broadcast to all tabs
-                            await this.updateSubscriptionTier(apiSubscriptionTier);
-                            
-                            return apiSubscriptionTier === 'pro';
-                        }
-                    }
-                } catch (error) {
-                    console.error('Background - Error fetching subscription status from API:', error);
-                }
-            }
-            
-            return subscription_tier === 'pro';
-        } catch (error) {
-            console.error('Background - Error checking Pro status:', error);
-            return false;
-        }
-    }
-    
-    showProFeatureNotification(tab) {
-        try {
-            // Show notification that this is a Pro feature
-            this.showNotification('This is a Pro feature. Please upgrade to access.', 'basic');
-            
-            // Also try to send a message to the content script to show a Pro feature modal
-            chrome.tabs.sendMessage(tab.id, {
-                action: 'showProFeatureMessage',
-                featureName: 'document analysis'
-            }).catch(error => {
-                console.log('Could not send message to content script:', error);
-            });
-        } catch (error) {
-            console.error('Error showing Pro feature notification:', error);
         }
     }
 

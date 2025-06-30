@@ -1,6 +1,6 @@
-# Legalish Chrome Extension
+# Legalish Chrome Extension - FREE VERSION
 
-A powerful Chrome extension that brings AI-powered legal document analysis directly to your browser. Detect and analyze terms of service, privacy policies, and contracts on any webpage.
+A powerful Chrome extension that brings AI-powered legal document analysis directly to your browser. Detect and analyze terms of service, privacy policies, and contracts on any webpage - **completely free!**
 
 ## 🚀 Quick Setup
 
@@ -40,20 +40,14 @@ headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
 3. Click "Load unpacked" and select the `extension` folder
 4. The extension will be loaded and ready to use
 
-## ✨ Features
+## ✨ Features - ALL FREE!
 
-### 🔐 **Pro-Only Features**
+### 🔓 **Completely Free Access**
 - **PDF Analysis**: Analyze PDF legal documents directly in your browser
 - **Text Selection Analysis**: Select and analyze specific sections of legal text
 - **Full Page Analysis**: Analyze entire webpages for legal content
-- **Audio Playback**: Listen to summaries with premium voices
-- **Save Analysis History**: Store and access your analysis history
-
-### 🔐 **Automatic Authentication Sync**
-- **Smart Auth Detection**: Automatically detects when you're signed in to Legalish website
-- **Seamless Sync**: Extension syncs your authentication state from the website
-- **No Manual Setup**: Just sign in to the website and the extension will recognize you
-- **Secure Token Management**: Safely stores and manages authentication tokens
+- **No Subscription Required**: All features available without payment
+- **Unlimited Usage**: No limits on number of analyses
 
 ### 🔍 Smart Legal Content Detection
 - **PDF Support**: Automatically detects and analyzes PDF legal documents
@@ -83,21 +77,14 @@ headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
 - Clear explanations of potential issues
 - Risk assessment for each clause
 
-### 🔐 Account Integration
-- **Auto-Sync**: Automatically syncs with your Legalish website account
-- **Cross-Device**: Access your analysis history across all devices
-- **Pro Features**: Unlock premium features when signed in
+### 🔐 Optional Account Integration
+- **Auto-Sync**: Optionally sync with your Legalish website account
+- **Cross-Device**: Access your analysis history across all devices (if signed in)
 - **Secure**: Uses the same authentication as the main website
 
 ## 📖 How to Use
 
-### Authentication Setup
-1. **Sign in to Legalish**: Go to [legalish.site](https://legalish.site) and sign in
-2. **Open Extension**: Click the Legalish extension icon
-3. **Auto-Sync**: The extension will automatically detect your sign-in status
-4. **Start Analyzing**: You're now ready to analyze documents with your account
-
-### Basic Usage
+### Basic Usage (No Account Required)
 1. **Browse any website** with legal content (including PDFs)
 2. **Look for the Legalish indicator** when legal documents are detected
 3. **Click the extension icon** in your toolbar to open the popup
@@ -116,17 +103,10 @@ The extension automatically detects PDF documents and uses URL-based analysis:
 ### Advanced Features
 - **Right-click context menu**: Right-click on selected text for quick analysis
 - **Floating analysis widget**: Get results without leaving the page
-- **Save analyses**: Keep a history of your document reviews (when signed in)
+- **Optional account sync**: Sign in to save analyses and sync across devices
 - **Full app integration**: Open complete results in the main Legalish application
 
 ## 🔧 Troubleshooting
-
-### Extension Shows "Sign In Required" Even When Signed In
-1. **Check Website Sign-In**: Make sure you're actually signed in to [legalish.site](https://legalish.site)
-2. **Refresh Extension**: Close and reopen the extension popup
-3. **Visit Legalish Site**: Go to the Legalish website in the same browser
-4. **Wait for Sync**: The extension should automatically detect your sign-in status
-5. **Manual Sync**: Click the "Sign In" button to open the website and sign in
 
 ### Extension Not Working
 1. **Check Supabase Key**: Ensure you've replaced the placeholder token with your actual anon key
@@ -164,7 +144,7 @@ The extension requests the following permissions:
 - **Minimum Chrome Version**: 88+
 - **API Integration**: Supabase + OpenAI RAG system
 - **PDF Support**: URL-based analysis with server-side text extraction
-- **Authentication**: Automatic sync with website authentication
+- **Authentication**: Optional sync with website authentication
 - **File Size**: ~2MB
 - **Languages**: English (more coming soon)
 
@@ -175,8 +155,12 @@ The extension requests the following permissions:
 - **Feature Requests**: Submit ideas through the main app
 - **Bug Reports**: Use the feedback option in the extension
 
+## 🆓 Free Forever
+
+This extension is completely free to use with no hidden costs or subscription requirements. All analysis features are available to everyone!
+
 ---
 
 **Made with ❤️ by the Legalish team**
 
-Transform legal jargon into plain English, one document at a time.
+Transform legal jargon into plain English, one document at a time - for free!
