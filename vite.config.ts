@@ -32,5 +32,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true, // Enable source maps for Sentry
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html')
+      }
+    }
   }
 });
