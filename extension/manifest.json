@@ -46,6 +46,5 @@
       "resources": ["icons/*.png"],
       "matches": ["<all_urls>"]
     }
-  ],
-  "update_url": "https://legalish.site/extension/updates.xml"
+  ]
 }
