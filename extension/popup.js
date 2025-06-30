@@ -14,6 +14,8 @@ class LegalishPopup {
 
     async init() {
         try {
+            console.log('🚀 Initializing Legalish Extension Popup...');
+            
             // Load stored data first
             await this.loadStoredData();
             
@@ -27,9 +29,9 @@ class LegalishPopup {
             // Detect page content
             await this.detectPageContent();
             
-            console.log('Popup initialized successfully');
+            console.log('✅ Popup initialized successfully');
         } catch (error) {
-            console.error('Error initializing popup:', error);
+            console.error('❌ Error initializing popup:', error);
         }
     }
 
@@ -46,42 +48,47 @@ class LegalishPopup {
             this.userInfo = data.userInfo || null;
             this.subscriptionTier = data.subscription_tier || 'free';
             
-            console.log('Loaded stored data:', {
+            console.log('📦 Loaded stored data:', {
                 hasAuthToken: !!this.authToken,
                 hasUserInfo: !!this.userInfo,
                 subscriptionTier: this.subscriptionTier,
-                userEmail: this.userInfo?.email
+                userEmail: this.userInfo?.email,
+                userId: this.userInfo?.id
             });
         } catch (error) {
-            console.error('Error loading stored data:', error);
+            console.error('❌ Error loading stored data:', error);
         }
     }
 
     async checkAuthenticationStatus() {
         try {
+            console.log('🔍 Checking authentication status...');
+            
             // First check if we have stored auth data
             if (this.authToken && this.userInfo) {
-                console.log('Found stored auth data, verifying...');
+                console.log('🔑 Found stored auth data, verifying...');
                 
-                // Verify the token is still valid by making an API call
+                // Always fetch latest subscription status for this user
+                await this.fetchLatestSubscriptionStatus();
+                
+                // Verify the token is still valid
                 const isValid = await this.verifyAuthToken();
                 if (isValid) {
-                    console.log('Stored auth token is valid');
-                    await this.fetchLatestSubscriptionStatus();
+                    console.log('✅ Stored auth token is valid');
                     this.updateUI();
                     return;
                 } else {
-                    console.log('Stored auth token is invalid, clearing...');
+                    console.log('❌ Stored auth token is invalid, clearing...');
                     await this.clearAuthData();
                 }
             }
 
             // Try to detect authentication from the current tab
-            console.log('Attempting to detect auth from current tab...');
+            console.log('🔍 Attempting to detect auth from current tab...');
             await this.detectAuthFromCurrentTab();
             
         } catch (error) {
-            console.error('Error checking authentication status:', error);
+            console.error('❌ Error checking authentication status:', error);
         }
     }
 
@@ -99,16 +106,19 @@ class LegalishPopup {
             
             return response.ok;
         } catch (error) {
-            console.error('Error verifying auth token:', error);
+            console.error('❌ Error verifying auth token:', error);
             return false;
         }
     }
 
     async fetchLatestSubscriptionStatus() {
-        if (!this.authToken || !this.userInfo?.id) return;
+        if (!this.authToken || !this.userInfo?.id) {
+            console.log('⚠️ Cannot fetch subscription status - missing auth token or user ID');
+            return;
+        }
         
         try {
-            console.log('Fetching latest subscription status for user:', this.userInfo.id);
+            console.log(`🔄 Fetching latest subscription status for user: ${this.userInfo.id}`);
             
             const response = await fetch(`https://txwilhbitljeeihpvscr.supabase.co/rest/v1/profiles?id=eq.${this.userInfo.id}&select=subscription_tier,email,full_name`, {
                 headers: {
@@ -118,11 +128,19 @@ class LegalishPopup {
                 }
             });
             
+            console.log(`📡 API Response Status: ${response.status}`);
+            
             if (response.ok) {
                 const profiles = await response.json();
+                console.log('📋 API Response Data:', profiles);
+                
                 if (profiles && profiles.length > 0) {
                     const profile = profiles[0];
-                    this.subscriptionTier = profile.subscription_tier || 'free';
+                    const newSubscriptionTier = profile.subscription_tier || 'free';
+                    
+                    console.log(`🔄 Subscription tier update: ${this.subscriptionTier} → ${newSubscriptionTier}`);
+                    
+                    this.subscriptionTier = newSubscriptionTier;
                     
                     // Update user info
                     this.userInfo = {
@@ -138,17 +156,23 @@ class LegalishPopup {
                         userInfo: this.userInfo
                     });
                     
-                    console.log('Updated subscription status:', this.subscriptionTier);
+                    console.log(`✅ Updated subscription status to: ${this.subscriptionTier}`);
                     
                     // Notify background script
                     chrome.runtime.sendMessage({
                         action: 'updateSubscriptionTier',
                         subscriptionTier: this.subscriptionTier
                     });
+                } else {
+                    console.log('⚠️ No profile data found for user');
                 }
+            } else {
+                console.error(`❌ API request failed: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error('Error details:', errorText);
             }
         } catch (error) {
-            console.error('Error fetching subscription status:', error);
+            console.error('❌ Error fetching subscription status:', error);
         }
     }
 
@@ -158,15 +182,15 @@ class LegalishPopup {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             
             if (!tab || !tab.url) {
-                console.log('No active tab found');
+                console.log('⚠️ No active tab found');
                 return;
             }
             
-            console.log('Current tab URL:', tab.url);
+            console.log(`🌐 Current tab URL: ${tab.url}`);
             
             // Check if we're on the Legalish website
             if (tab.url.includes('legalish.site') || tab.url.includes('localhost')) {
-                console.log('On Legalish website, attempting to extract auth data...');
+                console.log('🏠 On Legalish website, attempting to extract auth data...');
                 
                 try {
                     // Try to execute script to get auth data from the page
@@ -179,8 +203,11 @@ class LegalishPopup {
                                     key.includes('supabase') && key.includes('auth-token')
                                 );
                                 
+                                console.log('Found auth keys:', authKeys);
+                                
                                 if (authKeys.length > 0) {
                                     const authData = JSON.parse(localStorage.getItem(authKeys[0]) || '{}');
+                                    console.log('Auth data structure:', Object.keys(authData));
                                     
                                     if (authData.access_token && authData.user) {
                                         return {
@@ -205,7 +232,8 @@ class LegalishPopup {
                     if (results && results[0] && results[0].result && results[0].result.success) {
                         const { authToken, userInfo } = results[0].result;
                         
-                        console.log('Successfully extracted auth data from page');
+                        console.log('✅ Successfully extracted auth data from page');
+                        console.log(`👤 User: ${userInfo.email} (ID: ${userInfo.id})`);
                         
                         // Store the auth data
                         this.authToken = authToken;
@@ -220,22 +248,24 @@ class LegalishPopup {
                         // Fetch subscription status
                         await this.fetchLatestSubscriptionStatus();
                         
-                        console.log('Auth detection successful:', {
+                        console.log('🎉 Auth detection successful:', {
                             email: userInfo.email,
                             subscriptionTier: this.subscriptionTier
                         });
                         
                         this.updateUI();
                         return;
+                    } else {
+                        console.log('⚠️ Could not extract auth data from page');
                     }
                 } catch (scriptError) {
-                    console.log('Could not execute script on tab:', scriptError.message);
+                    console.log('⚠️ Could not execute script on tab:', scriptError.message);
                 }
             }
             
-            console.log('No authentication detected');
+            console.log('❌ No authentication detected');
         } catch (error) {
-            console.error('Error detecting auth from current tab:', error);
+            console.error('❌ Error detecting auth from current tab:', error);
         }
     }
 
@@ -251,7 +281,7 @@ class LegalishPopup {
             'authTimestamp'
         ]);
         
-        console.log('Cleared auth data');
+        console.log('🧹 Cleared auth data');
     }
 
     setupEventListeners() {
@@ -297,7 +327,10 @@ class LegalishPopup {
         // Refresh button
         const refreshBtn = document.getElementById('refresh-btn');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.detectPageContent());
+            refreshBtn.addEventListener('click', () => {
+                this.detectPageContent();
+                this.checkAuthenticationStatus(); // Also refresh auth status
+            });
         }
 
         // Audio controls
@@ -334,10 +367,11 @@ class LegalishPopup {
     }
 
     updateUI() {
-        console.log('Updating UI with auth status:', {
+        console.log('🎨 Updating UI with auth status:', {
             hasAuth: !!this.authToken,
             subscriptionTier: this.subscriptionTier,
-            userEmail: this.userInfo?.email
+            userEmail: this.userInfo?.email,
+            userId: this.userInfo?.id
         });
 
         // Update authentication section
@@ -362,6 +396,14 @@ class LegalishPopup {
             
             if (userPlan) {
                 userPlan.textContent = this.subscriptionTier === 'pro' ? 'Pro Plan' : 'Free Plan';
+                // Add visual indicator for Pro users
+                if (this.subscriptionTier === 'pro') {
+                    userPlan.style.color = '#10b981';
+                    userPlan.style.fontWeight = 'bold';
+                } else {
+                    userPlan.style.color = '';
+                    userPlan.style.fontWeight = '';
+                }
             }
         } else {
             // User is not signed in
@@ -374,10 +416,29 @@ class LegalishPopup {
         
         // Update analyze button state
         this.updateAnalyzeButton();
+        
+        // Update status indicator
+        this.updateStatusIndicator();
+    }
+
+    updateStatusIndicator() {
+        const statusText = document.querySelector('.status-text');
+        if (statusText) {
+            if (this.subscriptionTier === 'pro') {
+                statusText.textContent = 'Pro Active';
+                statusText.style.color = '#10b981';
+            } else if (this.authToken) {
+                statusText.textContent = 'Free Plan';
+                statusText.style.color = '#f59e0b';
+            } else {
+                statusText.textContent = 'Not Signed In';
+                statusText.style.color = '#6b7280';
+            }
+        }
     }
 
     updateProBanner() {
-        // This would show/hide Pro upgrade banners based on subscription status
+        // Show/hide Pro upgrade banners based on subscription status
         const proUpgradeBanners = document.querySelectorAll('.pro-upgrade-banner');
         proUpgradeBanners.forEach(banner => {
             if (this.subscriptionTier === 'pro') {
@@ -408,6 +469,7 @@ class LegalishPopup {
                     </svg>
                     <span>Analyze Document</span>
                 `;
+                analyzeBtn.style.background = 'linear-gradient(135deg, #a855f7, #3b82f6)';
             } else {
                 analyzeBtn.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -415,6 +477,7 @@ class LegalishPopup {
                     </svg>
                     <span>Upgrade to Pro</span>
                 `;
+                analyzeBtn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
             }
         }
     }
@@ -469,11 +532,16 @@ class LegalishPopup {
     async handleAnalyze() {
         if (this.isAnalyzing) return;
 
+        console.log(`🔍 Analyze button clicked - User subscription: ${this.subscriptionTier}`);
+
         // Check if user has Pro access for analysis
         if (this.subscriptionTier !== 'pro') {
+            console.log('❌ User does not have Pro access, redirecting to upgrade');
             this.handleUpgrade();
             return;
         }
+
+        console.log('✅ User has Pro access, proceeding with analysis');
 
         this.isAnalyzing = true;
         this.updateAnalyzeButton();
@@ -577,7 +645,7 @@ class LegalishPopup {
         if (resultsContent && data) {
             resultsContent.innerHTML = `
                 <div class="result-item">
-                    <div class="result-title">Analysis Complete</div>
+                    <div class="result-title">✅ Analysis Complete</div>
                     <div class="result-description">
                         Found ${data.red_flags?.length || 0} red flags in ${(data.processing_time_ms / 1000).toFixed(2)} seconds
                     </div>
@@ -587,7 +655,7 @@ class LegalishPopup {
     }
 
     showError(message) {
-        console.error('Showing error:', message);
+        console.error('❌ Showing error:', message);
         // You could implement a toast notification here
     }
 
