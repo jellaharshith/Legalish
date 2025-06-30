@@ -143,8 +143,10 @@ export default function DemoVideo() {
             </div>
           )}
           
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
+          {/* Overlay - only show when paused or hovered */}
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none transition-opacity duration-300 ${
+            isPlaying && !isHovered ? 'opacity-0' : 'opacity-100'
+          }`}>
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
@@ -161,11 +163,11 @@ export default function DemoVideo() {
             </div>
           </div>
           
-          {/* Play button */}
+          {/* Play button - hide when playing and not hovered */}
           <button 
             className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-              isHovered ? 'bg-black/40' : 'bg-black/20'
-            }`}
+              isPlaying && !isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'
+            } ${isHovered ? 'bg-black/40' : 'bg-black/20'}`}
             onClick={handlePlayPause}
           >
             <div className={`bg-primary rounded-full w-16 h-16 flex items-center justify-center transition-all duration-300 ${
@@ -179,8 +181,10 @@ export default function DemoVideo() {
             </div>
           </button>
           
-          {/* Control buttons */}
-          <div className="absolute bottom-4 right-4 flex items-center space-x-2">
+          {/* Control buttons - always visible */}
+          <div className={`absolute bottom-4 right-4 flex items-center space-x-2 transition-opacity duration-300 ${
+            isPlaying && !isHovered ? 'opacity-0' : 'opacity-100'
+          }`}>
             <button
               className="w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
               onClick={handleMuteToggle}
@@ -199,8 +203,10 @@ export default function DemoVideo() {
             </button>
           </div>
           
-          {/* Video title */}
-          <div className="absolute top-4 left-0 px-3 py-1 bg-black/80 text-white font-mono text-sm">
+          {/* Video title - fade out when playing */}
+          <div className={`absolute top-4 left-0 px-3 py-1 bg-black/80 text-white font-mono text-sm transition-opacity duration-300 ${
+            isPlaying && !isHovered ? 'opacity-0' : 'opacity-100'
+          }`}>
             Legalish Demo: Analyzing Terms of Service in Seconds
           </div>
         </div>
