@@ -201,6 +201,7 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 11px;
+    position: relative;
 }
 
 .input-method:hover {
@@ -445,6 +446,17 @@ body {
     flex: 1;
 }
 
+/* Pro plan badge */
+.pro-plan-badge {
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+}
+
 /* Account Section */
 .account-info {
     font-size: 12px;
@@ -496,17 +508,6 @@ body {
     font-size: 11px;
 }
 
-/* Pro plan badge */
-.pro-plan-badge {
-    background: linear-gradient(135deg, #a855f7, #3b82f6);
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 4px;
-}
-
 /* Footer */
 .footer {
     display: flex;
@@ -530,34 +531,6 @@ body {
 
 .footer-link:hover {
     color: #e2e8f0;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-    width: 4px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-/* Animations */
-.fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Pro feature modal */
@@ -638,6 +611,34 @@ body {
 
 .pro-feature-cancel:hover {
     background: rgba(255, 255, 255, 0.15);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive adjustments */

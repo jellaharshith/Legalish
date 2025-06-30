@@ -499,6 +499,8 @@ class LegalishContentScript {
                         sendResponse({ text: selection ? selection.toString() : '' });
                     } else if (request.action === 'updateSubscriptionTier') {
                         this.userSubscriptionTier = request.subscriptionTier || 'free';
+                    } else if (request.action === 'showProFeatureMessage') {
+                        this.showProFeatureMessage(request.featureName || 'this feature');
                     }
                 } catch (error) {
                     console.error('Error handling message:', error);
