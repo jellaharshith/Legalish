@@ -26,7 +26,11 @@ import {
   ArrowRight,
   Star,
   Users,
-  Clock
+  Clock,
+  Code,
+  FileText,
+  Settings,
+  RefreshCw
 } from 'lucide-react';
 
 interface ExtensionModalProps {
@@ -42,11 +46,11 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
       id: 'chrome' as const,
       name: 'Chrome',
       icon: Chrome,
-      status: 'available',
+      status: 'development',
       downloadUrl: '#',
-      description: 'Full-featured extension with all capabilities',
-      users: '10,000+',
-      rating: 4.8
+      description: 'Available for developer installation',
+      users: 'Dev Mode',
+      rating: null
     },
     {
       id: 'firefox' as const,
@@ -97,12 +101,9 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
     }
   ];
 
-  const handleInstallExtension = (browser: string) => {
-    if (browser === 'chrome') {
-      // For now, show installation instructions
-      // In production, this would link to Chrome Web Store
-      window.open('https://chrome.google.com/webstore', '_blank');
-    }
+  const handleInstallExtension = () => {
+    // For development version, show installation instructions
+    setIsOpen(true);
   };
 
   return (
@@ -122,12 +123,135 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="install" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="install">Install</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="features">Features</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="install" className="space-y-6">
+            {/* Current Status */}
+            <Card className="border-amber-200 bg-amber-50/50">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Code className="h-5 w-5 text-amber-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-amber-900 mb-1">Development Version Available</h4>
+                    <p className="text-sm text-amber-800 mb-3">
+                      The Legalish extension is currently in development. You can install it manually for testing.
+                      We're working on publishing it to the Chrome Web Store soon!
+                    </p>
+                    <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Chrome Web Store: Coming Soon
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Installation Instructions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Developer Installation (Chrome)
+                </CardTitle>
+                <CardDescription>
+                  Install the extension manually for testing and development
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                    <div>
+                      <p className="font-medium">Download Extension Files</p>
+                      <p className="text-sm text-muted-foreground">Get the extension source code from the project repository</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+                    <div>
+                      <p className="font-medium">Open Chrome Extensions</p>
+                      <p className="text-sm text-muted-foreground">Go to <code className="bg-muted px-1 rounded">chrome://extensions/</code> in your browser</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
+                    <div>
+                      <p className="font-medium">Enable Developer Mode</p>
+                      <p className="text-sm text-muted-foreground">Toggle "Developer mode" in the top right corner</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">4</div>
+                    <div>
+                      <p className="font-medium">Load Unpacked Extension</p>
+                      <p className="text-sm text-muted-foreground">Click "Load unpacked" and select the extension folder</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">5</div>
+                    <div>
+                      <p className="font-medium">Sign In & Start Analyzing</p>
+                      <p className="text-sm text-muted-foreground">Sign in to your Legalish account and start analyzing legal documents</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Access */}
+            <Card className="border-blue-200 bg-blue-50/50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Chrome className="h-8 w-8 text-blue-600" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Quick Setup</h4>
+                      <p className="text-sm text-blue-800">Open Chrome Extensions page directly</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => window.open('chrome://extensions/', '_blank')}
+                    variant="outline"
+                    className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Open Extensions
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Coming Soon Notice */}
+            <Card className="border-green-200 bg-green-50/50">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Star className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-green-900 mb-1">Chrome Web Store Coming Soon</h4>
+                    <p className="text-sm text-green-800 mb-3">
+                      We're preparing the extension for publication on the Chrome Web Store. 
+                      Once published, installation will be as simple as clicking "Add to Chrome"!
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        In Review Process
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="overview" className="space-y-6">
             {/* Hero Section */}
@@ -145,16 +269,16 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-4">
               <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-primary">10K+</div>
-                <div className="text-sm text-muted-foreground">Active Users</div>
+                <div className="text-2xl font-bold text-primary">Dev</div>
+                <div className="text-sm text-muted-foreground">Version</div>
               </Card>
               <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-primary">4.8★</div>
-                <div className="text-sm text-muted-foreground">User Rating</div>
+                <div className="text-2xl font-bold text-primary">100%</div>
+                <div className="text-sm text-muted-foreground">Functional</div>
               </Card>
               <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-primary">50K+</div>
-                <div className="text-sm text-muted-foreground">Documents Analyzed</div>
+                <div className="text-2xl font-bold text-primary">PDF</div>
+                <div className="text-sm text-muted-foreground">Support</div>
               </Card>
             </div>
 
@@ -181,150 +305,6 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
                 </motion.div>
               ))}
             </div>
-
-            {/* CTA */}
-            <div className="text-center">
-              <Button 
-                onClick={() => handleInstallExtension('chrome')}
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
-              >
-                <Chrome className="mr-2 h-4 w-4" />
-                Install Chrome Extension
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="install" className="space-y-6">
-            {/* Browser Selection */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Choose Your Browser</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {browsers.map((browser) => (
-                  <Card 
-                    key={browser.id}
-                    className={`cursor-pointer transition-all duration-200 ${
-                      selectedBrowser === browser.id 
-                        ? 'border-primary bg-primary/5' 
-                        : 'hover:border-primary/50'
-                    }`}
-                    onClick={() => setSelectedBrowser(browser.id)}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <browser.icon className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                      <h4 className="font-semibold mb-2">{browser.name}</h4>
-                      
-                      {browser.status === 'available' ? (
-                        <div className="space-y-2">
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Available
-                          </Badge>
-                          <div className="text-sm text-muted-foreground">
-                            <div className="flex items-center justify-center gap-1">
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                              <span>{browser.rating}</span>
-                            </div>
-                            <div>{browser.users} users</div>
-                          </div>
-                        </div>
-                      ) : (
-                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                          <Clock className="h-3 w-3 mr-1" />
-                          Coming Soon
-                        </Badge>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Installation Instructions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  Installation Instructions
-                </CardTitle>
-                <CardDescription>
-                  Follow these steps to install the Legalish extension
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {selectedBrowser === 'chrome' ? (
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
-                      <div>
-                        <p className="font-medium">Visit Chrome Web Store</p>
-                        <p className="text-sm text-muted-foreground">Click the button below to open the extension page</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
-                      <div>
-                        <p className="font-medium">Click "Add to Chrome"</p>
-                        <p className="text-sm text-muted-foreground">Review permissions and confirm installation</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
-                      <div>
-                        <p className="font-medium">Sign in to your Legalish account</p>
-                        <p className="text-sm text-muted-foreground">Access Pro features and sync your analysis history</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">4</div>
-                      <div>
-                        <p className="font-medium">Start analyzing!</p>
-                        <p className="text-sm text-muted-foreground">Visit any legal document and click the extension icon</p>
-                      </div>
-                    </div>
-                    
-                    <div className="pt-4">
-                      <Button 
-                        onClick={() => handleInstallExtension('chrome')}
-                        className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
-                      >
-                        <Chrome className="mr-2 h-4 w-4" />
-                        Install Chrome Extension
-                        <ExternalLink className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h4 className="font-semibold mb-2">Coming Soon</h4>
-                    <p className="text-muted-foreground mb-4">
-                      We're working on bringing Legalish to {browsers.find(b => b.id === selectedBrowser)?.name}. 
-                      Sign up for updates to be notified when it's ready!
-                    </p>
-                    <Button variant="outline">
-                      Notify Me When Ready
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Security Notice */}
-            <Card className="border-blue-200 bg-blue-50/50">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-blue-900 mb-1">Privacy & Security</h4>
-                    <p className="text-sm text-blue-800">
-                      The Legalish extension only accesses content when you explicitly request analysis. 
-                      We don't collect or store personal data beyond what's necessary for the service.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="features" className="space-y-6">
@@ -342,11 +322,12 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
                         <h4 className="font-semibold mb-2">One-Click Analysis</h4>
                         <p className="text-sm text-muted-foreground mb-3">
                           Select any text on a webpage and analyze it instantly. Perfect for terms of service, 
-                          privacy policies, and contract clauses.
+                          privacy policies, and contract clauses. Now with full PDF support!
                         </p>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="secondary">Text Selection</Badge>
                           <Badge variant="secondary">Right-Click Menu</Badge>
+                          <Badge variant="secondary">PDF Analysis</Badge>
                           <Badge variant="secondary">Full Page Analysis</Badge>
                         </div>
                       </div>
@@ -362,7 +343,7 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
                         <h4 className="font-semibold mb-2">Smart Red Flag Detection</h4>
                         <p className="text-sm text-muted-foreground mb-3">
                           Our AI automatically identifies concerning clauses like hidden fees, 
-                          one-sided terms, and unfair conditions.
+                          one-sided terms, and unfair conditions using advanced RAG technology.
                         </p>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="secondary">AI-Powered</Badge>
@@ -382,10 +363,10 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
                         <h4 className="font-semibold mb-2">Account Integration</h4>
                         <p className="text-sm text-muted-foreground mb-3">
                           Sign in with your Legalish account to access Pro features, save analysis history, 
-                          and sync across all your devices.
+                          and sync across all your devices automatically.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">Cloud Sync</Badge>
+                          <Badge variant="secondary">Auto-Sync</Badge>
                           <Badge variant="secondary">Pro Features</Badge>
                           <Badge variant="secondary">History Tracking</Badge>
                         </div>
@@ -396,18 +377,18 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
                   <Card className="p-4">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Smartphone className="h-6 w-6 text-purple-600" />
+                        <FileText className="h-6 w-6 text-purple-600" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold mb-2">Multiple Analysis Tones</h4>
+                        <h4 className="font-semibold mb-2">PDF Document Support</h4>
                         <p className="text-sm text-muted-foreground mb-3">
-                          Choose from 8 different analysis personalities, from serious professional 
-                          to sarcastic and humorous interpretations.
+                          Automatically detects and analyzes PDF legal documents using URL-based analysis.
+                          Perfect for lease agreements, contracts, and terms of service PDFs.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">8 Voice Tones</Badge>
-                          <Badge variant="secondary">Audio Playback</Badge>
-                          <Badge variant="secondary">Premium Voices</Badge>
+                          <Badge variant="secondary">PDF Detection</Badge>
+                          <Badge variant="secondary">URL Analysis</Badge>
+                          <Badge variant="secondary">Auto-Extract</Badge>
                         </div>
                       </div>
                     </div>
@@ -422,8 +403,8 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
                   <div className="flex items-center gap-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
                     <div>
-                      <p className="font-medium">Browse any website</p>
-                      <p className="text-sm text-muted-foreground">The extension works on all websites</p>
+                      <p className="font-medium">Browse any website or PDF</p>
+                      <p className="text-sm text-muted-foreground">The extension works on all websites and PDF documents</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -443,8 +424,8 @@ export default function ExtensionModal({ children }: ExtensionModalProps) {
                   <div className="flex items-center gap-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">4</div>
                     <div>
-                      <p className="font-medium">Listen to audio summary (Pro)</p>
-                      <p className="text-sm text-muted-foreground">Premium AI voices read the analysis</p>
+                      <p className="font-medium">Access full results in main app</p>
+                      <p className="text-sm text-muted-foreground">Open complete analysis with audio features</p>
                     </div>
                   </div>
                 </div>
