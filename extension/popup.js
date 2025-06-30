@@ -1,1217 +1,625 @@
 // Popup script for Legalish Chrome Extension
+// Handles the main popup interface, authentication, and analysis features
+
 class LegalishPopup {
     constructor() {
-        this.currentTab = null;
-        this.analysisData = null;
-        this.selectedMethod = 'page';
         this.isAnalyzing = false;
-        this.userSubscriptionTier = 'free'; // Default to free
+        this.currentMethod = 'page';
+        this.userInfo = null;
+        this.subscriptionTier = 'free';
+        this.authToken = null;
         
         this.init();
     }
 
     async init() {
         try {
-            await this.getCurrentTab();
+            // Load stored data first
+            await this.loadStoredData();
+            
+            // Initialize UI
             this.setupEventListeners();
-            await this.syncAuthenticationState();
-            this.checkPageForLegalContent();
-            this.loadUserState();
-            this.loadStoredAnalysis();
+            this.updateUI();
+            
+            // Check authentication status
+            await this.checkAuthenticationStatus();
+            
+            // Detect page content
+            await this.detectPageContent();
+            
+            console.log('Popup initialized successfully');
         } catch (error) {
             console.error('Error initializing popup:', error);
         }
     }
 
-    async getCurrentTab() {
+    async loadStoredData() {
         try {
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            this.currentTab = tab;
+            const data = await chrome.storage.local.get([
+                'authToken', 
+                'userInfo', 
+                'subscription_tier',
+                'authTimestamp'
+            ]);
+            
+            this.authToken = data.authToken || null;
+            this.userInfo = data.userInfo || null;
+            this.subscriptionTier = data.subscription_tier || 'free';
+            
+            console.log('Loaded stored data:', {
+                hasAuthToken: !!this.authToken,
+                hasUserInfo: !!this.userInfo,
+                subscriptionTier: this.subscriptionTier,
+                userEmail: this.userInfo?.email
+            });
         } catch (error) {
-            console.error('Error getting current tab:', error);
+            console.error('Error loading stored data:', error);
         }
     }
 
-    async syncAuthenticationState() {
+    async checkAuthenticationStatus() {
         try {
-            // Check if user is on Legalish website and try to sync auth
-            if (this.currentTab && this.currentTab.url && 
-                (this.currentTab.url.includes('legalish.site') || 
-                 this.currentTab.url.includes('localhost:5173'))) {
+            // First check if we have stored auth data
+            if (this.authToken && this.userInfo) {
+                console.log('Found stored auth data, verifying...');
                 
-                // Try to get auth token from the website
-                const [result] = await chrome.scripting.executeScript({
-                    target: { tabId: this.currentTab.id },
-                    function: () => {
-                        try {
-                            // Try to get Supabase session from localStorage
-                            const keys = Object.keys(localStorage);
-                            const supabaseKey = keys.find(key => 
-                                key.includes('supabase.auth.token') || 
-                                key.includes('sb-') && key.includes('-auth-token')
-                            );
-                            
-                            if (supabaseKey) {
-                                const authData = localStorage.getItem(supabaseKey);
-                                if (authData) {
-                                    const parsed = JSON.parse(authData);
-                                    
-                                    // Try to get subscription tier from localStorage if available
-                                    let subscriptionTier = 'free';
-                                    try {
-                                        // First check if we can get it from profiles table data
-                                        const profilesKey = keys.find(key => 
-                                            key.includes('profiles') || 
-                                            key.includes('user_metadata')
-                                        );
-                                        
-                                        if (profilesKey) {
-                                            const profileData = localStorage.getItem(profilesKey);
-                                            if (profileData) {
-                                                const parsedProfile = JSON.parse(profileData);
-                                                if (parsedProfile.subscription_tier) {
-                                                    subscriptionTier = parsedProfile.subscription_tier;
-                                                }
-                                            }
-                                        }
-                                        
-                                        // If not found, check if we can extract it from the DOM
-                                        if (subscriptionTier === 'free') {
-                                            // Look for Pro badge in the navbar
-                                            const proBadge = document.querySelector('.pro-badge, .pro-plan-badge');
-                                            if (proBadge) {
-                                                subscriptionTier = 'pro';
-                                            }
-                                            
-                                            // Look for Pro-only features that are enabled
-                                            const proFeatures = document.querySelectorAll('[data-pro-feature="true"]:not([disabled])');
-                                            if (proFeatures.length > 0) {
-                                                subscriptionTier = 'pro';
-                                            }
-                                            
-                                            // Check if there's any text indicating Pro status
-                                            const bodyText = document.body.innerText;
-                                            if (bodyText.includes('Pro Plan') || 
-                                                bodyText.includes('Pro Subscription') || 
-                                                bodyText.includes('Current Plan: Pro')) {
-                                                subscriptionTier = 'pro';
-                                            }
-                                        }
-                                    } catch (e) {
-                                        console.error('Error parsing profile data:', e);
-                                    }
-                                    
-                                    return {
-                                        token: parsed.access_token,
-                                        user: parsed.user,
-                                        expires_at: parsed.expires_at,
-                                        subscription_tier: subscriptionTier
-                                    };
-                                }
-                            }
-                            return null;
-                        } catch (error) {
-                            console.error('Error getting auth from website:', error);
-                            return null;
-                        }
-                    }
-                });
+                // Verify the token is still valid by making an API call
+                const isValid = await this.verifyAuthToken();
+                if (isValid) {
+                    console.log('Stored auth token is valid');
+                    await this.fetchLatestSubscriptionStatus();
+                    this.updateUI();
+                    return;
+                } else {
+                    console.log('Stored auth token is invalid, clearing...');
+                    await this.clearAuthData();
+                }
+            }
 
-                if (result && result.result && result.result.token) {
-                    const authData = result.result;
+            // Try to detect authentication from the current tab
+            console.log('Attempting to detect auth from current tab...');
+            await this.detectAuthFromCurrentTab();
+            
+        } catch (error) {
+            console.error('Error checking authentication status:', error);
+        }
+    }
+
+    async verifyAuthToken() {
+        if (!this.authToken) return false;
+        
+        try {
+            const response = await fetch(`https://txwilhbitljeeihpvscr.supabase.co/rest/v1/profiles?select=subscription_tier&limit=1`, {
+                headers: {
+                    'Authorization': `Bearer ${this.authToken}`,
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            return response.ok;
+        } catch (error) {
+            console.error('Error verifying auth token:', error);
+            return false;
+        }
+    }
+
+    async fetchLatestSubscriptionStatus() {
+        if (!this.authToken || !this.userInfo?.id) return;
+        
+        try {
+            console.log('Fetching latest subscription status for user:', this.userInfo.id);
+            
+            const response = await fetch(`https://txwilhbitljeeihpvscr.supabase.co/rest/v1/profiles?id=eq.${this.userInfo.id}&select=subscription_tier,email,full_name`, {
+                headers: {
+                    'Authorization': `Bearer ${this.authToken}`,
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const profiles = await response.json();
+                if (profiles && profiles.length > 0) {
+                    const profile = profiles[0];
+                    this.subscriptionTier = profile.subscription_tier || 'free';
                     
-                    // Check if token is still valid
-                    const now = Math.floor(Date.now() / 1000);
-                    if (authData.expires_at && authData.expires_at > now) {
-                        // Store in extension storage
+                    // Update user info
+                    this.userInfo = {
+                        ...this.userInfo,
+                        email: profile.email,
+                        full_name: profile.full_name,
+                        plan: this.subscriptionTier === 'pro' ? 'Pro Plan' : 'Free Plan'
+                    };
+                    
+                    // Store updated data
+                    await chrome.storage.local.set({
+                        subscription_tier: this.subscriptionTier,
+                        userInfo: this.userInfo
+                    });
+                    
+                    console.log('Updated subscription status:', this.subscriptionTier);
+                    
+                    // Notify background script
+                    chrome.runtime.sendMessage({
+                        action: 'updateSubscriptionTier',
+                        subscriptionTier: this.subscriptionTier
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching subscription status:', error);
+        }
+    }
+
+    async detectAuthFromCurrentTab() {
+        try {
+            // Get the current tab
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            
+            if (!tab || !tab.url) {
+                console.log('No active tab found');
+                return;
+            }
+            
+            console.log('Current tab URL:', tab.url);
+            
+            // Check if we're on the Legalish website
+            if (tab.url.includes('legalish.site') || tab.url.includes('localhost')) {
+                console.log('On Legalish website, attempting to extract auth data...');
+                
+                try {
+                    // Try to execute script to get auth data from the page
+                    const results = await chrome.scripting.executeScript({
+                        target: { tabId: tab.id },
+                        function: () => {
+                            try {
+                                // Look for Supabase auth data in localStorage
+                                const authKeys = Object.keys(localStorage).filter(key => 
+                                    key.includes('supabase') && key.includes('auth-token')
+                                );
+                                
+                                if (authKeys.length > 0) {
+                                    const authData = JSON.parse(localStorage.getItem(authKeys[0]) || '{}');
+                                    
+                                    if (authData.access_token && authData.user) {
+                                        return {
+                                            success: true,
+                                            authToken: authData.access_token,
+                                            userInfo: {
+                                                id: authData.user.id,
+                                                email: authData.user.email,
+                                                full_name: authData.user.user_metadata?.full_name || null
+                                            }
+                                        };
+                                    }
+                                }
+                                
+                                return { success: false, error: 'No auth data found' };
+                            } catch (error) {
+                                return { success: false, error: error.message };
+                            }
+                        }
+                    });
+                    
+                    if (results && results[0] && results[0].result && results[0].result.success) {
+                        const { authToken, userInfo } = results[0].result;
+                        
+                        console.log('Successfully extracted auth data from page');
+                        
+                        // Store the auth data
+                        this.authToken = authToken;
+                        this.userInfo = userInfo;
+                        
                         await chrome.storage.local.set({
-                            authToken: authData.token,
-                            userInfo: {
-                                id: authData.user?.id,
-                                email: authData.user?.email,
-                                name: authData.user?.user_metadata?.full_name || authData.user?.email?.split('@')[0],
-                                plan: authData.subscription_tier === 'pro' ? 'Pro Plan' : 'Free Plan'
-                            },
-                            subscription_tier: authData.subscription_tier || 'free',
+                            authToken: authToken,
+                            userInfo: userInfo,
                             authTimestamp: Date.now()
                         });
                         
-                        this.userSubscriptionTier = authData.subscription_tier || 'free';
-                        console.log('Successfully synced authentication from website, tier:', this.userSubscriptionTier);
+                        // Fetch subscription status
+                        await this.fetchLatestSubscriptionStatus();
+                        
+                        console.log('Auth detection successful:', {
+                            email: userInfo.email,
+                            subscriptionTier: this.subscriptionTier
+                        });
+                        
+                        this.updateUI();
+                        return;
                     }
+                } catch (scriptError) {
+                    console.log('Could not execute script on tab:', scriptError.message);
                 }
             }
             
-            // If we couldn't sync from the website, try to get from storage
-            if (!this.userSubscriptionTier || this.userSubscriptionTier === 'free') {
-                const { subscription_tier, authToken, userInfo } = await chrome.storage.local.get(['subscription_tier', 'authToken', 'userInfo']);
-                
-                // If user is authenticated, make a direct API call to check subscription status
-                if (authToken && userInfo && userInfo.id) {
-                    try {
-                        // Use your actual Supabase URL and anon key
-                        const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
-                        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ';
-                        
-                        // Make a direct API call to check the user's profile
-                        const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userInfo.id}&select=subscription_tier`, {
-                            headers: {
-                                'Authorization': `Bearer ${authToken}`,
-                                'apikey': supabaseAnonKey,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            const profiles = await response.json();
-                            if (profiles && profiles.length > 0 && profiles[0].subscription_tier) {
-                                const apiSubscriptionTier = profiles[0].subscription_tier;
-                                console.log('Got subscription tier from API:', apiSubscriptionTier);
-                                
-                                // Update the subscription tier in storage and memory
-                                this.userSubscriptionTier = apiSubscriptionTier;
-                                await chrome.storage.local.set({ subscription_tier: apiSubscriptionTier });
-                                
-                                // Update user info with correct plan
-                                userInfo.plan = apiSubscriptionTier === 'pro' ? 'Pro Plan' : 'Free Plan';
-                                await chrome.storage.local.set({ userInfo });
-                                
-                                console.log('Updated subscription tier from API:', this.userSubscriptionTier);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error fetching subscription status from API:', error);
-                    }
-                }
-                
-                // If we still don't have a tier from API, use the stored value
-                if (this.userSubscriptionTier === 'free' && subscription_tier) {
-                    this.userSubscriptionTier = subscription_tier;
-                    console.log('Using stored subscription tier:', this.userSubscriptionTier);
-                }
-            }
+            console.log('No authentication detected');
         } catch (error) {
-            console.error('Error syncing authentication state:', error);
+            console.error('Error detecting auth from current tab:', error);
         }
     }
 
+    async clearAuthData() {
+        this.authToken = null;
+        this.userInfo = null;
+        this.subscriptionTier = 'free';
+        
+        await chrome.storage.local.remove([
+            'authToken', 
+            'userInfo', 
+            'subscription_tier', 
+            'authTimestamp'
+        ]);
+        
+        console.log('Cleared auth data');
+    }
+
     setupEventListeners() {
-        try {
-            // Input method selection
-            document.querySelectorAll('.input-method').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    this.selectInputMethod(e.currentTarget.dataset.method);
-                });
+        // Input method selection
+        document.querySelectorAll('.input-method').forEach(button => {
+            button.addEventListener('click', () => {
+                if (button.dataset.method) {
+                    this.selectInputMethod(button.dataset.method);
+                }
             });
+        });
 
-            // Analyze button
-            const analyzeBtn = document.getElementById('analyze-btn');
-            if (analyzeBtn) {
-                analyzeBtn.addEventListener('click', () => {
-                    this.analyzeDocument();
-                });
-            }
+        // Analyze button
+        const analyzeBtn = document.getElementById('analyze-btn');
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', () => this.handleAnalyze());
+        }
 
-            // Refresh button
-            const refreshBtn = document.getElementById('refresh-btn');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', () => {
-                    this.checkPageForLegalContent();
-                });
-            }
+        // Sign in button
+        const signInBtn = document.getElementById('sign-in-btn');
+        if (signInBtn) {
+            signInBtn.addEventListener('click', () => this.handleSignIn());
+        }
 
-            // Audio playback
-            const playAudioBtn = document.getElementById('play-audio-btn');
-            if (playAudioBtn) {
-                playAudioBtn.addEventListener('click', () => {
-                    this.playAudioSummary();
-                });
-            }
+        // Sign out button
+        const signOutBtn = document.getElementById('sign-out-btn');
+        if (signOutBtn) {
+            signOutBtn.addEventListener('click', () => this.handleSignOut());
+        }
 
-            // Save analysis
-            const saveAnalysisBtn = document.getElementById('save-analysis-btn');
-            if (saveAnalysisBtn) {
-                saveAnalysisBtn.addEventListener('click', () => {
-                    this.saveAnalysis();
-                });
-            }
+        // Upgrade button
+        const upgradeBtn = document.getElementById('upgrade-btn');
+        if (upgradeBtn) {
+            upgradeBtn.addEventListener('click', () => this.handleUpgrade());
+        }
 
-            // Open full results
-            const openFullBtn = document.getElementById('open-full-btn');
-            if (openFullBtn) {
-                openFullBtn.addEventListener('click', () => {
-                    this.openFullResults();
-                });
-            }
+        // Help button
+        const helpBtn = document.getElementById('help-btn');
+        if (helpBtn) {
+            helpBtn.addEventListener('click', () => this.handleHelp());
+        }
 
-            // Account actions
-            const signInBtn = document.getElementById('sign-in-btn');
-            if (signInBtn) {
-                signInBtn.addEventListener('click', () => {
-                    this.signIn();
-                });
-            }
+        // Refresh button
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.detectPageContent());
+        }
 
-            const signOutBtn = document.getElementById('sign-out-btn');
-            if (signOutBtn) {
-                signOutBtn.addEventListener('click', () => {
-                    this.signOut();
-                });
-            }
+        // Audio controls
+        const playAudioBtn = document.getElementById('play-audio-btn');
+        if (playAudioBtn) {
+            playAudioBtn.addEventListener('click', () => this.handlePlayAudio());
+        }
 
-            // Footer actions
-            const upgradeBtn = document.getElementById('upgrade-btn');
-            if (upgradeBtn) {
-                upgradeBtn.addEventListener('click', () => {
-                    this.openUpgradePage();
-                });
-            }
-
-            const helpBtn = document.getElementById('help-btn');
-            if (helpBtn) {
-                helpBtn.addEventListener('click', () => {
-                    this.openHelpPage();
-                });
-            }
-        } catch (error) {
-            console.error('Error setting up event listeners:', error);
+        // Open full results button
+        const openFullBtn = document.getElementById('open-full-btn');
+        if (openFullBtn) {
+            openFullBtn.addEventListener('click', () => this.handleOpenFull());
         }
     }
 
     selectInputMethod(method) {
-        this.selectedMethod = method;
+        this.currentMethod = method;
         
         // Update UI
         document.querySelectorAll('.input-method').forEach(btn => {
             btn.classList.remove('active');
         });
-        const activeBtn = document.querySelector(`[data-method="${method}"]`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
+        
+        const selectedBtn = document.querySelector(`[data-method="${method}"]`);
+        if (selectedBtn) {
+            selectedBtn.classList.add('active');
         }
 
         // Show/hide manual input
         const manualInput = document.getElementById('manual-input');
         if (manualInput) {
-            if (method === 'manual') {
-                manualInput.style.display = 'block';
-            } else {
-                manualInput.style.display = 'none';
-            }
+            manualInput.style.display = method === 'manual' ? 'block' : 'none';
         }
     }
 
-    async checkPageForLegalContent() {
-        this.showLoading(true);
+    updateUI() {
+        console.log('Updating UI with auth status:', {
+            hasAuth: !!this.authToken,
+            subscriptionTier: this.subscriptionTier,
+            userEmail: this.userInfo?.email
+        });
+
+        // Update authentication section
+        const signedOut = document.getElementById('signed-out');
+        const signedIn = document.getElementById('signed-in');
+        const userAvatar = document.getElementById('user-avatar');
+        const userName = document.getElementById('user-name');
+        const userPlan = document.getElementById('user-plan');
+
+        if (this.authToken && this.userInfo) {
+            // User is signed in
+            if (signedOut) signedOut.style.display = 'none';
+            if (signedIn) signedIn.style.display = 'flex';
+            
+            if (userAvatar) {
+                userAvatar.textContent = (this.userInfo.email || 'U').charAt(0).toUpperCase();
+            }
+            
+            if (userName) {
+                userName.textContent = this.userInfo.full_name || this.userInfo.email?.split('@')[0] || 'User';
+            }
+            
+            if (userPlan) {
+                userPlan.textContent = this.subscriptionTier === 'pro' ? 'Pro Plan' : 'Free Plan';
+            }
+        } else {
+            // User is not signed in
+            if (signedOut) signedOut.style.display = 'block';
+            if (signedIn) signedIn.style.display = 'none';
+        }
+
+        // Update Pro upgrade banner visibility
+        this.updateProBanner();
         
-        try {
-            if (!this.currentTab || !this.currentTab.id) {
-                this.updateDetectionUI({ hasLegalContent: false });
-                return;
-            }
-
-            // Inject content script to analyze page
-            const [result] = await chrome.scripting.executeScript({
-                target: { tabId: this.currentTab.id },
-                function: this.detectLegalContent
-            });
-
-            const detection = result && result.result ? result.result : { hasLegalContent: false };
-            this.updateDetectionUI(detection);
-            
-        } catch (error) {
-            console.error('Error checking page content:', error);
-            this.updateDetectionUI({ hasLegalContent: false });
-        }
-        
-        this.showLoading(false);
+        // Update analyze button state
+        this.updateAnalyzeButton();
     }
 
-    // This function runs in the page context
-    detectLegalContent() {
-        try {
-            const legalKeywords = [
-                'terms of service', 'terms and conditions', 'privacy policy',
-                'user agreement', 'license agreement', 'end user license',
-                'terms of use', 'service agreement', 'legal notice',
-                'cookie policy', 'data protection', 'gdpr', 'ccpa',
-                'acceptable use', 'community guidelines', 'code of conduct',
-                'credit card agreement', 'cardholder agreement', 'mastercard', 'visa',
-                'lease agreement', 'rental agreement', 'residential lease',
-                'employment agreement', 'employment contract', 'work agreement'
-            ];
-
-            const pageText = document.body ? document.body.innerText.toLowerCase() : '';
-            const pageTitle = document.title ? document.title.toLowerCase() : '';
-            const pageUrl = window.location ? window.location.href.toLowerCase() : '';
-
-            // Special handling for PDF files
-            const isPDF = pageUrl.includes('.pdf') || 
-                         document.contentType === 'application/pdf' ||
-                         pageTitle.includes('.pdf') ||
-                         document.querySelector('embed[type="application/pdf"]') ||
-                         document.querySelector('object[type="application/pdf"]');
-
-            // Check for legal keywords in content
-            const hasLegalKeywords = legalKeywords.some(keyword => 
-                pageText.includes(keyword) || pageTitle.includes(keyword) || pageUrl.includes(keyword)
-            );
-
-            // Check for common legal document patterns
-            const hasLegalPatterns = /\b(shall|hereby|whereas|therefore|notwithstanding|pursuant|landlord|tenant|lessee|lessor|agreement|contract)\b/gi.test(pageText);
-            
-            // Check for legal document structure
-            const hasNumberedSections = /\b\d+\.\s*[A-Z][^.]*\./g.test(pageText);
-
-            // Determine document type
-            let documentType = 'Unknown';
-            if (pageText.includes('terms of service') || pageText.includes('terms and conditions')) {
-                documentType = 'Terms of Service';
-            } else if (pageText.includes('privacy policy')) {
-                documentType = 'Privacy Policy';
-            } else if (pageText.includes('license agreement')) {
-                documentType = 'License Agreement';
-            } else if (pageText.includes('cookie policy')) {
-                documentType = 'Cookie Policy';
-            } else if (pageText.includes('credit card') || pageText.includes('cardholder')) {
-                documentType = 'Credit Card Agreement';
-            } else if (pageText.includes('lease') || pageText.includes('rental') || pageText.includes('landlord') || pageText.includes('tenant')) {
-                documentType = 'Lease Agreement';
-            } else if (pageText.includes('employment') || pageText.includes('work agreement')) {
-                documentType = 'Employment Contract';
-            } else if (isPDF) {
-                documentType = 'PDF Document';
-            }
-
-            // PDF files are more likely to be legal documents
-            const pdfBonus = isPDF ? 0.3 : 0;
-            
-            const confidence = (hasLegalKeywords ? 0.4 : 0) + 
-                              (hasLegalPatterns ? 0.3 : 0) + 
-                              (hasNumberedSections ? 0.3 : 0) + 
-                              pdfBonus;
-
-            return {
-                hasLegalContent: confidence > 0.4 || isPDF, // Lower threshold for PDFs
-                documentType,
-                confidence,
-                textLength: pageText.length,
-                isPDF: isPDF
-            };
-        } catch (error) {
-            console.error('Error in detectLegalContent:', error);
-            return {
-                hasLegalContent: false,
-                documentType: 'Unknown',
-                confidence: 0,
-                textLength: 0,
-                isPDF: false
-            };
-        }
-    }
-
-    updateDetectionUI(detection) {
-        try {
-            const loadingEl = document.getElementById('loading');
-            const noContentEl = document.getElementById('no-legal-content');
-            const foundContentEl = document.getElementById('legal-content-found');
-            const documentTypeEl = document.getElementById('document-type');
-
-            // Hide all states
-            if (loadingEl) loadingEl.style.display = 'none';
-            if (noContentEl) noContentEl.style.display = 'none';
-            if (foundContentEl) foundContentEl.style.display = 'none';
-
-            if (detection.hasLegalContent || detection.isPDF) {
-                if (foundContentEl) foundContentEl.style.display = 'flex';
-                if (documentTypeEl) documentTypeEl.textContent = detection.documentType;
-                this.updateStatus('Legal document detected', 'success');
+    updateProBanner() {
+        // This would show/hide Pro upgrade banners based on subscription status
+        const proUpgradeBanners = document.querySelectorAll('.pro-upgrade-banner');
+        proUpgradeBanners.forEach(banner => {
+            if (this.subscriptionTier === 'pro') {
+                banner.style.display = 'none';
             } else {
-                if (noContentEl) noContentEl.style.display = 'flex';
-                this.updateStatus('No legal content found', 'neutral');
+                banner.style.display = 'block';
             }
-        } catch (error) {
-            console.error('Error updating detection UI:', error);
-        }
+        });
     }
 
-    showLoading(show) {
-        try {
-            const loadingEl = document.getElementById('loading');
-            const noContentEl = document.getElementById('no-legal-content');
-            const foundContentEl = document.getElementById('legal-content-found');
+    updateAnalyzeButton() {
+        const analyzeBtn = document.getElementById('analyze-btn');
+        if (!analyzeBtn) return;
 
-            if (show) {
-                if (loadingEl) loadingEl.style.display = 'flex';
-                if (noContentEl) noContentEl.style.display = 'none';
-                if (foundContentEl) foundContentEl.style.display = 'none';
-            }
-        } catch (error) {
-            console.error('Error showing loading:', error);
-        }
-    }
-
-    updateStatus(text, type = 'neutral') {
-        try {
-            const statusText = document.querySelector('.status-text');
-            const statusDot = document.querySelector('.status-dot');
+        if (this.isAnalyzing) {
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = `
+                <div class="spinner"></div>
+                <span>Analyzing...</span>
+            `;
+        } else {
+            analyzeBtn.disabled = false;
             
-            if (statusText) statusText.textContent = text;
-            
-            // Update dot color based on status type
-            if (statusDot) {
-                statusDot.style.background = type === 'success' ? '#10b981' : 
-                                           type === 'error' ? '#ef4444' : 
-                                           type === 'warning' ? '#f59e0b' : '#6b7280';
+            if (this.subscriptionTier === 'pro') {
+                analyzeBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    <span>Analyze Document</span>
+                `;
+            } else {
+                analyzeBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span>Upgrade to Pro</span>
+                `;
             }
-        } catch (error) {
-            console.error('Error updating status:', error);
         }
     }
 
-    async analyzeDocument() {
+    async detectPageContent() {
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab) return;
+
+            // Update detection UI
+            const loading = document.getElementById('loading');
+            const noLegalContent = document.getElementById('no-legal-content');
+            const legalContentFound = document.getElementById('legal-content-found');
+
+            if (loading) loading.style.display = 'flex';
+            if (noLegalContent) noLegalContent.style.display = 'none';
+            if (legalContentFound) legalContentFound.style.display = 'none';
+
+            // Send message to content script to detect legal content
+            try {
+                const response = await chrome.tabs.sendMessage(tab.id, {
+                    action: 'detectLegalContent'
+                });
+
+                setTimeout(() => {
+                    if (loading) loading.style.display = 'none';
+                    
+                    if (response && response.hasLegalContent) {
+                        if (legalContentFound) legalContentFound.style.display = 'flex';
+                        const documentType = document.getElementById('document-type');
+                        if (documentType) {
+                            documentType.textContent = response.documentType || 'Legal Document';
+                        }
+                    } else {
+                        if (noLegalContent) noLegalContent.style.display = 'flex';
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.log('Could not communicate with content script:', error);
+                setTimeout(() => {
+                    if (loading) loading.style.display = 'none';
+                    if (noLegalContent) noLegalContent.style.display = 'flex';
+                }, 1000);
+            }
+
+        } catch (error) {
+            console.error('Error detecting page content:', error);
+        }
+    }
+
+    async handleAnalyze() {
         if (this.isAnalyzing) return;
-        
-        // Check if user is a Pro subscriber
-        if (this.userSubscriptionTier !== 'pro') {
-            this.showProFeatureMessage('document analysis');
+
+        // Check if user has Pro access for analysis
+        if (this.subscriptionTier !== 'pro') {
+            this.handleUpgrade();
             return;
         }
-        
+
         this.isAnalyzing = true;
-        this.updateAnalyzeButton(true);
-        this.updateStatus('Analyzing document...', 'warning');
+        this.updateAnalyzeButton();
 
         try {
-            let analysisRequest = {};
-            
-            // Get text based on selected method
-            if (this.selectedMethod === 'page') {
-                // Check if current page is a PDF
-                const isPDF = this.currentTab && (
-                    this.currentTab.url.includes('.pdf') || 
-                    this.currentTab.title.includes('.pdf')
-                );
+            // Get current tab
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab) throw new Error('No active tab found');
+
+            let analysisData = {};
+
+            if (this.currentMethod === 'page') {
+                // Analyze current page
+                const response = await chrome.tabs.sendMessage(tab.id, {
+                    action: 'analyzePage'
+                });
                 
-                if (isPDF) {
-                    // Use URL-based analysis for PDFs
-                    analysisRequest = {
-                        input_url: this.currentTab.url,
-                        tone: 'serious',
-                        max_tokens: 2000,
-                        temperature: 0.7,
-                        document_type: 'general'
-                    };
+                if (response && response.success) {
+                    analysisData = response.data;
                 } else {
-                    // Use text-based analysis for regular pages
-                    const textToAnalyze = await this.getPageText();
-                    if (!textToAnalyze || textToAnalyze.trim().length < 10) {
-                        throw new Error('Please provide text to analyze (minimum 10 characters)');
-                    }
-                    
-                    analysisRequest = {
-                        legal_terms: textToAnalyze.substring(0, 2800),
-                        tone: 'serious',
-                        max_tokens: 2000,
-                        temperature: 0.7,
-                        document_type: 'general'
-                    };
+                    throw new Error(response?.error || 'Failed to analyze page');
                 }
-            } else if (this.selectedMethod === 'selection') {
-                const textToAnalyze = await this.getSelectedText();
-                if (!textToAnalyze || textToAnalyze.trim().length < 10) {
-                    throw new Error('Please select text to analyze (minimum 10 characters)');
-                }
+            } else if (this.currentMethod === 'selection') {
+                // Analyze selected text
+                const response = await chrome.tabs.sendMessage(tab.id, {
+                    action: 'analyzeSelection'
+                });
                 
-                analysisRequest = {
-                    legal_terms: textToAnalyze.substring(0, 2800),
-                    tone: 'serious',
-                    max_tokens: 2000,
-                    temperature: 0.7,
-                    document_type: 'general'
-                };
-            } else if (this.selectedMethod === 'manual') {
-                const manualTextEl = document.getElementById('manual-text');
-                const textToAnalyze = manualTextEl ? manualTextEl.value : '';
-                if (!textToAnalyze || textToAnalyze.trim().length < 10) {
-                    throw new Error('Please provide text to analyze (minimum 10 characters)');
+                if (response && response.success) {
+                    analysisData = response.data;
+                } else {
+                    throw new Error(response?.error || 'Failed to analyze selection');
                 }
-                
-                analysisRequest = {
-                    legal_terms: textToAnalyze.substring(0, 2800),
-                    tone: 'serious',
-                    max_tokens: 2000,
-                    temperature: 0.7,
-                    document_type: 'general'
-                };
+            } else if (this.currentMethod === 'manual') {
+                // Analyze manual input
+                const manualText = document.getElementById('manual-text')?.value;
+                if (!manualText || manualText.trim().length < 10) {
+                    throw new Error('Please enter at least 10 characters of text to analyze');
+                }
+
+                analysisData = await this.performAnalysis(manualText.trim());
             }
 
-            // Call analysis API with better error handling
-            const result = await this.callAnalysisAPI(analysisRequest);
-            
-            if (result.success) {
-                this.analysisData = result.data;
-                this.displayResults(result.data);
-                this.updateStatus('Analysis complete', 'success');
-                
-                // Store analysis for later
-                await this.storeAnalysis(result.data);
-            } else {
-                throw new Error(result.error || 'Analysis failed');
-            }
-            
+            // Show results
+            this.displayResults(analysisData);
+
         } catch (error) {
             console.error('Analysis error:', error);
-            this.updateStatus('Analysis failed', 'error');
             this.showError(error.message);
         } finally {
             this.isAnalyzing = false;
-            this.updateAnalyzeButton(false);
+            this.updateAnalyzeButton();
         }
     }
 
-    async getPageText() {
-        try {
-            if (!this.currentTab || !this.currentTab.id) {
-                throw new Error('No active tab found');
-            }
+    async performAnalysis(text) {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
 
-            const [result] = await chrome.scripting.executeScript({
-                target: { tabId: this.currentTab.id },
-                function: () => {
-                    // Extract meaningful text from the page
-                    const content = document.body ? document.body.innerText : '';
-                    return content.substring(0, 2800); // Limit to API constraints
-                }
-            });
-            return result && result.result ? result.result : '';
-        } catch (error) {
-            console.error('Error getting page text:', error);
-            throw new Error('Failed to extract page content');
+        if (this.authToken) {
+            headers['Authorization'] = `Bearer ${this.authToken}`;
+        } else {
+            headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ`;
         }
-    }
 
-    async getSelectedText() {
-        try {
-            if (!this.currentTab || !this.currentTab.id) {
-                throw new Error('No active tab found');
-            }
+        const response = await fetch('https://txwilhbitljeeihpvscr.supabase.co/functions/v1/analyze-legal-terms-rag', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                legal_terms: text,
+                tone: document.getElementById('tone-select')?.value || 'serious',
+                max_tokens: 1500,
+                temperature: 0.7,
+                document_type: 'general'
+            })
+        });
 
-            const [result] = await chrome.scripting.executeScript({
-                target: { tabId: this.currentTab.id },
-                function: () => {
-                    return window.getSelection ? window.getSelection().toString() : '';
-                }
-            });
-            return result && result.result ? result.result : '';
-        } catch (error) {
-            console.error('Error getting selected text:', error);
-            throw new Error('Failed to get selected text');
+        if (!response.ok) {
+            throw new Error(`Analysis failed: ${response.status} - ${response.statusText}`);
         }
-    }
 
-    async callAnalysisAPI(analysisRequest) {
-        try {
-            // Get stored auth token if available
-            const { authToken } = await chrome.storage.local.get(['authToken']);
-            
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-
-            // Use your actual Supabase anon key
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
-            } else {
-                // Updated with your actual Supabase anon key
-                headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ`;
-            }
-
-            // Use your actual Supabase project URL
-            const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
-            const apiUrl = `${supabaseUrl}/functions/v1/analyze-legal-terms-rag`;
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(analysisRequest)
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error calling analysis API:', error);
-            return {
-                success: false,
-                error: error.message || 'Failed to analyze document'
-            };
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Analysis failed');
         }
+
+        return result.data;
     }
 
     displayResults(data) {
-        try {
-            const resultsSection = document.getElementById('results-section');
-            const resultsContent = document.getElementById('results-content');
-            
-            if (!resultsSection || !resultsContent) {
-                console.error('Results elements not found');
-                return;
-            }
-
-            resultsContent.innerHTML = '';
-
-            // Display summary
-            if (data.summary && data.summary.length > 0) {
-                data.summary.forEach(item => {
-                    const resultDiv = document.createElement('div');
-                    resultDiv.className = 'result-item fade-in';
-                    resultDiv.innerHTML = `
-                        <div class="result-title">${item.title}</div>
-                        <div class="result-description">${item.description}</div>
-                    `;
-                    resultsContent.appendChild(resultDiv);
-                });
-            }
-
-            // Display red flags
-            if (data.red_flags && data.red_flags.length > 0) {
-                const redFlagsTitle = document.createElement('div');
-                redFlagsTitle.className = 'result-title';
-                redFlagsTitle.style.marginTop = '16px';
-                redFlagsTitle.style.marginBottom = '8px';
-                redFlagsTitle.textContent = `Red Flags (${data.red_flags.length})`;
-                resultsContent.appendChild(redFlagsTitle);
-
-                data.red_flags.forEach(flag => {
-                    const flagDiv = document.createElement('div');
-                    flagDiv.className = 'red-flag fade-in';
-                    flagDiv.innerHTML = `
-                        <svg class="red-flag-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                            <line x1="12" y1="9" x2="12" y2="13"/>
-                            <line x1="12" y1="17" x2="12.01" y2="17"/>
-                        </svg>
-                        <div class="red-flag-text">${flag}</div>
-                    `;
-                    resultsContent.appendChild(flagDiv);
-                });
-            }
-
+        // Hide loading and show results
+        const resultsSection = document.getElementById('results-section');
+        if (resultsSection) {
             resultsSection.style.display = 'block';
-        } catch (error) {
-            console.error('Error displaying results:', error);
-        }
-    }
-
-    updateAnalyzeButton(analyzing) {
-        try {
-            const btn = document.getElementById('analyze-btn');
-            const span = btn ? btn.querySelector('span') : null;
-            
-            if (btn && span) {
-                if (analyzing) {
-                    btn.disabled = true;
-                    span.textContent = 'Analyzing...';
-                    const svg = btn.querySelector('svg');
-                    if (svg) svg.style.animation = 'spin 1s linear infinite';
-                } else {
-                    btn.disabled = false;
-                    span.textContent = 'Analyze Document';
-                    const svg = btn.querySelector('svg');
-                    if (svg) svg.style.animation = 'none';
-                }
-            }
-        } catch (error) {
-            console.error('Error updating analyze button:', error);
-        }
-    }
-
-    async playAudioSummary() {
-        // Check if user is a Pro subscriber
-        if (this.userSubscriptionTier !== 'pro') {
-            this.showProFeatureMessage('audio playback');
-            return;
-        }
-        
-        if (!this.analysisData || !this.analysisData.summary || this.analysisData.summary.length === 0) {
-            this.showError('No summary available for audio playback');
-            return;
         }
 
-        try {
-            const textToSpeak = this.analysisData.summary[0].description;
-            const { authToken } = await chrome.storage.local.get(['authToken']);
-            
-            if (!authToken) {
-                this.showError('Please sign in to use audio features');
-                return;
-            }
-
-            // Call speech synthesis API
-            const supabaseUrl = 'https://txwilhbitljeeihpvscr.supabase.co';
-            const response = await fetch(`${supabaseUrl}/functions/v1/synthesize-speech`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
-                body: JSON.stringify({
-                    text: textToSpeak,
-                    voice_id: 'default-voice-id'
-                })
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success) {
-                    // Play audio
-                    const audio = new Audio(`data:audio/mpeg;base64,${result.audio}`);
-                    audio.play();
-                }
-            }
-        } catch (error) {
-            console.error('Audio playback error:', error);
-            this.showError('Audio playback failed');
-        }
-    }
-
-    async saveAnalysis() {
-        // Check if user is a Pro subscriber
-        if (this.userSubscriptionTier !== 'pro') {
-            this.showProFeatureMessage('saving analyses');
-            return;
-        }
-        
-        if (!this.analysisData) {
-            this.showError('No analysis to save');
-            return;
-        }
-
-        try {
-            const { authToken } = await chrome.storage.local.get(['authToken']);
-            
-            if (!authToken) {
-                this.showError('Please sign in to save analyses');
-                return;
-            }
-
-            // Save to user's account via API
-            this.updateStatus('Analysis saved', 'success');
-            
-        } catch (error) {
-            console.error('Save error:', error);
-            this.showError('Failed to save analysis');
-        }
-    }
-
-    openFullResults() {
-        // Open the main Legalish app with results
-        chrome.tabs.create({
-            url: 'https://legalish.site/summary'
-        });
-    }
-
-    signIn() {
-        // Open sign-in page and then sync auth
-        chrome.tabs.create({
-            url: 'https://legalish.site'
-        }, (tab) => {
-            // Listen for tab updates to sync auth when user signs in
-            const listener = (tabId, changeInfo, updatedTab) => {
-                if (tabId === tab.id && changeInfo.status === 'complete') {
-                    // Wait a moment for auth to settle, then sync
-                    setTimeout(async () => {
-                        await this.syncAuthenticationState();
-                        this.loadUserState();
-                    }, 2000);
-                    chrome.tabs.onUpdated.removeListener(listener);
-                }
-            };
-            chrome.tabs.onUpdated.addListener(listener);
-        });
-    }
-
-    async signOut() {
-        await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp', 'subscription_tier']);
-        this.userSubscriptionTier = 'free';
-        this.loadUserState();
-        this.updateStatus('Signed out', 'neutral');
-    }
-
-    openUpgradePage() {
-        chrome.tabs.create({
-            url: 'https://legalish.site/upgrade'
-        });
-    }
-
-    openHelpPage() {
-        chrome.tabs.create({
-            url: 'https://legalish.site/help'
-        });
-    }
-
-    async loadUserState() {
-        try {
-            const { authToken, userInfo, subscription_tier } = await chrome.storage.local.get(['authToken', 'userInfo', 'subscription_tier']);
-            
-            // Update subscription tier if available
-            if (subscription_tier) {
-                this.userSubscriptionTier = subscription_tier;
-                console.log('Loaded subscription tier from storage:', this.userSubscriptionTier);
-            }
-            
-            const signedOut = document.getElementById('signed-out');
-            const signedIn = document.getElementById('signed-in');
-            
-            if (authToken && userInfo) {
-                if (signedOut) signedOut.style.display = 'none';
-                if (signedIn) signedIn.style.display = 'flex';
-                
-                const userNameEl = document.getElementById('user-name');
-                const userPlanEl = document.getElementById('user-plan');
-                const userAvatarEl = document.getElementById('user-avatar');
-                
-                if (userNameEl) userNameEl.textContent = userInfo.name || 'User';
-                if (userPlanEl) userPlanEl.textContent = userInfo.plan || 'Free Plan';
-                if (userAvatarEl) userAvatarEl.textContent = (userInfo.name || 'U')[0].toUpperCase();
-                
-                // Update UI based on subscription tier
-                this.updateUIForSubscriptionTier();
-            } else {
-                if (signedOut) signedOut.style.display = 'block';
-                if (signedIn) signedIn.style.display = 'none';
-                
-                // Reset subscription tier to free if not signed in
-                this.userSubscriptionTier = 'free';
-                this.updateUIForSubscriptionTier();
-            }
-        } catch (error) {
-            console.error('Error loading user state:', error);
-        }
-    }
-    
-    updateUIForSubscriptionTier() {
-        try {
-            const isPro = this.userSubscriptionTier === 'pro';
-            console.log('Updating UI for subscription tier:', this.userSubscriptionTier, 'isPro:', isPro);
-            
-            // Update analyze button
-            const analyzeBtn = document.getElementById('analyze-btn');
-            if (analyzeBtn) {
-                if (!isPro) {
-                    analyzeBtn.innerHTML = `
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                        <span>Upgrade to Pro</span>
-                    `;
-                    analyzeBtn.classList.add('pro-feature');
-                    analyzeBtn.onclick = () => this.openUpgradePage();
-                } else {
-                    analyzeBtn.innerHTML = `
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                        </svg>
-                        <span>Analyze Document</span>
-                    `;
-                    analyzeBtn.classList.remove('pro-feature');
-                    analyzeBtn.onclick = () => this.analyzeDocument();
-                }
-            }
-            
-            // Add Pro badges to Pro-only features
-            document.querySelectorAll('.pro-badge').forEach(badge => {
-                badge.remove();
-            });
-            
-            if (!isPro) {
-                // Add Pro badge to audio button
-                const playAudioBtn = document.getElementById('play-audio-btn');
-                if (playAudioBtn) {
-                    const badge = document.createElement('span');
-                    badge.className = 'pro-badge';
-                    badge.textContent = 'PRO';
-                    playAudioBtn.appendChild(badge);
-                }
-                
-                // Add Pro badge to save button
-                const saveAnalysisBtn = document.getElementById('save-analysis-btn');
-                if (saveAnalysisBtn) {
-                    const badge = document.createElement('span');
-                    badge.className = 'pro-badge';
-                    badge.textContent = 'PRO';
-                    saveAnalysisBtn.appendChild(badge);
-                }
-            }
-            
-            // Add Pro-only CSS if not already added
-            if (!document.getElementById('pro-features-css')) {
-                const style = document.createElement('style');
-                style.id = 'pro-features-css';
-                style.textContent = `
-                    .pro-badge {
-                        position: absolute;
-                        top: -8px;
-                        right: -8px;
-                        background: linear-gradient(135deg, #a855f7, #3b82f6);
-                        color: white;
-                        font-size: 8px;
-                        font-weight: bold;
-                        padding: 2px 4px;
-                        border-radius: 4px;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                    }
-                    
-                    .pro-feature {
-                        background: linear-gradient(135deg, #a855f7, #3b82f6) !important;
-                    }
-                    
-                    .pro-upgrade-banner {
-                        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(59, 130, 246, 0.1));
-                        border: 1px solid rgba(168, 85, 247, 0.2);
-                        border-radius: 8px;
-                        padding: 12px;
-                        margin-bottom: 12px;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-                    
-                    .pro-upgrade-banner svg {
-                        color: #a855f7;
-                    }
-                    
-                    .pro-upgrade-banner-content {
-                        flex: 1;
-                    }
-                    
-                    .pro-upgrade-banner-title {
-                        font-weight: 600;
-                        margin-bottom: 4px;
-                    }
-                    
-                    .pro-upgrade-banner-description {
-                        font-size: 12px;
-                        color: #94a3b8;
-                    }
-                    
-                    .pro-upgrade-banner-button {
-                        background: linear-gradient(135deg, #a855f7, #3b82f6);
-                        color: white;
-                        border: none;
-                        border-radius: 4px;
-                        padding: 6px 12px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.2s ease;
-                    }
-                    
-                    .pro-upgrade-banner-button:hover {
-                        opacity: 0.9;
-                        transform: translateY(-1px);
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-            
-            // Show/hide Pro upgrade banner
-            let proUpgradeBanner = document.getElementById('pro-upgrade-banner');
-            if (!isPro) {
-                if (!proUpgradeBanner) {
-                    proUpgradeBanner = document.createElement('div');
-                    proUpgradeBanner.id = 'pro-upgrade-banner';
-                    proUpgradeBanner.className = 'pro-upgrade-banner';
-                    proUpgradeBanner.innerHTML = `
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                        <div class="pro-upgrade-banner-content">
-                            <div class="pro-upgrade-banner-title">Upgrade to Pro</div>
-                            <div class="pro-upgrade-banner-description">Unlock PDF analysis, audio playback, and more</div>
-                        </div>
-                        <button class="pro-upgrade-banner-button">Upgrade</button>
-                    `;
-                    
-                    // Insert before the analysis section
-                    const analysisSection = document.getElementById('analysis-section');
-                    if (analysisSection && analysisSection.parentNode) {
-                        analysisSection.parentNode.insertBefore(proUpgradeBanner, analysisSection);
-                    }
-                    
-                    // Add click handler
-                    const upgradeButton = proUpgradeBanner.querySelector('.pro-upgrade-banner-button');
-                    if (upgradeButton) {
-                        upgradeButton.addEventListener('click', () => this.openUpgradePage());
-                    }
-                }
-            } else if (proUpgradeBanner) {
-                proUpgradeBanner.remove();
-            }
-            
-            // Update status text to show Pro status
-            if (isPro) {
-                this.updateStatus('Pro features enabled', 'success');
-            }
-        } catch (error) {
-            console.error('Error updating UI for subscription tier:', error);
-        }
-    }
-
-    async storeAnalysis(data) {
-        try {
-            const analysisKey = `analysis_${Date.now()}`;
-            await chrome.storage.local.set({
-                [analysisKey]: {
-                    data,
-                    timestamp: Date.now(),
-                    url: this.currentTab ? this.currentTab.url : '',
-                    title: this.currentTab ? this.currentTab.title : ''
-                }
-            });
-        } catch (error) {
-            console.error('Error storing analysis:', error);
-        }
-    }
-
-    async loadStoredAnalysis() {
-        try {
-            // Load the most recent analysis for this tab if available
-            const storage = await chrome.storage.local.get();
-            const analyses = Object.entries(storage)
-                .filter(([key]) => key.startsWith('analysis_'))
-                .map(([key, value]) => ({ key, ...value }))
-                .filter(analysis => analysis.url === (this.currentTab ? this.currentTab.url : ''))
-                .sort((a, b) => b.timestamp - a.timestamp);
-
-            if (analyses.length > 0) {
-                const recentAnalysis = analyses[0];
-                this.analysisData = recentAnalysis.data;
-                this.displayResults(recentAnalysis.data);
-            }
-        } catch (error) {
-            console.error('Error loading stored analysis:', error);
+        // Update results content
+        const resultsContent = document.getElementById('results-content');
+        if (resultsContent && data) {
+            resultsContent.innerHTML = `
+                <div class="result-item">
+                    <div class="result-title">Analysis Complete</div>
+                    <div class="result-description">
+                        Found ${data.red_flags?.length || 0} red flags in ${(data.processing_time_ms / 1000).toFixed(2)} seconds
+                    </div>
+                </div>
+            `;
         }
     }
 
     showError(message) {
-        try {
-            // Simple error display - could be enhanced with a proper notification system
-            const errorDiv = document.createElement('div');
-            errorDiv.style.cssText = `
-                position: fixed;
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                background: #ef4444;
-                color: white;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 12px;
-                z-index: 1000;
-            `;
-            errorDiv.textContent = message;
-            document.body.appendChild(errorDiv);
-
-            setTimeout(() => {
-                if (errorDiv && errorDiv.parentNode) {
-                    errorDiv.remove();
-                }
-            }, 3000);
-        } catch (error) {
-            console.error('Error showing error message:', error);
-        }
+        console.error('Showing error:', message);
+        // You could implement a toast notification here
     }
-    
-    showProFeatureMessage(featureName) {
-        try {
-            // Create a modal-like overlay for Pro feature message
-            const modalOverlay = document.createElement('div');
-            modalOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.7);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 2000;
-                backdrop-filter: blur(4px);
-            `;
-            
-            const modalContent = document.createElement('div');
-            modalContent.style.cssText = `
-                background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #581c87 100%);
-                border-radius: 12px;
-                padding: 24px;
-                max-width: 320px;
-                width: 100%;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-                text-align: center;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            `;
-            
-            modalContent.innerHTML = `
-                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #a855f7, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                </div>
-                <h3 style="color: white; font-size: 18px; margin-bottom: 8px;">Pro Feature</h3>
-                <p style="color: #e2e8f0; margin-bottom: 20px; font-size: 14px;">
-                    ${featureName.charAt(0).toUpperCase() + featureName.slice(1)} is available exclusively for Pro subscribers.
-                </p>
-                <button id="upgrade-pro-btn" style="background: linear-gradient(135deg, #a855f7, #3b82f6); color: white; border: none; border-radius: 6px; padding: 10px 16px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px;">
-                    Upgrade to Pro
-                </button>
-                <button id="close-pro-modal" style="background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 8px 16px; font-weight: 500; cursor: pointer; width: 100%;">
-                    Maybe Later
-                </button>
-            `;
-            
-            document.body.appendChild(modalOverlay);
-            modalOverlay.appendChild(modalContent);
-            
-            // Add event listeners
-            const upgradeBtn = document.getElementById('upgrade-pro-btn');
-            const closeBtn = document.getElementById('close-pro-modal');
-            
-            if (upgradeBtn) {
-                upgradeBtn.addEventListener('click', () => {
-                    this.openUpgradePage();
-                    modalOverlay.remove();
-                });
-            }
-            
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                    modalOverlay.remove();
-                });
-            }
-            
-            // Auto-close after 10 seconds
-            setTimeout(() => {
-                if (modalOverlay && modalOverlay.parentNode) {
-                    modalOverlay.remove();
-                }
-            }, 10000);
-        } catch (error) {
-            console.error('Error showing Pro feature message:', error);
-        }
+
+    handleSignIn() {
+        // Open Legalish website for sign in
+        chrome.tabs.create({ url: 'https://legalish.site' });
+    }
+
+    async handleSignOut() {
+        await this.clearAuthData();
+        this.updateUI();
+    }
+
+    handleUpgrade() {
+        chrome.tabs.create({ url: 'https://legalish.site/upgrade' });
+    }
+
+    handleHelp() {
+        chrome.tabs.create({ url: 'https://legalish.site/help' });
+    }
+
+    handlePlayAudio() {
+        // Implement audio playback
+        console.log('Play audio clicked');
+    }
+
+    handleOpenFull() {
+        chrome.tabs.create({ url: 'https://legalish.site/summary' });
     }
 }
 
 // Initialize popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        new LegalishPopup();
-    } catch (error) {
-        console.error('Error initializing popup:', error);
-    }
+    new LegalishPopup();
 });

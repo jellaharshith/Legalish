@@ -151,6 +151,12 @@ class LegalishBackground {
         try {
             const { subscription_tier, authToken, userInfo } = await chrome.storage.local.get(['subscription_tier', 'authToken', 'userInfo']);
             
+            console.log('Background - Checking Pro status:', {
+                subscription_tier,
+                hasAuthToken: !!authToken,
+                hasUserInfo: !!userInfo
+            });
+            
             // If user is authenticated, make a direct API call to check subscription status
             if (authToken && userInfo && userInfo.id) {
                 try {
@@ -171,7 +177,7 @@ class LegalishBackground {
                         const profiles = await response.json();
                         if (profiles && profiles.length > 0 && profiles[0].subscription_tier) {
                             const apiSubscriptionTier = profiles[0].subscription_tier;
-                            console.log('Got subscription tier from API:', apiSubscriptionTier);
+                            console.log('Background - Got subscription tier from API:', apiSubscriptionTier);
                             
                             // Update the subscription tier in storage
                             await chrome.storage.local.set({ subscription_tier: apiSubscriptionTier });
@@ -187,13 +193,13 @@ class LegalishBackground {
                         }
                     }
                 } catch (error) {
-                    console.error('Error fetching subscription status from API:', error);
+                    console.error('Background - Error fetching subscription status from API:', error);
                 }
             }
             
             return subscription_tier === 'pro';
         } catch (error) {
-            console.error('Error checking Pro status:', error);
+            console.error('Background - Error checking Pro status:', error);
             return false;
         }
     }
@@ -293,6 +299,8 @@ class LegalishBackground {
     async updateSubscriptionTier(tier) {
         try {
             await chrome.storage.local.set({ subscription_tier: tier });
+            
+            console.log('Background - Broadcasting subscription tier update:', tier);
             
             // Broadcast to all tabs
             const tabs = await chrome.tabs.query({});

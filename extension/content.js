@@ -47,6 +47,12 @@ class LegalishContentScript {
             if (chrome.storage && chrome.storage.local) {
                 const { subscription_tier, authToken, userInfo } = await chrome.storage.local.get(['subscription_tier', 'authToken', 'userInfo']);
                 
+                console.log('Content script - checking subscription:', {
+                    subscription_tier,
+                    hasAuthToken: !!authToken,
+                    hasUserInfo: !!userInfo
+                });
+                
                 // If user is authenticated, make a direct API call to check subscription status
                 if (authToken && userInfo && userInfo.id) {
                     try {
@@ -67,7 +73,7 @@ class LegalishContentScript {
                             const profiles = await response.json();
                             if (profiles && profiles.length > 0 && profiles[0].subscription_tier) {
                                 const apiSubscriptionTier = profiles[0].subscription_tier;
-                                console.log('Got subscription tier from API:', apiSubscriptionTier);
+                                console.log('Content script - Got subscription tier from API:', apiSubscriptionTier);
                                 
                                 // Update the subscription tier in storage and memory
                                 this.userSubscriptionTier = apiSubscriptionTier;
@@ -77,22 +83,22 @@ class LegalishContentScript {
                                 userInfo.plan = apiSubscriptionTier === 'pro' ? 'Pro Plan' : 'Free Plan';
                                 await chrome.storage.local.set({ userInfo });
                                 
-                                console.log('Updated subscription tier from API:', this.userSubscriptionTier);
+                                console.log('Content script - Updated subscription tier from API:', this.userSubscriptionTier);
                             }
                         }
                     } catch (error) {
-                        console.error('Error fetching subscription status from API:', error);
+                        console.error('Content script - Error fetching subscription status from API:', error);
                     }
                 }
                 
                 // If we still don't have a tier from API, use the stored value
                 if (this.userSubscriptionTier === 'free' && subscription_tier) {
                     this.userSubscriptionTier = subscription_tier;
-                    console.log('Using stored subscription tier:', this.userSubscriptionTier);
+                    console.log('Content script - Using stored subscription tier:', this.userSubscriptionTier);
                 }
             }
         } catch (error) {
-            console.error('Error checking user subscription:', error);
+            console.error('Content script - Error checking user subscription:', error);
         }
     }
 
@@ -540,13 +546,37 @@ class LegalishContentScript {
                         sendResponse({ text: selection ? selection.toString() : '' });
                     } else if (request.action === 'updateSubscriptionTier') {
                         this.userSubscriptionTier = request.subscriptionTier || 'free';
+                        console.log('Content script - Updated subscription tier:', this.userSubscriptionTier);
                     } else if (request.action === 'showProFeatureMessage') {
                         this.showProFeatureMessage(request.featureName || 'this feature');
+                    } else if (request.action === 'detectLegalContent') {
+                        // Return current legal content detection status
+                        sendResponse({
+                            hasLegalContent: this.legalContentDetected,
+                            documentType: this.getDocumentType()
+                        });
                     }
                 } catch (error) {
                     console.error('Error handling message:', error);
                 }
             });
+        }
+    }
+
+    getDocumentType() {
+        const pageTitle = document.title.toLowerCase();
+        const pageText = document.body ? document.body.innerText.toLowerCase() : '';
+        
+        if (pageTitle.includes('privacy') || pageText.includes('privacy policy')) {
+            return 'Privacy Policy';
+        } else if (pageTitle.includes('terms') || pageText.includes('terms of service')) {
+            return 'Terms of Service';
+        } else if (pageTitle.includes('lease') || pageText.includes('lease agreement')) {
+            return 'Lease Agreement';
+        } else if (pageTitle.includes('employment') || pageText.includes('employment contract')) {
+            return 'Employment Contract';
+        } else {
+            return 'Legal Document';
         }
     }
 
