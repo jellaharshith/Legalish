@@ -38,7 +38,7 @@ class LegalishBackground {
                     // Main analyze option
                     chrome.contextMenus.create({
                         id: 'analyze-selection',
-                        title: 'Analyze with Legalish',
+                        title: 'Analyze with Legalish (Pro)',
                         contexts: ['selection'],
                         documentUrlPatterns: ['http://*/*', 'https://*/*']
                     });
@@ -46,7 +46,7 @@ class LegalishBackground {
                     // Analyze page option
                     chrome.contextMenus.create({
                         id: 'analyze-page',
-                        title: 'Analyze page for legal content',
+                        title: 'Analyze page for legal content (Pro)',
                         contexts: ['page'],
                         documentUrlPatterns: ['http://*/*', 'https://*/*']
                     });
@@ -78,6 +78,13 @@ class LegalishBackground {
                         title: 'View Analysis History',
                         contexts: ['selection', 'page']
                     });
+                    
+                    chrome.contextMenus.create({
+                        id: 'upgrade-to-pro',
+                        parentId: 'quick-actions',
+                        title: 'Upgrade to Pro',
+                        contexts: ['selection', 'page']
+                    });
 
                     console.log('Context menus created successfully');
                 } catch (error) {
@@ -103,13 +110,24 @@ class LegalishBackground {
                 return;
             }
 
+            // Check if user is a Pro subscriber for Pro-only features
+            const isPro = await this.isProUser();
+
             switch (info.menuItemId) {
                 case 'analyze-selection':
-                    await this.analyzeSelection(tab, info.selectionText);
+                    if (isPro) {
+                        await this.analyzeSelection(tab, info.selectionText);
+                    } else {
+                        this.showProFeatureNotification(tab);
+                    }
                     break;
                 
                 case 'analyze-page':
-                    await this.analyzePage(tab);
+                    if (isPro) {
+                        await this.analyzePage(tab);
+                    } else {
+                        this.showProFeatureNotification(tab);
+                    }
                     break;
                 
                 case 'open-legalish':
@@ -119,9 +137,40 @@ class LegalishBackground {
                 case 'view-history':
                     chrome.tabs.create({ url: 'https://legalish.site/dashboard' });
                     break;
+                    
+                case 'upgrade-to-pro':
+                    chrome.tabs.create({ url: 'https://legalish.site/upgrade' });
+                    break;
             }
         } catch (error) {
             console.error('Error handling context menu click:', error);
+        }
+    }
+    
+    async isProUser() {
+        try {
+            const { subscription_tier } = await chrome.storage.local.get(['subscription_tier']);
+            return subscription_tier === 'pro';
+        } catch (error) {
+            console.error('Error checking Pro status:', error);
+            return false;
+        }
+    }
+    
+    showProFeatureNotification(tab) {
+        try {
+            // Show notification that this is a Pro feature
+            this.showNotification('This is a Pro feature. Please upgrade to access.', 'basic');
+            
+            // Also try to send a message to the content script to show a Pro feature modal
+            chrome.tabs.sendMessage(tab.id, {
+                action: 'showProFeatureMessage',
+                featureName: 'document analysis'
+            }).catch(error => {
+                console.log('Could not send message to content script:', error);
+            });
+        } catch (error) {
+            console.error('Error showing Pro feature notification:', error);
         }
     }
 
@@ -190,9 +239,34 @@ class LegalishBackground {
                 case 'clearOldData':
                     await this.clearOldData();
                     break;
+                    
+                case 'updateSubscriptionTier':
+                    await this.updateSubscriptionTier(request.subscriptionTier);
+                    break;
             }
         } catch (error) {
             console.error('Error handling message:', error);
+        }
+    }
+    
+    async updateSubscriptionTier(tier) {
+        try {
+            await chrome.storage.local.set({ subscription_tier: tier });
+            
+            // Broadcast to all tabs
+            const tabs = await chrome.tabs.query({});
+            for (const tab of tabs) {
+                try {
+                    await chrome.tabs.sendMessage(tab.id, {
+                        action: 'updateSubscriptionTier',
+                        subscriptionTier: tier
+                    });
+                } catch (error) {
+                    // Ignore errors for tabs that don't have our content script
+                }
+            }
+        } catch (error) {
+            console.error('Error updating subscription tier:', error);
         }
     }
 
@@ -358,13 +432,17 @@ class LegalishBackground {
     }
 
     // Authentication helpers
-    async setAuthToken(token, userInfo) {
+    async setAuthToken(token, userInfo, subscriptionTier = 'free') {
         try {
             await chrome.storage.local.set({
                 authToken: token,
                 userInfo: userInfo,
+                subscription_tier: subscriptionTier,
                 authTimestamp: Date.now()
             });
+            
+            // Update subscription tier in all tabs
+            await this.updateSubscriptionTier(subscriptionTier);
         } catch (error) {
             console.error('Error setting auth token:', error);
         }
@@ -381,7 +459,8 @@ class LegalishBackground {
                 const maxAge = 24 * 60 * 60 * 1000; // 24 hours
                 
                 if (tokenAge > maxAge) {
-                    await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp']);
+                    await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp', 'subscription_tier']);
+                    await this.updateSubscriptionTier('free');
                     return null;
                 }
             }
@@ -395,7 +474,8 @@ class LegalishBackground {
 
     async clearAuth() {
         try {
-            await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp']);
+            await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp', 'subscription_tier']);
+            await this.updateSubscriptionTier('free');
         } catch (error) {
             console.error('Error clearing auth:', error);
         }

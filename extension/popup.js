@@ -5,6 +5,7 @@ class LegalishPopup {
         this.analysisData = null;
         this.selectedMethod = 'page';
         this.isAnalyzing = false;
+        this.userSubscriptionTier = 'free'; // Default to free
         
         this.init();
     }
@@ -54,10 +55,33 @@ class LegalishPopup {
                                 const authData = localStorage.getItem(supabaseKey);
                                 if (authData) {
                                     const parsed = JSON.parse(authData);
+                                    
+                                    // Try to get subscription tier from localStorage if available
+                                    let subscriptionTier = 'free';
+                                    try {
+                                        const profileKey = keys.find(key => 
+                                            key.includes('profile') || 
+                                            key.includes('user_metadata')
+                                        );
+                                        
+                                        if (profileKey) {
+                                            const profileData = localStorage.getItem(profileKey);
+                                            if (profileData) {
+                                                const parsedProfile = JSON.parse(profileData);
+                                                if (parsedProfile.subscription_tier) {
+                                                    subscriptionTier = parsedProfile.subscription_tier;
+                                                }
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.error('Error parsing profile data:', e);
+                                    }
+                                    
                                     return {
                                         token: parsed.access_token,
                                         user: parsed.user,
-                                        expires_at: parsed.expires_at
+                                        expires_at: parsed.expires_at,
+                                        subscription_tier: subscriptionTier
                                     };
                                 }
                             }
@@ -82,13 +106,23 @@ class LegalishPopup {
                                 id: authData.user?.id,
                                 email: authData.user?.email,
                                 name: authData.user?.user_metadata?.full_name || authData.user?.email?.split('@')[0],
-                                plan: 'Free Plan' // Default, could be enhanced
+                                plan: authData.subscription_tier === 'pro' ? 'Pro Plan' : 'Free Plan'
                             },
+                            subscription_tier: authData.subscription_tier || 'free',
                             authTimestamp: Date.now()
                         });
                         
+                        this.userSubscriptionTier = authData.subscription_tier || 'free';
                         console.log('Successfully synced authentication from website');
                     }
+                }
+            }
+            
+            // If we couldn't sync from the website, try to get from storage
+            if (!this.userSubscriptionTier || this.userSubscriptionTier === 'free') {
+                const { subscription_tier } = await chrome.storage.local.get(['subscription_tier']);
+                if (subscription_tier) {
+                    this.userSubscriptionTier = subscription_tier;
                 }
             }
         } catch (error) {
@@ -373,6 +407,12 @@ class LegalishPopup {
     async analyzeDocument() {
         if (this.isAnalyzing) return;
         
+        // Check if user is a Pro subscriber
+        if (this.userSubscriptionTier !== 'pro') {
+            this.showProFeatureMessage('document analysis');
+            return;
+        }
+        
         this.isAnalyzing = true;
         this.updateAnalyzeButton(true);
         this.updateStatus('Analyzing document...', 'warning');
@@ -626,6 +666,12 @@ class LegalishPopup {
     }
 
     async playAudioSummary() {
+        // Check if user is a Pro subscriber
+        if (this.userSubscriptionTier !== 'pro') {
+            this.showProFeatureMessage('audio playback');
+            return;
+        }
+        
         if (!this.analysisData || !this.analysisData.summary || this.analysisData.summary.length === 0) {
             this.showError('No summary available for audio playback');
             return;
@@ -669,6 +715,12 @@ class LegalishPopup {
     }
 
     async saveAnalysis() {
+        // Check if user is a Pro subscriber
+        if (this.userSubscriptionTier !== 'pro') {
+            this.showProFeatureMessage('saving analyses');
+            return;
+        }
+        
         if (!this.analysisData) {
             this.showError('No analysis to save');
             return;
@@ -719,7 +771,8 @@ class LegalishPopup {
     }
 
     async signOut() {
-        await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp']);
+        await chrome.storage.local.remove(['authToken', 'userInfo', 'authTimestamp', 'subscription_tier']);
+        this.userSubscriptionTier = 'free';
         this.loadUserState();
         this.updateStatus('Signed out', 'neutral');
     }
@@ -738,7 +791,12 @@ class LegalishPopup {
 
     async loadUserState() {
         try {
-            const { authToken, userInfo } = await chrome.storage.local.get(['authToken', 'userInfo']);
+            const { authToken, userInfo, subscription_tier } = await chrome.storage.local.get(['authToken', 'userInfo', 'subscription_tier']);
+            
+            // Update subscription tier if available
+            if (subscription_tier) {
+                this.userSubscriptionTier = subscription_tier;
+            }
             
             const signedOut = document.getElementById('signed-out');
             const signedIn = document.getElementById('signed-in');
@@ -754,12 +812,181 @@ class LegalishPopup {
                 if (userNameEl) userNameEl.textContent = userInfo.name || 'User';
                 if (userPlanEl) userPlanEl.textContent = userInfo.plan || 'Free Plan';
                 if (userAvatarEl) userAvatarEl.textContent = (userInfo.name || 'U')[0].toUpperCase();
+                
+                // Update UI based on subscription tier
+                this.updateUIForSubscriptionTier();
             } else {
                 if (signedOut) signedOut.style.display = 'block';
                 if (signedIn) signedIn.style.display = 'none';
+                
+                // Reset subscription tier to free if not signed in
+                this.userSubscriptionTier = 'free';
+                this.updateUIForSubscriptionTier();
             }
         } catch (error) {
             console.error('Error loading user state:', error);
+        }
+    }
+    
+    updateUIForSubscriptionTier() {
+        try {
+            const isPro = this.userSubscriptionTier === 'pro';
+            
+            // Update analyze button
+            const analyzeBtn = document.getElementById('analyze-btn');
+            if (analyzeBtn) {
+                if (!isPro) {
+                    analyzeBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span>Upgrade to Pro</span>
+                    `;
+                    analyzeBtn.classList.add('pro-feature');
+                    analyzeBtn.onclick = () => this.openUpgradePage();
+                } else {
+                    analyzeBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        <span>Analyze Document</span>
+                    `;
+                    analyzeBtn.classList.remove('pro-feature');
+                    analyzeBtn.onclick = () => this.analyzeDocument();
+                }
+            }
+            
+            // Add Pro badges to Pro-only features
+            document.querySelectorAll('.pro-badge').forEach(badge => {
+                badge.remove();
+            });
+            
+            if (!isPro) {
+                // Add Pro badge to audio button
+                const playAudioBtn = document.getElementById('play-audio-btn');
+                if (playAudioBtn) {
+                    const badge = document.createElement('span');
+                    badge.className = 'pro-badge';
+                    badge.textContent = 'PRO';
+                    playAudioBtn.appendChild(badge);
+                }
+                
+                // Add Pro badge to save button
+                const saveAnalysisBtn = document.getElementById('save-analysis-btn');
+                if (saveAnalysisBtn) {
+                    const badge = document.createElement('span');
+                    badge.className = 'pro-badge';
+                    badge.textContent = 'PRO';
+                    saveAnalysisBtn.appendChild(badge);
+                }
+            }
+            
+            // Add Pro-only CSS if not already added
+            if (!document.getElementById('pro-features-css')) {
+                const style = document.createElement('style');
+                style.id = 'pro-features-css';
+                style.textContent = `
+                    .pro-badge {
+                        position: absolute;
+                        top: -8px;
+                        right: -8px;
+                        background: linear-gradient(135deg, #a855f7, #3b82f6);
+                        color: white;
+                        font-size: 8px;
+                        font-weight: bold;
+                        padding: 2px 4px;
+                        border-radius: 4px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    }
+                    
+                    .pro-feature {
+                        background: linear-gradient(135deg, #a855f7, #3b82f6) !important;
+                    }
+                    
+                    .pro-upgrade-banner {
+                        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(59, 130, 246, 0.1));
+                        border: 1px solid rgba(168, 85, 247, 0.2);
+                        border-radius: 8px;
+                        padding: 12px;
+                        margin-bottom: 12px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    
+                    .pro-upgrade-banner svg {
+                        color: #a855f7;
+                    }
+                    
+                    .pro-upgrade-banner-content {
+                        flex: 1;
+                    }
+                    
+                    .pro-upgrade-banner-title {
+                        font-weight: 600;
+                        margin-bottom: 4px;
+                    }
+                    
+                    .pro-upgrade-banner-description {
+                        font-size: 12px;
+                        color: #94a3b8;
+                    }
+                    
+                    .pro-upgrade-banner-button {
+                        background: linear-gradient(135deg, #a855f7, #3b82f6);
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        padding: 6px 12px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+                    
+                    .pro-upgrade-banner-button:hover {
+                        opacity: 0.9;
+                        transform: translateY(-1px);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Show/hide Pro upgrade banner
+            let proUpgradeBanner = document.getElementById('pro-upgrade-banner');
+            if (!isPro) {
+                if (!proUpgradeBanner) {
+                    proUpgradeBanner = document.createElement('div');
+                    proUpgradeBanner.id = 'pro-upgrade-banner';
+                    proUpgradeBanner.className = 'pro-upgrade-banner';
+                    proUpgradeBanner.innerHTML = `
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <div class="pro-upgrade-banner-content">
+                            <div class="pro-upgrade-banner-title">Upgrade to Pro</div>
+                            <div class="pro-upgrade-banner-description">Unlock PDF analysis, audio playback, and more</div>
+                        </div>
+                        <button class="pro-upgrade-banner-button">Upgrade</button>
+                    `;
+                    
+                    // Insert before the analysis section
+                    const analysisSection = document.getElementById('analysis-section');
+                    if (analysisSection && analysisSection.parentNode) {
+                        analysisSection.parentNode.insertBefore(proUpgradeBanner, analysisSection);
+                    }
+                    
+                    // Add click handler
+                    const upgradeButton = proUpgradeBanner.querySelector('.pro-upgrade-banner-button');
+                    if (upgradeButton) {
+                        upgradeButton.addEventListener('click', () => this.openUpgradePage());
+                    }
+                }
+            } else if (proUpgradeBanner) {
+                proUpgradeBanner.remove();
+            }
+        } catch (error) {
+            console.error('Error updating UI for subscription tier:', error);
         }
     }
 
@@ -825,6 +1052,85 @@ class LegalishPopup {
             }, 3000);
         } catch (error) {
             console.error('Error showing error message:', error);
+        }
+    }
+    
+    showProFeatureMessage(featureName) {
+        try {
+            // Create a modal-like overlay for Pro feature message
+            const modalOverlay = document.createElement('div');
+            modalOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                backdrop-filter: blur(4px);
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #581c87 100%);
+                border-radius: 12px;
+                padding: 24px;
+                max-width: 320px;
+                width: 100%;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            `;
+            
+            modalContent.innerHTML = `
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #a855f7, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <h3 style="color: white; font-size: 18px; margin-bottom: 8px;">Pro Feature</h3>
+                <p style="color: #e2e8f0; margin-bottom: 20px; font-size: 14px;">
+                    ${featureName.charAt(0).toUpperCase() + featureName.slice(1)} is available exclusively for Pro subscribers.
+                </p>
+                <button id="upgrade-pro-btn" style="background: linear-gradient(135deg, #a855f7, #3b82f6); color: white; border: none; border-radius: 6px; padding: 10px 16px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px;">
+                    Upgrade to Pro
+                </button>
+                <button id="close-pro-modal" style="background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 8px 16px; font-weight: 500; cursor: pointer; width: 100%;">
+                    Maybe Later
+                </button>
+            `;
+            
+            document.body.appendChild(modalOverlay);
+            modalOverlay.appendChild(modalContent);
+            
+            // Add event listeners
+            const upgradeBtn = document.getElementById('upgrade-pro-btn');
+            const closeBtn = document.getElementById('close-pro-modal');
+            
+            if (upgradeBtn) {
+                upgradeBtn.addEventListener('click', () => {
+                    this.openUpgradePage();
+                    modalOverlay.remove();
+                });
+            }
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    modalOverlay.remove();
+                });
+            }
+            
+            // Auto-close after 10 seconds
+            setTimeout(() => {
+                if (modalOverlay && modalOverlay.parentNode) {
+                    modalOverlay.remove();
+                }
+            }, 10000);
+        } catch (error) {
+            console.error('Error showing Pro feature message:', error);
         }
     }
 }

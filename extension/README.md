@@ -17,7 +17,7 @@ A powerful Chrome extension that brings AI-powered legal document analysis direc
 **In `popup.js` around line 300:**
 ```javascript
 // Replace this line:
-headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.YOUR_ACTUAL_SIGNATURE_HERE`;
+headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ`;
 
 // With your actual anon key:
 headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
@@ -26,7 +26,7 @@ headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
 **In `content.js` around line 200:**
 ```javascript
 // Replace this line:
-headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMzQ0MDAsImV4cCI6MjA1MDkxMDQwMH0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8`;
+headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4d2lsaGJpdGxqZWVpaHB2c2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwODUzNjQsImV4cCI6MjA2NDY2MTM2NH0.EhFUUngApIPqLfpSHg_0ajRkgN6Krg9BmZd5RXEq6NQ`;
 
 // With your actual anon key:
 headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
@@ -42,7 +42,14 @@ headers['Authorization'] = `Bearer YOUR_ACTUAL_SUPABASE_ANON_KEY_HERE`;
 
 ## ✨ Features
 
-### 🔐 **NEW: Automatic Authentication Sync**
+### 🔐 **Pro-Only Features**
+- **PDF Analysis**: Analyze PDF legal documents directly in your browser
+- **Text Selection Analysis**: Select and analyze specific sections of legal text
+- **Full Page Analysis**: Analyze entire webpages for legal content
+- **Audio Playback**: Listen to summaries with premium voices
+- **Save Analysis History**: Store and access your analysis history
+
+### 🔐 **Automatic Authentication Sync**
 - **Smart Auth Detection**: Automatically detects when you're signed in to Legalish website
 - **Seamless Sync**: Extension syncs your authentication state from the website
 - **No Manual Setup**: Just sign in to the website and the extension will recognize you

@@ -292,6 +292,7 @@ body {
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .btn-primary:hover {
@@ -319,10 +320,72 @@ body {
     font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .btn-secondary:hover {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* Pro badge for buttons */
+.pro-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    color: white;
+    font-size: 8px;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Pro upgrade banner */
+.pro-upgrade-banner {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(59, 130, 246, 0.1));
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pro-upgrade-banner svg {
+    color: #a855f7;
+}
+
+.pro-upgrade-banner-content {
+    flex: 1;
+}
+
+.pro-upgrade-banner-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.pro-upgrade-banner-description {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.pro-upgrade-banner-button {
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pro-upgrade-banner-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
 
 /* Results */
@@ -433,6 +496,17 @@ body {
     font-size: 11px;
 }
 
+/* Pro plan badge */
+.pro-plan-badge {
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+}
+
 /* Footer */
 .footer {
     display: flex;
@@ -484,6 +558,86 @@ body {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pro feature modal */
+.pro-feature-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+
+.pro-feature-content {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #581c87 100%);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 320px;
+    width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pro-feature-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.pro-feature-title {
+    color: white;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.pro-feature-description {
+    color: #e2e8f0;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.pro-feature-button {
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.pro-feature-button:hover {
+    opacity: 0.9;
+}
+
+.pro-feature-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+}
+
+.pro-feature-cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 /* Responsive adjustments */

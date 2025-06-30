@@ -7,6 +7,7 @@ class LegalishContentScript {
         this.selectedText = '';
         this.legalContentDetected = false;
         this.analysisWidget = null;
+        this.userSubscriptionTier = 'free'; // Default to free
         
         this.init();
     }
@@ -26,8 +27,11 @@ class LegalishContentScript {
         }
     }
 
-    setupContentScript() {
+    async setupContentScript() {
         try {
+            // Check user subscription status first
+            await this.checkUserSubscription();
+            
             this.detectLegalContent();
             this.setupTextSelection();
             this.setupContextMenu();
@@ -35,6 +39,19 @@ class LegalishContentScript {
             this.setupMessageListener();
         } catch (error) {
             console.error('Error setting up content script:', error);
+        }
+    }
+    
+    async checkUserSubscription() {
+        try {
+            if (chrome.storage && chrome.storage.local) {
+                const { subscription_tier } = await chrome.storage.local.get(['subscription_tier']);
+                if (subscription_tier) {
+                    this.userSubscriptionTier = subscription_tier;
+                }
+            }
+        } catch (error) {
+            console.error('Error checking user subscription:', error);
         }
     }
 
@@ -100,11 +117,17 @@ class LegalishContentScript {
             
             const message = isPDF ? 'PDF document detected' : 'Legal document detected';
             
+            // Different button text based on subscription
+            const buttonText = this.userSubscriptionTier === 'pro' ? 'Analyze' : 'Pro Feature';
+            
             indicator.innerHTML = `
                 <div class="legalish-indicator-content">
                     <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
                     <span>${message}</span>
-                    <button class="legalish-analyze-btn">Analyze</button>
+                    <button class="legalish-analyze-btn ${this.userSubscriptionTier !== 'pro' ? 'pro-btn' : ''}">
+                        ${buttonText}
+                        ${this.userSubscriptionTier !== 'pro' ? '<span class="pro-badge">PRO</span>' : ''}
+                    </button>
                 </div>
             `;
             
@@ -115,7 +138,9 @@ class LegalishContentScript {
                 const analyzeBtn = indicator.querySelector('.legalish-analyze-btn');
                 if (analyzeBtn) {
                     analyzeBtn.addEventListener('click', () => {
-                        if (isPDF) {
+                        if (this.userSubscriptionTier !== 'pro') {
+                            this.showProFeatureMessage('document analysis');
+                        } else if (isPDF) {
                             this.analyzePDFByURL();
                         } else {
                             this.openAnalysisPopup();
@@ -129,6 +154,32 @@ class LegalishContentScript {
                         indicator.style.transform = 'translateY(-100%)';
                     }
                 }, isPDF ? 8000 : 5000);
+                
+                // Add Pro-only CSS if not already added
+                if (!document.getElementById('pro-features-css')) {
+                    const style = document.createElement('style');
+                    style.id = 'pro-features-css';
+                    style.textContent = `
+                        .pro-btn {
+                            background: linear-gradient(135deg, #a855f7, #3b82f6) !important;
+                            position: relative;
+                        }
+                        
+                        .pro-badge {
+                            position: absolute;
+                            top: -8px;
+                            right: -8px;
+                            background: #ef4444;
+                            color: white;
+                            font-size: 8px;
+                            font-weight: bold;
+                            padding: 2px 4px;
+                            border-radius: 4px;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
             }
         } catch (error) {
             console.error('Error showing legal content indicator:', error);
@@ -136,6 +187,12 @@ class LegalishContentScript {
     }
 
     async analyzePDFByURL() {
+        // Check if user is a Pro subscriber
+        if (this.userSubscriptionTier !== 'pro') {
+            this.showProFeatureMessage('PDF analysis');
+            return;
+        }
+        
         try {
             const currentUrl = window.location.href;
             
@@ -258,11 +315,18 @@ class LegalishContentScript {
 
             const widget = document.createElement('div');
             widget.id = 'legalish-selection-widget';
+            
+            // Different button text based on subscription
+            const buttonText = this.userSubscriptionTier === 'pro' ? 'Analyze' : 'Pro Feature';
+            
             widget.innerHTML = `
                 <div class="legalish-widget-content">
                     <img src="${chrome.runtime.getURL('icons/icon16.png')}" alt="Legalish">
                     <span>Analyze with Legalish</span>
-                    <button class="legalish-widget-btn">Analyze</button>
+                    <button class="legalish-widget-btn ${this.userSubscriptionTier !== 'pro' ? 'pro-btn' : ''}">
+                        ${buttonText}
+                        ${this.userSubscriptionTier !== 'pro' ? '<span class="pro-badge">PRO</span>' : ''}
+                    </button>
                 </div>
             `;
 
@@ -277,7 +341,11 @@ class LegalishContentScript {
                 const analyzeBtn = widget.querySelector('.legalish-widget-btn');
                 if (analyzeBtn) {
                     analyzeBtn.addEventListener('click', () => {
-                        this.analyzeSelectedText();
+                        if (this.userSubscriptionTier !== 'pro') {
+                            this.showProFeatureMessage('text selection analysis');
+                        } else {
+                            this.analyzeSelectedText();
+                        }
                     });
                 }
 
@@ -285,6 +353,32 @@ class LegalishContentScript {
                 setTimeout(() => {
                     this.hideSelectionWidget();
                 }, 10000);
+                
+                // Add Pro-only CSS if not already added
+                if (!document.getElementById('pro-features-css')) {
+                    const style = document.createElement('style');
+                    style.id = 'pro-features-css';
+                    style.textContent = `
+                        .pro-btn {
+                            background: linear-gradient(135deg, #a855f7, #3b82f6) !important;
+                            position: relative;
+                        }
+                        
+                        .pro-badge {
+                            position: absolute;
+                            top: -8px;
+                            right: -8px;
+                            background: #ef4444;
+                            color: white;
+                            font-size: 8px;
+                            font-weight: bold;
+                            padding: 2px 4px;
+                            border-radius: 4px;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
             }
         } catch (error) {
             console.error('Error showing selection widget:', error);
@@ -385,14 +479,26 @@ class LegalishContentScript {
             chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 try {
                     if (request.action === 'analyzeSelection') {
+                        // Check if user is a Pro subscriber
+                        if (this.userSubscriptionTier !== 'pro') {
+                            this.showProFeatureMessage('text selection analysis');
+                            return;
+                        }
                         this.analyzeSelectedText();
                     } else if (request.action === 'analyzePage') {
+                        // Check if user is a Pro subscriber
+                        if (this.userSubscriptionTier !== 'pro') {
+                            this.showProFeatureMessage('page analysis');
+                            return;
+                        }
                         this.analyzePageContent();
                     } else if (request.action === 'getPageText') {
                         sendResponse({ text: document.body ? document.body.innerText : '' });
                     } else if (request.action === 'getSelection') {
                         const selection = window.getSelection();
                         sendResponse({ text: selection ? selection.toString() : '' });
+                    } else if (request.action === 'updateSubscriptionTier') {
+                        this.userSubscriptionTier = request.subscriptionTier || 'free';
                     }
                 } catch (error) {
                     console.error('Error handling message:', error);
@@ -402,6 +508,12 @@ class LegalishContentScript {
     }
 
     async analyzeSelectedText() {
+        // Check if user is a Pro subscriber
+        if (this.userSubscriptionTier !== 'pro') {
+            this.showProFeatureMessage('text selection analysis');
+            return;
+        }
+        
         try {
             if (!this.selectedText) {
                 const selection = window.getSelection();
@@ -422,6 +534,12 @@ class LegalishContentScript {
     }
 
     async analyzePageContent() {
+        // Check if user is a Pro subscriber
+        if (this.userSubscriptionTier !== 'pro') {
+            this.showProFeatureMessage('page analysis');
+            return;
+        }
+        
         try {
             // Check if this is a PDF
             const isPDF = window.location.href.includes('.pdf') || 
@@ -629,6 +747,85 @@ class LegalishContentScript {
             }
         } catch (error) {
             console.error('Error showing error message:', error);
+        }
+    }
+    
+    showProFeatureMessage(featureName) {
+        try {
+            // Create a modal-like overlay for Pro feature message
+            const modalOverlay = document.createElement('div');
+            modalOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                backdrop-filter: blur(4px);
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #581c87 100%);
+                border-radius: 12px;
+                padding: 24px;
+                max-width: 320px;
+                width: 100%;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            `;
+            
+            modalContent.innerHTML = `
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #a855f7, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <h3 style="color: white; font-size: 18px; margin-bottom: 8px;">Pro Feature</h3>
+                <p style="color: #e2e8f0; margin-bottom: 20px; font-size: 14px;">
+                    ${featureName.charAt(0).toUpperCase() + featureName.slice(1)} is available exclusively for Pro subscribers.
+                </p>
+                <button id="upgrade-pro-btn" style="background: linear-gradient(135deg, #a855f7, #3b82f6); color: white; border: none; border-radius: 6px; padding: 10px 16px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px;">
+                    Upgrade to Pro
+                </button>
+                <button id="close-pro-modal" style="background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 8px 16px; font-weight: 500; cursor: pointer; width: 100%;">
+                    Maybe Later
+                </button>
+            `;
+            
+            document.body.appendChild(modalOverlay);
+            modalOverlay.appendChild(modalContent);
+            
+            // Add event listeners
+            const upgradeBtn = document.getElementById('upgrade-pro-btn');
+            const closeBtn = document.getElementById('close-pro-modal');
+            
+            if (upgradeBtn) {
+                upgradeBtn.addEventListener('click', () => {
+                    window.open('https://legalish.site/upgrade', '_blank');
+                    modalOverlay.remove();
+                });
+            }
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    modalOverlay.remove();
+                });
+            }
+            
+            // Auto-close after 10 seconds
+            setTimeout(() => {
+                if (modalOverlay && modalOverlay.parentNode) {
+                    modalOverlay.remove();
+                }
+            }, 10000);
+        } catch (error) {
+            console.error('Error showing Pro feature message:', error);
         }
     }
 }
