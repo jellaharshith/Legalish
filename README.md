@@ -162,19 +162,19 @@ Legalish combines professional legal analysis with an approachable, modern inter
 
 ## 🔮 Future Roadmap
 
-### **Short Term **
+### Short Term 
 - **Multi-language support** for international legal documents
 - **Advanced comparison tools** for contract negotiations
 - **Mobile app** for on-the-go legal analysis
 - **Firefox and Edge extension** support
 
-### **Medium Term **
+### Medium Term 
 - **Legal template library** for common document types
 - **API access** for developer integrations
 - **Team collaboration** features
 - **Advanced analytics** dashboard
 
-### **Long Term **
+### Long Term 
 - **AI legal advisor** for contract negotiation
 - **Integration marketplace** with legal software
 - **White-label solutions** for law firms
